@@ -1,0 +1,77 @@
+# .github/workflows/unity-ci.yml
+name: Unity CI (Bridge Project)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'bridge/Assets/**'
+      - 'bridge/Packages/**'
+      - 'bridge/ProjectSettings/**'
+      - '.github/workflows/unity-ci.yml'
+  pull_request:
+    paths:
+      - 'bridge/Assets/**'
+      - 'bridge/Packages/**'
+      - 'bridge/ProjectSettings/**'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # ❶ リポジトリ取得（LFS 有効）
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # ❷ Library キャッシュ
+      - name: Cache Unity Library
+        uses: actions/cache@v3
+        with:
+          path: bridge/Library
+          key: bridge-Library-${{ hashFiles('bridge/Assets/**', 'bridge/Packages/**', 'bridge/ProjectSettings/**') }}
+          restore-keys: bridge-Library-
+
+      # ❸ ライセンス認証（Personal／Pro 共通）
+      - name: Activate Unity
+        uses: game-ci/unity-activate@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+
+      # ❹ テスト（EditMode & PlayMode）
+      - name: Run Unity tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: bridge
+          githubToken:  ${{ secrets.GITHUB_TOKEN }}
+
+      # ❺ ビルド（Linux ヘッドレス）
+      - name: Build (Linux Headless)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE:  ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: bridge
+          targetPlatform: Linux64
+          buildName: MCPBridge
+          versioning: Semantic   # セマンティックバージョン自動付与
+
+      # ❻ ビルド成果物アップロード
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: UnityBridgeBuild
+          path: bridge/build
+
+      # ❼ テスト結果レポート（失敗時でもアップロード）
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: TestResults
+          path: '**/TestResults/*.xml'
