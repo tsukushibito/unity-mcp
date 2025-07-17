@@ -1,0 +1,37 @@
+name: .NET Library CI
+
+on:
+  push:
+    paths:
+      - 'Src/**/*.cs'
+      - '**/*.csproj'
+      - '.github/workflows/dotnet-ci.yml'
+  pull_request:
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # .NET SDK
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      # NuGet パッケージキャッシュ
+      - uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-
+
+      # ビルド
+      - run: dotnet build --configuration Release
+
+      # テスト（カバレッジ収集付き）
+      - run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+      # フォーマット検証
+      - run: dotnet format --verify-no-changes --verbosity diagnostic

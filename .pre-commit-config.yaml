@@ -1,0 +1,38 @@
+repos:
+  # 一般的なファイルのフォーマッタ・リンター
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  # Rustフォーマッタ・リンター
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        description: Format Rust code with rustfmt
+        entry: cargo fmt
+        language: system
+        files: \.rs$
+        args: [--all, --]
+
+      - id: cargo-clippy
+        name: cargo clippy
+        description: Lint Rust code with clippy
+        entry: cargo clippy
+        language: system
+        files: \.rs$
+        args: [--workspace, --all-targets, --all-features, --, -D, warnings]
+
+  # YAMLフォーマッタ
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-d, relaxed]

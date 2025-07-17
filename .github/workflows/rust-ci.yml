@@ -1,0 +1,52 @@
+name: Rust MCP CI
+
+on:
+  push:
+    paths:
+      - 'mcp/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/rust-ci.yml'
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ツールチェーン設定
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      # Cargo キャッシュ
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-
+
+      # フォーマットチェック
+      - run: cargo fmt --all -- --check
+
+      # 静的解析（警告をエラー扱い）
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      # ビルド
+      - run: cargo build --workspace --release
+
+      # テスト
+      - run: cargo test --workspace --release -- --nocapture
+
+      # 成果物アップロード
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcp-binaries
+          path: |
+            target/release/mcp-server*
+            target/release/mcp-client*

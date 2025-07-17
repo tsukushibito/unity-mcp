@@ -1,0 +1,19 @@
+name: Lint & Pre-commit Hooks
+
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # pre-commit で統一フォーマッタ／リンター実行
+      - uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --all-files
