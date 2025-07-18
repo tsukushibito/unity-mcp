@@ -11,13 +11,18 @@ pub struct RpcRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum RpcResponsePayload {
+    Result(Value),
+    Error(RpcError),
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct RpcResponse {
     pub jsonrpc: String,
     pub id: Value,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub result: Option<Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<RpcError>,
+    #[serde(flatten)]
+    pub payload: RpcResponsePayload,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -78,6 +83,34 @@ mod tests {
         let frame = encode_frame(&req).unwrap();
         let decoded: RpcRequest = decode_frame(&frame).unwrap();
         assert_eq!(req, decoded);
+    }
+
+    #[test]
+    fn roundtrip_response_result() {
+        let resp = RpcResponse {
+            jsonrpc: "2.0".to_string(),
+            id: Value::from(1),
+            payload: RpcResponsePayload::Result(serde_json::json!({"ok": true})),
+        };
+        let frame = encode_frame(&resp).unwrap();
+        let decoded: RpcResponse = decode_frame(&frame).unwrap();
+        assert_eq!(resp, decoded);
+    }
+
+    #[test]
+    fn roundtrip_response_error() {
+        let resp = RpcResponse {
+            jsonrpc: "2.0".to_string(),
+            id: Value::from(2),
+            payload: RpcResponsePayload::Error(RpcError {
+                code: -32600,
+                message: "Invalid Request".to_string(),
+                data: None,
+            }),
+        };
+        let frame = encode_frame(&resp).unwrap();
+        let decoded: RpcResponse = decode_frame(&frame).unwrap();
+        assert_eq!(resp, decoded);
     }
 
     #[test]
