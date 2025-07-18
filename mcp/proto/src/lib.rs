@@ -28,32 +28,39 @@ pub struct RpcError {
     pub data: Option<Value>,
 }
 
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum FrameError {
-    #[error("frame too short")] 
+    #[error("frame too short")]
     Truncated,
     #[error("invalid json")]
-    Malformed,
+    Malformed(#[from] serde_json::Error),
 }
 
-pub fn encode_frame<T: Serialize>(message: &T) -> Result<Vec<u8>, serde_json::Error> {
+#[derive(Debug, thiserror::Error)]
+pub enum EncodeError {
+    #[error("payload too large")]
+    PayloadTooLarge,
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+}
+
+pub fn encode_frame<T: Serialize>(message: &T) -> Result<Vec<u8>, EncodeError> {
     let payload = serde_json::to_vec(message)?;
+    let len = u32::try_from(payload.len()).map_err(|_| EncodeError::PayloadTooLarge)?;
     let mut frame = Vec::with_capacity(4 + payload.len());
-    frame.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+    frame.extend_from_slice(&len.to_le_bytes());
     frame.extend_from_slice(&payload);
     Ok(frame)
 }
 
 pub fn decode_frame<T: for<'de> Deserialize<'de>>(data: &[u8]) -> Result<T, FrameError> {
-    if data.len() < 4 {
-        return Err(FrameError::Truncated);
-    }
-    let len = u32::from_le_bytes(data[0..4].try_into().unwrap()) as usize;
-    if data.len() < 4 + len {
-        return Err(FrameError::Truncated);
-    }
-    let payload = &data[4..4 + len];
-    serde_json::from_slice(payload).map_err(|_| FrameError::Malformed)
+    let header = data.get(0..4).ok_or(FrameError::Truncated)?;
+    let len_bytes: [u8; 4] = header
+        .try_into()
+        .expect("infallible: slice is 4 bytes");
+    let len = u32::from_le_bytes(len_bytes) as usize;
+    let payload = data.get(4..4 + len).ok_or(FrameError::Truncated)?;
+    Ok(serde_json::from_slice(payload)?)
 }
 
 #[cfg(test)]
@@ -83,7 +90,7 @@ mod tests {
         };
         let mut frame = encode_frame(&req).unwrap();
         frame.pop(); // remove last byte
-        assert_eq!(decode_frame::<RpcRequest>(&frame), Err(FrameError::Truncated));
+        assert!(matches!(decode_frame::<RpcRequest>(&frame), Err(FrameError::Truncated)));
     }
 
     #[test]
@@ -92,6 +99,11 @@ mod tests {
         let payload = b"not json";
         frame.extend_from_slice(&(payload.len() as u32).to_le_bytes());
         frame.extend_from_slice(payload);
-        assert_eq!(decode_frame::<RpcRequest>(&frame), Err(FrameError::Malformed));
+        assert!(matches!(decode_frame::<RpcRequest>(&frame), Err(FrameError::Malformed(_))));
+    }
+
+    #[test]
+    fn decode_truncated_header() {
+        assert!(matches!(decode_frame::<RpcRequest>(&[1, 2, 3]), Err(FrameError::Truncated)));
     }
 }
