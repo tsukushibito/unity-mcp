@@ -99,3 +99,13 @@ Response
 }
 ```
 
+Failure response
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "error": { "code": 1001, "message": "Health check failed" }
+}
+```
+
