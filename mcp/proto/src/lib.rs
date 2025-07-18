@@ -49,8 +49,13 @@ pub enum EncodeError {
     Json(#[from] serde_json::Error),
 }
 
+const MAX_PAYLOAD_SIZE: usize = 64 * 1024; // 64 KB
+
 pub fn encode_frame<T: Serialize>(message: &T) -> Result<Vec<u8>, EncodeError> {
     let payload = serde_json::to_vec(message)?;
+    if payload.len() > MAX_PAYLOAD_SIZE {
+        return Err(EncodeError::PayloadTooLarge);
+    }
     let len = u32::try_from(payload.len()).map_err(|_| EncodeError::PayloadTooLarge)?;
     let mut frame = Vec::with_capacity(4 + payload.len());
     frame.extend_from_slice(&len.to_le_bytes());
@@ -59,10 +64,10 @@ pub fn encode_frame<T: Serialize>(message: &T) -> Result<Vec<u8>, EncodeError> {
 }
 
 pub fn decode_frame<T: for<'de> Deserialize<'de>>(data: &[u8]) -> Result<T, FrameError> {
-    let header = data.get(0..4).ok_or(FrameError::Truncated)?;
-    let len_bytes: [u8; 4] = header
-        .try_into()
-        .expect("infallible: slice is 4 bytes");
+    let len_bytes: [u8; 4] = match data.get(0..4) {
+        Some(header) => header.try_into().map_err(|_| FrameError::Truncated)?,
+        None => return Err(FrameError::Truncated),
+    };
     let len = u32::from_le_bytes(len_bytes) as usize;
     let payload = data.get(4..4 + len).ok_or(FrameError::Truncated)?;
     Ok(serde_json::from_slice(payload)?)
@@ -138,5 +143,11 @@ mod tests {
     #[test]
     fn decode_truncated_header() {
         assert!(matches!(decode_frame::<RpcRequest>(&[1, 2, 3]), Err(FrameError::Truncated)));
+    }
+
+    #[test]
+    fn encode_payload_too_large() {
+        let big_data = vec![0u8; MAX_PAYLOAD_SIZE + 1];
+        assert!(matches!(encode_frame(&big_data), Err(EncodeError::PayloadTooLarge)));
     }
 }
