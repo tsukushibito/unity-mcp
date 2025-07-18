@@ -1,3 +1,3 @@
 [workspace]
-members = ["mcp/server", "mcp/client"]
+members = ["mcp/server", "mcp/client", "mcp/proto"]
 resolver = "2"

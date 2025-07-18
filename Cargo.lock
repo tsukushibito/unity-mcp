@@ -827,11 +827,16 @@ dependencies = [
  "clap",
  "env_logger",
  "log",
+ "mcp-proto",
  "mcpr",
  "serde",
  "serde_json",
  "thiserror",
 ]
+
+[[package]]
+name = "mcp-proto"
+version = "0.1.0"
 
 [[package]]
 name = "mcp-server"
@@ -840,6 +845,7 @@ dependencies = [
  "clap",
  "env_logger",
  "log",
+ "mcp-proto",
  "mcpr",
  "serde",
  "serde_json",

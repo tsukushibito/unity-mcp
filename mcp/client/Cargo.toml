@@ -17,3 +17,5 @@ log = "0.4"
 # Additional dependencies for improved client
 anyhow = "1.0"
 thiserror = "1.0"
+
+mcp-proto = { path = "../proto" }
