@@ -3,11 +3,22 @@ use serde_json::Value;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct RpcRequest {
-    pub jsonrpc: String,
+    jsonrpc: String,
     pub id: Value,
     pub method: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<Value>,
+}
+
+impl RpcRequest {
+    pub fn new(id: Value, method: String, params: Option<Value>) -> Self {
+        Self {
+            jsonrpc: "2.0".to_string(),
+            id,
+            method,
+            params,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -66,10 +77,10 @@ pub fn encode_frame<T: Serialize>(message: &T) -> Result<Vec<u8>, EncodeError> {
 }
 
 pub fn decode_frame<T: for<'de> Deserialize<'de>>(data: &[u8]) -> Result<T, FrameError> {
-    let len_bytes: [u8; 4] = match data.get(0..4) {
-        Some(header) => header.try_into().map_err(|_| FrameError::Truncated)?,
-        None => return Err(FrameError::Truncated),
-    };
+    let len_bytes: [u8; 4] = data
+        .get(0..4)
+        .and_then(|s| s.try_into().ok())
+        .ok_or(FrameError::Truncated)?;
     let len = u32::from_le_bytes(len_bytes) as usize;
     if len > MAX_PAYLOAD_SIZE {
         return Err(FrameError::PayloadTooLarge);
@@ -84,12 +95,11 @@ mod tests {
 
     #[test]
     fn roundtrip_request() {
-        let req = RpcRequest {
-            jsonrpc: "2.0".to_string(),
-            id: Value::from(1),
-            method: "test".to_string(),
-            params: Some(serde_json::json!({"a":1})),
-        };
+        let req = RpcRequest::new(
+            Value::from(1),
+            "test".to_string(),
+            Some(serde_json::json!({"a":1})),
+        );
         let frame = encode_frame(&req).unwrap();
         let decoded: RpcRequest = decode_frame(&frame).unwrap();
         assert_eq!(req, decoded);
@@ -125,12 +135,7 @@ mod tests {
 
     #[test]
     fn decode_truncated() {
-        let req = RpcRequest {
-            jsonrpc: "2.0".to_string(),
-            id: Value::from(1),
-            method: "test".to_string(),
-            params: None,
-        };
+        let req = RpcRequest::new(Value::from(1), "test".to_string(), None);
         let mut frame = encode_frame(&req).unwrap();
         frame.pop(); // remove last byte
         assert!(matches!(decode_frame::<RpcRequest>(&frame), Err(FrameError::Truncated)));
