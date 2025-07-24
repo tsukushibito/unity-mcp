@@ -30,10 +30,20 @@ pub enum RpcResponsePayload {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct RpcResponse {
-    pub jsonrpc: String,
+    jsonrpc: String,
     pub id: Value,
     #[serde(flatten)]
     pub payload: RpcResponsePayload,
+}
+
+impl RpcResponse {
+    pub fn new(id: Value, payload: RpcResponsePayload) -> Self {
+        Self {
+            jsonrpc: "2.0".to_string(),
+            id,
+            payload,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -62,6 +72,7 @@ pub enum EncodeError {
     Json(#[from] serde_json::Error),
 }
 
+const HEADER_SIZE: usize = std::mem::size_of::<u32>();
 const MAX_PAYLOAD_SIZE: usize = 64 * 1024; // 64 KB
 
 pub fn encode_frame<T: Serialize>(message: &T) -> Result<Vec<u8>, EncodeError> {
@@ -70,22 +81,25 @@ pub fn encode_frame<T: Serialize>(message: &T) -> Result<Vec<u8>, EncodeError> {
         return Err(EncodeError::PayloadTooLarge);
     }
     let len = payload.len() as u32;
-    let mut frame = Vec::with_capacity(4 + payload.len());
+    let mut frame = Vec::with_capacity(HEADER_SIZE + payload.len());
     frame.extend_from_slice(&len.to_le_bytes());
     frame.extend_from_slice(&payload);
     Ok(frame)
 }
 
 pub fn decode_frame<T: for<'de> Deserialize<'de>>(data: &[u8]) -> Result<T, FrameError> {
-    let len_bytes: [u8; 4] = data
-        .get(0..4)
-        .and_then(|s| s.try_into().ok())
-        .ok_or(FrameError::Truncated)?;
+    if data.len() < HEADER_SIZE {
+        return Err(FrameError::Truncated);
+    }
+    let (header, body) = data.split_at(HEADER_SIZE);
+    let len_bytes: [u8; HEADER_SIZE] = header.try_into().expect("slice has guaranteed size");
     let len = u32::from_le_bytes(len_bytes) as usize;
+
     if len > MAX_PAYLOAD_SIZE {
         return Err(FrameError::PayloadTooLarge);
     }
-    let payload = data.get(4..4 + len).ok_or(FrameError::Truncated)?;
+
+    let payload = body.get(..len).ok_or(FrameError::Truncated)?;
     Ok(serde_json::from_slice(payload)?)
 }
 
@@ -107,11 +121,10 @@ mod tests {
 
     #[test]
     fn roundtrip_response_result() {
-        let resp = RpcResponse {
-            jsonrpc: "2.0".to_string(),
-            id: Value::from(1),
-            payload: RpcResponsePayload::Result(serde_json::json!({"ok": true})),
-        };
+        let resp = RpcResponse::new(
+            Value::from(1),
+            RpcResponsePayload::Result(serde_json::json!({"ok": true})),
+        );
         let frame = encode_frame(&resp).unwrap();
         let decoded: RpcResponse = decode_frame(&frame).unwrap();
         assert_eq!(resp, decoded);
@@ -119,15 +132,14 @@ mod tests {
 
     #[test]
     fn roundtrip_response_error() {
-        let resp = RpcResponse {
-            jsonrpc: "2.0".to_string(),
-            id: Value::from(2),
-            payload: RpcResponsePayload::Error(RpcError {
+        let resp = RpcResponse::new(
+            Value::from(2),
+            RpcResponsePayload::Error(RpcError {
                 code: -32600,
                 message: "Invalid Request".to_string(),
                 data: None,
             }),
-        };
+        );
         let frame = encode_frame(&resp).unwrap();
         let decoded: RpcResponse = decode_frame(&frame).unwrap();
         assert_eq!(resp, decoded);
@@ -163,10 +175,8 @@ mod tests {
 
     #[test]
     fn decode_payload_too_large() {
-        let len = MAX_PAYLOAD_SIZE + 1;
-        let mut frame = Vec::with_capacity(4 + len);
-        frame.extend_from_slice(&(len as u32).to_le_bytes());
-        frame.extend(std::iter::repeat(0u8).take(len));
+        let len = (MAX_PAYLOAD_SIZE + 1) as u32;
+        let frame = len.to_le_bytes();
         assert!(matches!(decode_frame::<RpcRequest>(&frame), Err(FrameError::PayloadTooLarge)));
     }
 }
