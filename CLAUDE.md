@@ -77,3 +77,13 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 - 追加時はserver/tests/に統合テスト
 - テストは決定論的に保ち、デフォルトでネットワーク依存を避ける
 - Unity: Unity Test RunnerによるEditModeテスト
+
+## コミュニケーションガイドライン
+
+**対話言語:**
+- 回答は日本語で行う
+
+## 作業ガイドライン
+
+**作業指示:**
+- 指示の内容に確証がない場合は作業を進めずに質問すること
