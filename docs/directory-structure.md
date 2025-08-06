@@ -31,7 +31,6 @@ unity-mcp-server/
 ├── scripts/                   # ビルド・テスト・リリース補助
 ├── .github/workflows/         # rust-ci.yml / unity-ci.yml / lint.yml
 ├── .devcontainer/             # VS Code Dev Container
-├── Dockerfile                 # CI & ローカル実行用
 └── README.md
 ```
 
