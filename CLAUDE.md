@@ -62,14 +62,9 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 ## プロジェクト構造
 
 **主要ディレクトリ:**
-- `server/src/handlers/` - 機能別MCPリクエストハンドラー
 - `bridge/Assets/MCP/Editor/` - Unity Editor 統合（MVP重視）
 - `bridge/Packages/com.example.mcp-bridge/` - 再利用性のためのUPMパッケージ
 - `docs/` - アーキテクチャドキュメント（日本語ディレクトリ構造ガイドを含む）
-
-**拡張パス:**
-- サーバーは成長に伴いcore/transport-*クレートでワークスペース化
-- Unityブリッジは既にUPMパッケージ化済みで拡張が容易
 
 ## テスト戦略
 
@@ -87,3 +82,8 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 
 **作業指示:**
 - 指示の内容に確証がない場合は作業を進めずに質問すること
+
+## コミット規約
+
+**コミットメッセージ:**
+- コミットメッセージはConventionalCommitに従った英語のメッセージとしてください

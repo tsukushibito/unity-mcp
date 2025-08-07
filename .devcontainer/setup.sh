@@ -40,4 +40,9 @@ echo "🖥️ Setting up Claude Monitor..."
 uv tool install claude-monitor
 echo "Claude Monitor setup complete."
 
+# Install Cipher MCP
+echo "🔐 Installing Cipher MCP..."
+npm install -g @byterover/cipher
+echo "Cipher MCP installation complete."
+
 echo "🚀 DevContainer setup completed successfully!"
