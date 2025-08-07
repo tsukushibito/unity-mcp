@@ -10,6 +10,7 @@ Unity MCP Server は、Rust MCP サーバーと Unity Editor ブリッジを組�
 - `server/` - rmcp SDK を使用した複数トランスポート対応（stdio/WebSocket）のRust MCP サーバー
 - `bridge/` - Rust サーバーを起動し連携するための Unity Editor ツール
 - 高速フィードバックループを目的とした単一リポジトリアプローチ、将来のワークスペース拡張を想定
+- Rust MCP サーバーと Unity Editor ブリッジ間の通信はgRPCを使用する
 
 ## 開発コマンド
 
