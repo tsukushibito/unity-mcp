@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package unity.mcp.v1;
+
+import "google/rpc/status.proto";
+
+option go_package = "unity/mcp/v1;unitymcpv1";
+option csharp_namespace = "Unity.Mcp.V1";
+
+message Empty {}
+
+message McpTool {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message McpResource {
+  string uri = 1;
+  string mime_type = 2;
+  int64 size_bytes = 3;
+}
+
+message UnityAsset {
+  string guid = 1; // Unity asset GUID
+  string asset_path = 2; // e.g., Assets/Textures/foo.png
+  string type = 3; // e.g., Texture2D, Prefab
+}
+
+message ProjectInfo {
+  string project_name = 1;
+  string unity_version = 2;
+}
+
+// Core MCP
+message ListToolsRequest {}
+message ListToolsResponse {
+  repeated McpTool tools = 1;
+  google.rpc.Status status = 15;
+}
+
+message CallToolRequest {
+  string tool_id = 1;
+  string input_json = 2;
+}
+message CallToolResponse {
+  string output_json = 1;
+  google.rpc.Status status = 15;
+}
+
+message ListResourcesRequest {}
+message ListResourcesResponse {
+  repeated McpResource resources = 1;
+  google.rpc.Status status = 15;
+}
+
+message ReadResourceRequest {
+  string uri = 1;
+}
+message ReadResourceResponse {
+  bytes data = 1;
+  string mime_type = 2;
+  google.rpc.Status status = 15;
+}
+
+message ListPromptsRequest {}
+message ListPromptsResponse {
+  repeated string prompt_ids = 1;
+  google.rpc.Status status = 15;
+}
+
+message GetPromptRequest {
+  string prompt_id = 1;
+}
+message GetPromptResponse {
+  string prompt_text = 1;
+  google.rpc.Status status = 15;
+}
+
+// Unity-specific operations (AssetDatabase)
+message ImportAssetRequest {
+  string asset_path = 1;
+}
+message ImportAssetResponse {
+  UnityAsset asset = 1;
+  google.rpc.Status status = 15;
+}
+
+message MoveAssetRequest {
+  string src_path = 1;
+  string dst_path = 2;
+}
+message MoveAssetResponse {
+  UnityAsset asset = 1;
+  google.rpc.Status status = 15;
+}
+
+message DeleteAssetRequest {
+  string asset_path = 1;
+}
+message DeleteAssetResponse {
+  bool success = 1;
+  google.rpc.Status status = 15;
+}
+
+message RefreshRequest {}
+message RefreshResponse {
+  bool success = 1;
+  google.rpc.Status status = 15;
+}
+
+// Bidirectional streaming envelope
+message StreamRequest {
+  oneof message {
+    ImportAssetRequest import_asset = 1;
+    MoveAssetRequest move_asset = 2;
+    DeleteAssetRequest delete_asset = 3;
+    RefreshRequest refresh = 4;
+  }
+}
+
+message StreamResponse {
+  oneof message {
+    ImportAssetResponse import_asset = 1;
+    MoveAssetResponse move_asset = 2;
+    DeleteAssetResponse delete_asset = 3;
+    RefreshResponse refresh = 4;
+  }
+}
+
+service UnityMcpService {
+  // MCP core
+  rpc ListTools(ListToolsRequest) returns (ListToolsResponse);
+  rpc CallTool(CallToolRequest) returns (CallToolResponse);
+  rpc ListResources(ListResourcesRequest) returns (ListResourcesResponse);
+  rpc ReadResource(ReadResourceRequest) returns (ReadResourceResponse);
+  rpc ListPrompts(ListPromptsRequest) returns (ListPromptsResponse);
+  rpc GetPrompt(GetPromptRequest) returns (GetPromptResponse);
+
+  // Unity AssetDatabase
+  rpc ImportAsset(ImportAssetRequest) returns (ImportAssetResponse);
+  rpc MoveAsset(MoveAssetRequest) returns (MoveAssetResponse);
+  rpc DeleteAsset(DeleteAssetRequest) returns (DeleteAssetResponse);
+  rpc Refresh(RefreshRequest) returns (RefreshResponse);
+
+  // Bidirectional stream for realtime operations
+  rpc Stream(stream StreamRequest) returns (stream StreamResponse);
+}
