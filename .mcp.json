@@ -21,14 +21,6 @@
       "headers": {
         "Authorization": "Bearer ${GITHUB_PAT}"
       }
-    },
-    "cipher": {
-      "type": "stdio",
-      "command": "cipher",
-      "args": [
-        "--mode",
-        "mcp"
-      ]
     }
   }
 }
