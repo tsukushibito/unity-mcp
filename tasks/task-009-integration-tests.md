@@ -84,11 +84,10 @@ bridge/Tests/Runtime/
 - `server/tests/fixtures/` - テストデータと設定
 
 **Unityテスト:**
-- `bridge/Tests/Runtime/GrpcClientTests.cs`
-- `bridge/Tests/Runtime/McpIntegrationTests.cs`
-- `bridge/Tests/Runtime/StreamingTests.cs`
-- `bridge/Tests/Editor/EditorIntegrationTests.cs`
-- `bridge/Tests/TestUtilities/` - 共有テストユーティリティ
+- `bridge/Tests/Runtime/GrpcClientTests.cs`（Editor 非依存、Task 011 のモックを使用）
+- `bridge/Tests/Runtime/McpIntegrationTests.cs`（Editor 非依存、Task 011 のモックを使用）
+- `bridge/Tests/Runtime/StreamingTests.cs`（Editor 非依存、Task 011 のモックを使用）
+- `bridge/Tests/TestUtilities/` - 共有テストユーティリティ（MockUnityEditor, VirtualTimeScheduler など）
 
 **CI設定:**
 - 統合テスト用の`.github/workflows/ci.yml`更新

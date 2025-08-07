@@ -72,6 +72,7 @@ namespace MCP.Bridge.Runtime
 - 複数の接続/切断サイクルが正常に動作すること
 - キャンセレーショントークンが適切に処理されること
 - Unity Debug.Log統合が動作すること
+- IUnityEditorApi 抽象を導入し、DIで MockUnityEditor に差し替え可能であること（Task 011）
 
 ## 依存関係
 
