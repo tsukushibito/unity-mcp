@@ -12,7 +12,6 @@ unity-mcp-server/
 │   ├── Cargo.toml             # 依存 & バイナリ定義
 │   ├── src/
 │   │   ├── main.rs            # エントリーポイント
-│   │   ├── lib.rs             # （必要なら）共通ロジック
 │   │   └── handlers/          # rmcp ハンドラを機能別に分割
 │   ├── config/                # デフォルト設定（TOML / YAML）
 │   └── README.md
