@@ -6,7 +6,7 @@
 use anyhow::Result;
 use std::net::SocketAddr;
 use tonic::transport::Server;
-use tracing::{info, warn};
+use tracing::info;
 
 /// Default gRPC server port
 pub const DEFAULT_GRPC_PORT: u16 = 50051;
@@ -21,8 +21,6 @@ pub struct GrpcServerConfig {
     pub host: String,
     /// Port to bind to
     pub port: u16,
-    /// Enable gRPC reflection for development/debugging
-    pub enable_reflection: bool,
     /// Maximum message size in bytes (4MB default)
     pub max_message_size: usize,
 }
@@ -32,7 +30,6 @@ impl Default for GrpcServerConfig {
         Self {
             host: DEFAULT_GRPC_HOST.to_string(),
             port: DEFAULT_GRPC_PORT,
-            enable_reflection: true,           // Enable in development mode
             max_message_size: 4 * 1024 * 1024, // 4MB
         }
     }
@@ -56,11 +53,6 @@ impl GrpcServerConfig {
         self
     }
 
-    /// Enable or disable gRPC reflection
-    pub fn with_reflection(mut self, enable: bool) -> Self {
-        self.enable_reflection = enable;
-        self
-    }
 
     /// Set the maximum message size
     pub fn with_max_message_size(mut self, size: usize) -> Self {
@@ -107,11 +99,6 @@ impl GrpcServerBuilder {
         self
     }
 
-    /// Enable or disable gRPC reflection
-    pub fn reflection(mut self, enable: bool) -> Self {
-        self.config.enable_reflection = enable;
-        self
-    }
 
     /// Set maximum message size
     pub fn max_message_size(mut self, size: usize) -> Self {
@@ -130,7 +117,6 @@ impl GrpcServerBuilder {
             host = %self.config.host,
             port = %self.config.port,
             max_message_size = %self.config.max_message_size,
-            reflection = %self.config.enable_reflection,
             "Building gRPC server"
         );
 
@@ -141,24 +127,6 @@ impl GrpcServerBuilder {
         //       .max_encoding_message_size(self.config.max_message_size)
         let server = Server::builder();
 
-        // Add reflection service for development/debugging
-        #[cfg(feature = "reflection")]
-        {
-            if self.config.enable_reflection {
-                let reflection_service = tonic_reflection::server::Builder::configure()
-                    .register_encoded_file_descriptor_set(crate::proto::FILE_DESCRIPTOR_SET)
-                    .build()?;
-                server = server.add_service(reflection_service);
-                info!("gRPC reflection enabled");
-            }
-        }
-
-        #[cfg(not(feature = "reflection"))]
-        {
-            if self.config.enable_reflection {
-                warn!("Reflection requested but not compiled with reflection feature");
-            }
-        }
 
         Ok((server, addr))
     }
@@ -189,7 +157,6 @@ mod tests {
         let config = GrpcServerConfig::default();
         assert_eq!(config.host, DEFAULT_GRPC_HOST);
         assert_eq!(config.port, DEFAULT_GRPC_PORT);
-        assert!(config.enable_reflection);
         assert_eq!(config.max_message_size, 4 * 1024 * 1024);
     }
 
@@ -198,12 +165,10 @@ mod tests {
         let config = GrpcServerConfig::new()
             .with_host("0.0.0.0")
             .with_port(8080)
-            .with_reflection(false)
             .with_max_message_size(8 * 1024 * 1024);
 
         assert_eq!(config.host, "0.0.0.0");
         assert_eq!(config.port, 8080);
-        assert!(!config.enable_reflection);
         assert_eq!(config.max_message_size, 8 * 1024 * 1024);
     }
 
@@ -220,12 +185,10 @@ mod tests {
         let builder = GrpcServerBuilder::new()
             .host("localhost")
             .port(9090)
-            .reflection(true)
             .max_message_size(1024);
 
         assert_eq!(builder.config.host, "localhost");
         assert_eq!(builder.config.port, 9090);
-        assert!(builder.config.enable_reflection);
         assert_eq!(builder.config.max_message_size, 1024);
     }
 }

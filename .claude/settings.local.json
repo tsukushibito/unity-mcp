@@ -12,7 +12,8 @@
       "Bash(cargo:*)",
       "mcp__serena__think_about_collected_information",
       "Bash(mv:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__serena__find_symbol"
     ]
   },
   "enableAllProjectMcpServers": true,
