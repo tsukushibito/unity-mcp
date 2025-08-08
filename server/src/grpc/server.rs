@@ -32,7 +32,7 @@ impl Default for GrpcServerConfig {
         Self {
             host: DEFAULT_GRPC_HOST.to_string(),
             port: DEFAULT_GRPC_PORT,
-            enable_reflection: true, // Enable in development mode
+            enable_reflection: true,           // Enable in development mode
             max_message_size: 4 * 1024 * 1024, // 4MB
         }
     }
@@ -125,7 +125,7 @@ impl GrpcServerBuilder {
     /// Services will be added in subsequent tasks.
     pub fn build(self) -> Result<(Server, SocketAddr)> {
         let addr = self.config.socket_addr()?;
-        
+
         info!(
             host = %self.config.host,
             port = %self.config.port,
@@ -134,8 +134,12 @@ impl GrpcServerBuilder {
             "Building gRPC server"
         );
 
-        let mut server = Server::builder()
-            .max_message_size(self.config.max_message_size);
+        // Note: tonic 0.14 does not support setting message size limits on the transport Server.
+        // Apply per-service limits when adding services instead:
+        //   MyServiceServer::new(impl)
+        //       .max_decoding_message_size(self.config.max_message_size)
+        //       .max_encoding_message_size(self.config.max_message_size)
+        let mut server = Server::builder();
 
         // Add reflection service for development/debugging
         #[cfg(feature = "reflection")]
@@ -173,10 +177,7 @@ pub fn create_default_server() -> Result<(Server, SocketAddr)> {
 
 /// Utility function to create a server with custom address
 pub fn create_server_with_address(host: &str, port: u16) -> Result<(Server, SocketAddr)> {
-    GrpcServerBuilder::new()
-        .host(host)
-        .port(port)
-        .build()
+    GrpcServerBuilder::new().host(host).port(port).build()
 }
 
 #[cfg(test)]

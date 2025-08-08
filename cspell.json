@@ -1,0 +1,76 @@
+{
+    "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+    "version": "0.2",
+    "language": "en",
+    "words": [
+        "protoc",
+        "protobuf",
+        "proto",
+        "proto3",
+        "grpc",
+        "gRPC",
+        "tonic",
+        "prost",
+        "serde",
+        "serde_json",
+        "tokio",
+        "Tokio",
+        "anyhow",
+        "thiserror",
+        "hyper",
+        "tower",
+        "tonic_build",
+        "prost_build",
+        "rustfmt",
+        "clippy",
+        "Cargo",
+        "toml",
+        "Unity",
+        "ScriptableObject",
+        "MonoBehaviour",
+        "GameObject",
+        "AssetDatabase",
+        "EditorGUILayout",
+        "UnityEditor",
+        "MCP",
+        "unitymcp"
+    ],
+    "ignorePaths": [
+        "**/.git/**",
+        "**/.github/**",
+        "**/node_modules/**",
+        "**/target/**",
+        "server/target/**",
+        "bridge/Library/**",
+        "bridge/Logs/**",
+        "bridge/Temp/**",
+        "bridge/Obj/**",
+        "bridge/Build/**",
+        "bridge/Builds/**",
+        "**/bin/**",
+        "**/obj/**",
+        "**/*.pb.*",
+        "**/*.g.cs",
+        "**/*.generated.*",
+        "Cargo.lock",
+        "**/package-lock.json",
+        "**/yarn.lock"
+    ],
+    "dictionaries": [
+        "softwareTerms",
+        "bash",
+        "rust",
+        "cpp",
+        "dotnet"
+    ],
+    "languageSettings": [
+        {
+            "languageId": "proto3",
+            "enabled": true
+        },
+        {
+            "languageId": "proto",
+            "enabled": true
+        }
+    ]
+}
