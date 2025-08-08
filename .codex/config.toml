@@ -1,6 +1,3 @@
-projects = { "/workspaces/unity-mcp" = { trust_level = "trusted" } }
-# Codex CLI config mapped from .mcp.json
-
 # IMPORTANT: top-level key is `mcp_servers` (not `mcpServers`).
 
 [mcp_servers.serena]

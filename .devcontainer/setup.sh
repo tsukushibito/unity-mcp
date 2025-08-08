@@ -19,8 +19,9 @@ fi
 # Codex CLI setup
 echo "📦 Setting up Codex CLI configuration..."
 if [ -d /workspaces/unity-mcp/.codex ]; then
-    cp -r /workspaces/unity-mcp/.codex ~/.codex
-    echo "✅ Codex configuration copied to ~/.codex"
+    mkdir -p ~/.codex
+    ln -sf /workspaces/unity-mcp/.codex/config.toml ~/.codex/config.toml
+    echo "✅ Codex configuration symlinked to ~/.codex"
 else
     echo "ℹ️  .codex directory not found, skipping Codex setup"
 fi
