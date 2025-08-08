@@ -8,7 +8,7 @@ use tonic::{Code, Status};
 use tracing::error;
 
 /// Converts a `McpError` protobuf message to a `tonic::Status` for gRPC response
-/// 
+///
 /// This function maps application-specific error codes to appropriate gRPC status codes
 /// and preserves error messages for client debugging.
 pub fn mcp_error_to_status(mcp_error: &McpError) -> Status {
@@ -49,13 +49,13 @@ pub fn mcp_error_to_status(mcp_error: &McpError) -> Status {
 /// returned as gRPC responses.
 pub fn internal_error_to_status(error: &anyhow::Error) -> Status {
     error!("Internal gRPC error: {:?}", error);
-    
+
     let mcp_error = McpError {
         code: 500, // Internal Server Error
         message: "Internal server error".to_string(),
         details: error.to_string(),
     };
-    
+
     mcp_error_to_status(&mcp_error)
 }
 
@@ -108,7 +108,10 @@ mod tests {
 
         let status = mcp_error_to_status(&mcp_error);
         assert_eq!(status.code(), Code::NotFound);
-        assert_eq!(status.message(), "Resource not found: The requested resource does not exist");
+        assert_eq!(
+            status.message(),
+            "Resource not found: The requested resource does not exist"
+        );
     }
 
     #[test]

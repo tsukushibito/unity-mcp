@@ -139,7 +139,7 @@ impl GrpcServerBuilder {
         //   MyServiceServer::new(impl)
         //       .max_decoding_message_size(self.config.max_message_size)
         //       .max_encoding_message_size(self.config.max_message_size)
-        let mut server = Server::builder();
+        let server = Server::builder();
 
         // Add reflection service for development/debugging
         #[cfg(feature = "reflection")]
