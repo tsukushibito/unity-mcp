@@ -6,7 +6,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "/bin/bash -lc 'bash /workspace/unity-mcp/.claude/hooks/format-on-edit.sh'"
+                        "command": "/bin/bash -lc 'bash /workspaces/unity-mcp/.claude/hooks/format-on-edit.sh'"
                     }
                 ]
             }

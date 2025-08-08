@@ -20,7 +20,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /home/vscode/.npm-global /home/vscode/.npm-cache \
- && chown -R vscode:vscode /home/vscode
+    && chown -R vscode:vscode /home/vscode
 
 ENV NPM_CONFIG_PREFIX=/home/vscode/.npm-global
 ENV NPM_CONFIG_CACHE=/home/vscode/.npm-cache
@@ -59,6 +59,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 # Install npm packages globally for vscode user
 RUN npm install -g eslint \
     && npm install -g npm@latest \
+    && npm install -g @openai/codex \
     && npm install -g @anthropic-ai/claude-code \
     && npm install -g @google/gemini-cli \
     && npm install -g @charmland/crush \

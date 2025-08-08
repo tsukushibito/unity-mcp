@@ -1,0 +1,23 @@
+projects = { "/workspaces/unity-mcp" = { trust_level = "trusted" } }
+# Codex CLI config mapped from .mcp.json
+
+# IMPORTANT: top-level key is `mcp_servers` (not `mcpServers`).
+
+[mcp_servers.serena]
+command = "uvx"
+args = [
+  "--from",
+  "git+https://github.com/oraios/serena",
+  "serena",
+  "start-mcp-server",
+  "--context",
+  "ide-assistant",
+  "--project",
+  "/workspaces/unity-mcp",
+]
+env = {}
+
+# NOTE: Codex currently supports only stdio-launched MCP servers.
+# The `.mcp.json` entry `github` uses HTTP transport and cannot be
+# represented directly here. If needed, consider an adapter (e.g., mcp-proxy)
+# to wrap an HTTP/SSE MCP endpoint as a local stdio command.
