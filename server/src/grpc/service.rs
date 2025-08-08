@@ -24,7 +24,7 @@ use crate::grpc::{
     RefreshRequest, RefreshResponse,
     StreamRequest, StreamResponse,
 };
-use crate::grpc::error::{validation_error, no_error, internal_server_error};
+use crate::grpc::error::{validation_error, no_error, internal_server_error, not_found_error};
 
 /// Unity MCP Service implementation
 /// 
@@ -114,52 +114,113 @@ impl UnityMcpService for UnityMcpServiceImpl {
         Ok(Response::new(response))
     }
 
-    /// Read content of an MCP resource (stub implementation)
+    /// Read content of an MCP resource
+    /// 
+    /// Currently returns dummy binary data for demonstration purposes.
     #[instrument(skip(self))]
     async fn read_resource(
         &self,
-        _request: Request<ReadResourceRequest>,
+        request: Request<ReadResourceRequest>,
     ) -> Result<Response<ReadResourceResponse>, Status> {
-        info!("ReadResource called (stub)");
+        let req = request.into_inner();
         
+        info!(uri = %req.uri, "ReadResource called");
+        
+        // Basic validation
+        if req.uri.trim().is_empty() {
+            let response = ReadResourceResponse {
+                data: Vec::new(),
+                mime_type: String::new(),
+                error: Some(validation_error("Invalid URI", "URI parameter cannot be empty")),
+            };
+            return Ok(Response::new(response));
+        }
+        
+        // Check for existence (dummy logic - only accept specific URIs)
+        if !req.uri.starts_with("unity://") {
+            let response = ReadResourceResponse {
+                data: Vec::new(),
+                mime_type: String::new(),
+                error: Some(not_found_error("resource", &req.uri)),
+            };
+            return Ok(Response::new(response));
+        }
+        
+        // Return dummy binary data for valid URIs
+        let dummy_data = "Hello from Unity MCP".as_bytes().to_vec();
         let response = ReadResourceResponse {
-            data: Vec::new(),
-            mime_type: String::new(),
-            error: Some(internal_server_error("Not implemented in this task")),
+            data: dummy_data,
+            mime_type: "text/plain".to_string(),
+            error: no_error(),
         };
         
+        debug!("Returning {} bytes of data", response.data.len());
         Ok(Response::new(response))
     }
 
-    /// List all available MCP prompts (stub implementation)
+    /// List all available MCP prompts
+    /// 
+    /// Currently returns an empty list as this is a stub implementation.
+    /// Future tasks will implement actual prompt discovery and listing.
     #[instrument(skip(self))]
     async fn list_prompts(
         &self,
         _request: Request<ListPromptsRequest>,
     ) -> Result<Response<ListPromptsResponse>, Status> {
-        info!("ListPrompts called (stub)");
+        info!("ListPrompts called");
         
         let response = ListPromptsResponse {
-            prompt_ids: vec![],
-            error: Some(internal_server_error("Not implemented in this task")),
+            prompt_ids: vec![], // Empty list for stub implementation
+            error: no_error(),
         };
         
+        debug!("Returning {} prompt IDs", response.prompt_ids.len());
         Ok(Response::new(response))
     }
 
-    /// Get content of an MCP prompt (stub implementation)
+    /// Get content of an MCP prompt
+    /// 
+    /// Currently returns dummy prompt text for demonstration purposes.
     #[instrument(skip(self))]
     async fn get_prompt(
         &self,
-        _request: Request<GetPromptRequest>,
+        request: Request<GetPromptRequest>,
     ) -> Result<Response<GetPromptResponse>, Status> {
-        info!("GetPrompt called (stub)");
+        let req = request.into_inner();
+        
+        info!(prompt_id = %req.prompt_id, "GetPrompt called");
+        
+        // Basic validation
+        if req.prompt_id.trim().is_empty() {
+            let response = GetPromptResponse {
+                prompt_text: String::new(),
+                error: Some(validation_error("Invalid prompt_id", "prompt_id parameter cannot be empty")),
+            };
+            return Ok(Response::new(response));
+        }
+        
+        // Check for existence (dummy logic - only accept specific prompt IDs)
+        if !req.prompt_id.starts_with("unity_") {
+            let response = GetPromptResponse {
+                prompt_text: String::new(),
+                error: Some(not_found_error("prompt", &req.prompt_id)),
+            };
+            return Ok(Response::new(response));
+        }
+        
+        // Return dummy prompt text for valid prompt IDs
+        let dummy_prompt = format!(
+            "This is a sample prompt from Unity MCP for prompt ID: {}. \
+             Use this prompt to interact with Unity assets and operations.",
+            req.prompt_id
+        );
         
         let response = GetPromptResponse {
-            prompt_text: String::new(),
-            error: Some(internal_server_error("Not implemented in this task")),
+            prompt_text: dummy_prompt,
+            error: no_error(),
         };
         
+        debug!(prompt_id = %req.prompt_id, "Returning prompt text");
         Ok(Response::new(response))
     }
 
