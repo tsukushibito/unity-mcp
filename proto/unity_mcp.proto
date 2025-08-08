@@ -2,147 +2,210 @@ syntax = "proto3";
 
 package unity.mcp.v1;
 
-import "google/rpc/status.proto";
-
 option go_package = "unity/mcp/v1;unitymcpv1";
 option csharp_namespace = "Unity.Mcp.V1";
 
+// Empty message for RPCs that don't require request/response data
 message Empty {}
 
+// Custom error type for Unity MCP operations
+message McpError {
+  int32 code = 1;      // Application-specific error code
+  string message = 2;  // Human-readable error message  
+  string details = 3;  // Additional error details
+}
+
+// MCP Tool definition with input schema
 message McpTool {
-  string id = 1;
-  string name = 2;
-  string description = 3;
+  string id = 1;                    // Unique tool identifier
+  string name = 2;                  // Human-readable tool name
+  string description = 3;           // Tool description
+  string input_schema = 4;          // JSON Schema as string defining expected tool input
 }
 
+// MCP Resource definition
 message McpResource {
-  string uri = 1;
-  string mime_type = 2;
-  int64 size_bytes = 3;
+  string uri = 1;                   // Resource URI
+  string mime_type = 2;             // MIME type of the resource
+  int64 size_bytes = 3;             // Size of the resource in bytes
 }
 
+// Unity Asset representation
 message UnityAsset {
-  string guid = 1; // Unity asset GUID
-  string asset_path = 2; // e.g., Assets/Textures/foo.png
-  string type = 3; // e.g., Texture2D, Prefab
+  string guid = 1;                  // Unity asset GUID
+  string asset_path = 2;            // Asset path, e.g., Assets/Textures/foo.png
+  string type = 3;                  // Asset type, e.g., Texture2D, Prefab
 }
 
+// Unity Project information
 message ProjectInfo {
-  string project_name = 1;
-  string unity_version = 2;
+  string project_name = 1;          // Name of the Unity project
+  string unity_version = 2;         // Unity version string
 }
 
-// Core MCP
+// ========== Core MCP Operations ==========
+
+// List all available MCP tools
 message ListToolsRequest {}
 message ListToolsResponse {
-  repeated McpTool tools = 1;
-  google.rpc.Status status = 15;
+  repeated McpTool tools = 1;       // List of available tools
+  McpError error = 15;    // Operation status
 }
 
+// Execute an MCP tool with given input
 message CallToolRequest {
-  string tool_id = 1;
-  string input_json = 2;
+  string tool_id = 1;               // ID of the tool to call
+  string input_json = 2;            // Tool input as JSON string
 }
 message CallToolResponse {
-  string output_json = 1;
-  google.rpc.Status status = 15;
+  string output_json = 1;           // Tool output as JSON string
+  McpError error = 15;    // Operation status
 }
 
+// List all available MCP resources
 message ListResourcesRequest {}
 message ListResourcesResponse {
-  repeated McpResource resources = 1;
-  google.rpc.Status status = 15;
+  repeated McpResource resources = 1; // List of available resources
+  McpError error = 15;    // Operation status
 }
 
+// Read content of an MCP resource
 message ReadResourceRequest {
-  string uri = 1;
+  string uri = 1;                   // URI of the resource to read
 }
 message ReadResourceResponse {
-  bytes data = 1;
-  string mime_type = 2;
-  google.rpc.Status status = 15;
+  bytes data = 1;                   // Resource content as bytes
+  string mime_type = 2;             // MIME type of the resource
+  McpError error = 15;    // Operation status
 }
 
+// List all available MCP prompts
 message ListPromptsRequest {}
 message ListPromptsResponse {
-  repeated string prompt_ids = 1;
-  google.rpc.Status status = 15;
+  repeated string prompt_ids = 1;   // List of available prompt IDs
+  McpError error = 15;    // Operation status
 }
 
+// Get content of an MCP prompt
 message GetPromptRequest {
-  string prompt_id = 1;
+  string prompt_id = 1;             // ID of the prompt to retrieve
 }
 message GetPromptResponse {
-  string prompt_text = 1;
-  google.rpc.Status status = 15;
+  string prompt_text = 1;           // Prompt content as text
+  McpError error = 15;    // Operation status
 }
 
-// Unity-specific operations (AssetDatabase)
+// ========== Unity Project Operations ==========
+
+// Get Unity project information
+message GetProjectInfoRequest {}
+message GetProjectInfoResponse {
+  ProjectInfo project = 1;          // Project information
+  McpError error = 15;    // Operation status
+}
+
+// ========== Unity AssetDatabase Operations ==========
+
+// Import an asset into the Unity project
 message ImportAssetRequest {
-  string asset_path = 1;
+  string asset_path = 1;            // Path to the asset to import
 }
 message ImportAssetResponse {
-  UnityAsset asset = 1;
-  google.rpc.Status status = 15;
+  UnityAsset asset = 1;             // Information about the imported asset
+  McpError error = 15;    // Operation status
 }
 
+// Move an asset to a new location
 message MoveAssetRequest {
-  string src_path = 1;
-  string dst_path = 2;
+  string src_path = 1;              // Source asset path
+  string dst_path = 2;              // Destination asset path
 }
 message MoveAssetResponse {
-  UnityAsset asset = 1;
-  google.rpc.Status status = 15;
+  UnityAsset asset = 1;             // Information about the moved asset
+  McpError error = 15;    // Operation status
 }
 
+// Delete an asset from the Unity project
 message DeleteAssetRequest {
-  string asset_path = 1;
+  string asset_path = 1;            // Path to the asset to delete
 }
 message DeleteAssetResponse {
-  bool success = 1;
-  google.rpc.Status status = 15;
+  bool success = 1;                 // Whether the deletion was successful
+  McpError error = 15;    // Operation status
 }
 
+// Refresh the AssetDatabase
 message RefreshRequest {}
 message RefreshResponse {
-  bool success = 1;
-  google.rpc.Status status = 15;
+  bool success = 1;                 // Whether the refresh was successful
+  McpError error = 15;    // Operation status
 }
 
-// Bidirectional streaming envelope
+// ========== Bidirectional Streaming ==========
+
+// Streaming request envelope for real-time operations
 message StreamRequest {
   oneof message {
-    ImportAssetRequest import_asset = 1;
-    MoveAssetRequest move_asset = 2;
-    DeleteAssetRequest delete_asset = 3;
-    RefreshRequest refresh = 4;
+    ImportAssetRequest import_asset = 1;    // Stream asset import request
+    MoveAssetRequest move_asset = 2;        // Stream asset move request
+    DeleteAssetRequest delete_asset = 3;    // Stream asset delete request
+    RefreshRequest refresh = 4;             // Stream refresh request
   }
 }
 
+// Streaming response envelope for real-time operations
 message StreamResponse {
   oneof message {
-    ImportAssetResponse import_asset = 1;
-    MoveAssetResponse move_asset = 2;
-    DeleteAssetResponse delete_asset = 3;
-    RefreshResponse refresh = 4;
+    ImportAssetResponse import_asset = 1;   // Stream asset import response
+    MoveAssetResponse move_asset = 2;       // Stream asset move response
+    DeleteAssetResponse delete_asset = 3;   // Stream asset delete response
+    RefreshResponse refresh = 4;            // Stream refresh response
   }
 }
 
+// ========== gRPC Service Definition ==========
+
+// Unity MCP Service providing both standard MCP operations and Unity-specific functionality
 service UnityMcpService {
-  // MCP core
+  // ========== MCP Core Operations ==========
+  
+  // List all available MCP tools
   rpc ListTools(ListToolsRequest) returns (ListToolsResponse);
+  
+  // Execute an MCP tool with given input
   rpc CallTool(CallToolRequest) returns (CallToolResponse);
+  
+  // List all available MCP resources  
   rpc ListResources(ListResourcesRequest) returns (ListResourcesResponse);
+  
+  // Read content of an MCP resource
   rpc ReadResource(ReadResourceRequest) returns (ReadResourceResponse);
+  
+  // List all available MCP prompts
   rpc ListPrompts(ListPromptsRequest) returns (ListPromptsResponse);
+  
+  // Get content of an MCP prompt
   rpc GetPrompt(GetPromptRequest) returns (GetPromptResponse);
 
-  // Unity AssetDatabase
+  // ========== Unity Operations ==========
+  
+  // Get Unity project information
+  rpc GetProjectInfo(GetProjectInfoRequest) returns (GetProjectInfoResponse);
+
+  // Import an asset into the Unity project
   rpc ImportAsset(ImportAssetRequest) returns (ImportAssetResponse);
+  
+  // Move an asset to a new location
   rpc MoveAsset(MoveAssetRequest) returns (MoveAssetResponse);
+  
+  // Delete an asset from the Unity project
   rpc DeleteAsset(DeleteAssetRequest) returns (DeleteAssetResponse);
+  
+  // Refresh the AssetDatabase
   rpc Refresh(RefreshRequest) returns (RefreshResponse);
 
-  // Bidirectional stream for realtime operations
+  // ========== Streaming Operations ==========
+  
+  // Bidirectional stream for real-time Unity operations
   rpc Stream(stream StreamRequest) returns (stream StreamResponse);
 }
