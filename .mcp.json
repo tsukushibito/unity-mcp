@@ -21,6 +21,13 @@
       "headers": {
         "Authorization": "Bearer ${GITHUB_PAT}"
       }
+    },
+    "codex": {
+      "type": "stdio",
+      "command": "codex",
+      "args": [
+        "mcp"
+      ]
     }
   }
 }
