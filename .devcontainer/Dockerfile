@@ -13,8 +13,18 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     && rm -rf /var/lib/apt/lists/*
 
-# Switch to vscode user for user-specific installations
-USER vscode
+# Install Node.js (using NodeSource repository) and eslint
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /home/vscode/.npm-global /home/vscode/.npm-cache \
+ && chown -R vscode:vscode /home/vscode
+
+ENV NPM_CONFIG_PREFIX=/home/vscode/.npm-global
+ENV NPM_CONFIG_CACHE=/home/vscode/.npm-cache
+ENV PATH=/home/vscode/.npm-global/bin:$PATH
 
 # Install .NET SDK
 RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
@@ -23,13 +33,6 @@ RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/package
     && apt-get update \
     && apt-get install -y dotnet-sdk-8.0 \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js (using NodeSource repository) and eslint
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install -g eslint \
-    && npm install -g npm@latest
 
 # Install protoc compiler
 RUN apt-get update && apt-get install -y protobuf-compiler \
@@ -43,6 +46,9 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
     && apt-get install gh -y \
     && rm -rf /var/lib/apt/lists/*
 
+# Switch to vscode user for user-specific installations
+USER vscode
+
 # Install Rust for vscode user
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
     && echo 'source $HOME/.cargo/env' >> ~/.bashrc
@@ -51,7 +57,9 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install npm packages globally for vscode user
-RUN npm install -g @anthropic-ai/claude-code \
+RUN npm install -g eslint \
+    && npm install -g npm@latest \
+    && npm install -g @anthropic-ai/claude-code \
     && npm install -g @google/gemini-cli \
     && npm install -g @charmland/crush \
     && npm install -g @byterover/cipher
