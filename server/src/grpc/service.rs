@@ -23,8 +23,10 @@ use crate::grpc::{
     DeleteAssetRequest, DeleteAssetResponse,
     RefreshRequest, RefreshResponse,
     StreamRequest, StreamResponse,
+    ProjectInfo, UnityAsset,
 };
 use crate::grpc::error::{validation_error, no_error, internal_server_error, not_found_error};
+use uuid::Uuid;
 
 /// Unity MCP Service implementation
 /// 
@@ -225,52 +227,142 @@ impl UnityMcpService for UnityMcpServiceImpl {
     }
 
     /// Get Unity project information (stub implementation)
-    #[instrument(skip(self))]
-    async fn get_project_info(
-        &self,
-        _request: Request<GetProjectInfoRequest>,
-    ) -> Result<Response<GetProjectInfoResponse>, Status> {
-        info!("GetProjectInfo called (stub)");
-        
-        let response = GetProjectInfoResponse {
-            project: None,
-            error: Some(internal_server_error("Not implemented in this task")),
-        };
-        
-        Ok(Response::new(response))
-    }
+#[instrument(skip(self))]
+async fn get_project_info(
+    &self,
+    _request: Request<GetProjectInfoRequest>,
+) -> Result<Response<GetProjectInfoResponse>, Status> {
+    info!("GetProjectInfo called");
+    
+    // Create dummy project information
+    let project_info = ProjectInfo {
+        project_name: "Unity MCP Test Project".to_string(),
+        unity_version: "2023.3.0f1".to_string(),
+    };
+    
+    let response = GetProjectInfoResponse {
+        project: Some(project_info),
+        error: no_error(),
+    };
+    
+    debug!(project_name = "Unity MCP Test Project", unity_version = "2023.3.0f1", "Returning project information");
+    Ok(Response::new(response))
+}
 
     /// Import an asset into the Unity project (stub implementation)
-    #[instrument(skip(self))]
-    async fn import_asset(
-        &self,
-        _request: Request<ImportAssetRequest>,
-    ) -> Result<Response<ImportAssetResponse>, Status> {
-        info!("ImportAsset called (stub)");
-        
+#[instrument(skip(self))]
+async fn import_asset(
+    &self,
+    request: Request<ImportAssetRequest>,
+) -> Result<Response<ImportAssetResponse>, Status> {
+    let req = request.into_inner();
+    
+    info!(asset_path = %req.asset_path, "ImportAsset called");
+    
+    // Basic validation
+    if req.asset_path.trim().is_empty() {
         let response = ImportAssetResponse {
             asset: None,
-            error: Some(internal_server_error("Not implemented in this task")),
+            error: Some(validation_error("Invalid asset_path", "asset_path cannot be empty")),
         };
-        
-        Ok(Response::new(response))
+        return Ok(Response::new(response));
     }
+    
+    // Unity-specific validation: path should start with "Assets/"
+    if !req.asset_path.starts_with("Assets/") {
+        let response = ImportAssetResponse {
+            asset: None,
+            error: Some(validation_error("Invalid asset_path", "asset_path must start with 'Assets/'")),
+        };
+        return Ok(Response::new(response));
+    }
+    
+    // Generate dummy Unity Asset with UUID-based GUID
+    let guid = Uuid::new_v4().simple().to_string(); // 32-character hex string without hyphens
+    let asset = UnityAsset {
+        guid: guid.clone(),
+        asset_path: req.asset_path.clone(),
+        r#type: "Unknown".to_string(), // Using r#type to handle 'type' keyword
+    };
+    
+    let response = ImportAssetResponse {
+        asset: Some(asset),
+        error: no_error(),
+    };
+    
+    debug!(asset_path = %req.asset_path, guid = %guid, "Asset import completed (stub)");
+    Ok(Response::new(response))
+}
 
     /// Move an asset to a new location (stub implementation)
-    #[instrument(skip(self))]
-    async fn move_asset(
-        &self,
-        _request: Request<MoveAssetRequest>,
-    ) -> Result<Response<MoveAssetResponse>, Status> {
-        info!("MoveAsset called (stub)");
-        
+#[instrument(skip(self))]
+async fn move_asset(
+    &self,
+    request: Request<MoveAssetRequest>,
+) -> Result<Response<MoveAssetResponse>, Status> {
+    let req = request.into_inner();
+    
+    info!(src_path = %req.src_path, dst_path = %req.dst_path, "MoveAsset called");
+    
+    // Basic validation: both paths must not be empty
+    if req.src_path.trim().is_empty() {
         let response = MoveAssetResponse {
             asset: None,
-            error: Some(internal_server_error("Not implemented in this task")),
+            error: Some(validation_error("Invalid src_path", "src_path cannot be empty")),
         };
-        
-        Ok(Response::new(response))
+        return Ok(Response::new(response));
     }
+    
+    if req.dst_path.trim().is_empty() {
+        let response = MoveAssetResponse {
+            asset: None,
+            error: Some(validation_error("Invalid dst_path", "dst_path cannot be empty")),
+        };
+        return Ok(Response::new(response));
+    }
+    
+    // Unity-specific validation: both paths should start with "Assets/"
+    if !req.src_path.starts_with("Assets/") {
+        let response = MoveAssetResponse {
+            asset: None,
+            error: Some(validation_error("Invalid src_path", "src_path must start with 'Assets/'")),
+        };
+        return Ok(Response::new(response));
+    }
+    
+    if !req.dst_path.starts_with("Assets/") {
+        let response = MoveAssetResponse {
+            asset: None,
+            error: Some(validation_error("Invalid dst_path", "dst_path must start with 'Assets/'")),
+        };
+        return Ok(Response::new(response));
+    }
+    
+    // Check that source and destination paths are different
+    if req.src_path == req.dst_path {
+        let response = MoveAssetResponse {
+            asset: None,
+            error: Some(validation_error("Invalid move operation", "src_path and dst_path must be different")),
+        };
+        return Ok(Response::new(response));
+    }
+    
+    // Generate dummy Unity Asset representing the moved asset
+    let guid = Uuid::new_v4().simple().to_string(); // 32-character hex string without hyphens
+    let asset = UnityAsset {
+        guid: guid.clone(),
+        asset_path: req.dst_path.clone(), // Use destination path for moved asset
+        r#type: "Unknown".to_string(),
+    };
+    
+    let response = MoveAssetResponse {
+        asset: Some(asset),
+        error: no_error(),
+    };
+    
+    debug!(src_path = %req.src_path, dst_path = %req.dst_path, guid = %guid, "Asset move completed (stub)");
+    Ok(Response::new(response))
+}
 
     /// Delete an asset from the Unity project (stub implementation)
     #[instrument(skip(self))]
