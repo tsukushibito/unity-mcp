@@ -11,7 +11,8 @@
       "WebFetch(domain:docs.rs)",
       "Bash(cargo:*)",
       "mcp__serena__think_about_collected_information",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(mkdir:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

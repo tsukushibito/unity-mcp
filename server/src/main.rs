@@ -1,3 +1,4 @@
+mod grpc;
 mod unity;
 
 use anyhow::Result;
