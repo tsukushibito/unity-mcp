@@ -53,7 +53,6 @@ impl GrpcServerConfig {
         self
     }
 
-
     /// Set the maximum message size
     pub fn with_max_message_size(mut self, size: usize) -> Self {
         self.max_message_size = size;
@@ -99,7 +98,6 @@ impl GrpcServerBuilder {
         self
     }
 
-
     /// Set maximum message size
     pub fn max_message_size(mut self, size: usize) -> Self {
         self.config.max_message_size = size;
@@ -126,7 +124,6 @@ impl GrpcServerBuilder {
         //       .max_decoding_message_size(self.config.max_message_size)
         //       .max_encoding_message_size(self.config.max_message_size)
         let server = Server::builder();
-
 
         Ok((server, addr))
     }
