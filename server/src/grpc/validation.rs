@@ -321,9 +321,9 @@ impl AssetPathValidator {
             return Err("Path cannot be empty".to_string());
         }
 
-        // Unity Asset path format check
-        if !path.starts_with("Assets/") {
-            return Err("Path must start with 'Assets/'".to_string());
+        // Unity Asset path format check - accept both forward and backslash formats
+        if !path.starts_with("Assets/") && !path.starts_with("Assets\\") {
+            return Err("Path must start with 'Assets/' or 'Assets\\'".to_string());
         }
 
         // Path traversal check
