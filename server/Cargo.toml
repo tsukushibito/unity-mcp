@@ -43,3 +43,4 @@ thiserror = "1.0"
 tonic-prost-build = "0.14"
 
 [dev-dependencies]
+rand = "0.8"
