@@ -8,12 +8,15 @@ use std::path::{Component, Path};
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
-use tokio_util::sync::CancellationToken;
 use tokio_stream::{Stream, StreamExt};
+use tokio_util::sync::CancellationToken;
 use tonic::{Request, Response, Status, Streaming};
 use tracing::{debug, info, instrument, warn};
 
 use crate::grpc::error::{no_error, not_found_error, validation_error};
+use crate::grpc::validation::{
+    ClientInfo, StreamValidationEngine, StreamValidationError, ValidationContext,
+};
 use crate::grpc::{
     stream_request, stream_response, unity_mcp_service_server::UnityMcpService, CallToolRequest,
     CallToolResponse, DeleteAssetRequest, DeleteAssetResponse, GetProjectInfoRequest,
@@ -89,7 +92,8 @@ impl ErrorContext {
     }
 
     pub fn to_details_string(&self) -> String {
-        serde_json::to_string(self).unwrap_or_else(|_| "Error context serialization failed".to_string())
+        serde_json::to_string(self)
+            .unwrap_or_else(|_| "Error context serialization failed".to_string())
     }
 }
 
@@ -98,7 +102,9 @@ impl ErrorContext {
 /// Provides stub implementations for all MCP operations.
 /// Task 3.3 focuses on the first 3 methods (ListTools, CallTool, ListResources),
 /// while other methods are provided as minimal stubs.
-pub struct UnityMcpServiceImpl;
+pub struct UnityMcpServiceImpl {
+    validation_engine: StreamValidationEngine,
+}
 
 impl Default for UnityMcpServiceImpl {
     fn default() -> Self {
@@ -112,7 +118,7 @@ impl UnityMcpServiceImpl {
     const STUB_UNITY_VERSION: &'static str = "2023.3.0f1";
     const DEFAULT_ASSET_TYPE: &'static str = "Unknown";
     const MAX_PATH_LENGTH: usize = 260;
-    
+
     // Stream channel configuration for security
     const STREAM_CHANNEL_CAPACITY: usize = 1000;
     const STREAM_BACKPRESSURE_THRESHOLD: f64 = 0.8;
@@ -135,7 +141,7 @@ impl StreamHandler {
         tx: tokio::sync::mpsc::Sender<Result<StreamResponse, Status>>,
     ) -> Self {
         let cancellation_token = CancellationToken::new();
-        
+
         let message_handler = tokio::spawn({
             let cancellation_token = cancellation_token.clone();
             async move {
@@ -197,7 +203,7 @@ impl WithMcpError for MoveAssetResponse {
     }
 }
 // ============================================================================
-// Stream Operation Handler Trait (Generic + Trait approach)  
+// Stream Operation Handler Trait (Generic + Trait approach)
 // ============================================================================
 
 /// Generic trait for handling different types of stream requests
@@ -226,7 +232,9 @@ pub trait StreamOperationHandler {
 impl UnityMcpServiceImpl {
     /// Create a new service instance
     pub fn new() -> Self {
-        Self
+        Self {
+            validation_engine: StreamValidationEngine::new(),
+        }
     }
 
     /// Check if a path is under the Assets directory using proper path component analysis
@@ -318,16 +326,14 @@ impl UnityMcpServiceImpl {
     /// Create a backpressure error response when stream channel is full
     fn create_backpressure_error() -> StreamResponse {
         StreamResponse {
-            message: Some(stream_response::Message::ImportAsset(
-                ImportAssetResponse {
-                    asset: None,
-                    error: Some(McpError {
-                        code: 8, // RESOURCE_EXHAUSTED
-                        message: "Stream processing capacity exceeded".to_string(),
-                        details: "Please reduce message rate".to_string(),
-                    }),
-                },
-            )),
+            message: Some(stream_response::Message::ImportAsset(ImportAssetResponse {
+                asset: None,
+                error: Some(McpError {
+                    code: 8, // RESOURCE_EXHAUSTED
+                    message: "Stream processing capacity exceeded".to_string(),
+                    details: "Please reduce message rate".to_string(),
+                }),
+            })),
         }
     }
 
@@ -337,11 +343,17 @@ impl UnityMcpServiceImpl {
         mut stream: Streaming<StreamRequest>,
         tx: tokio::sync::mpsc::Sender<Result<StreamResponse, Status>>,
     ) {
+        let mut message_id_counter = 1u64;
+
         while let Some(result) = stream.next().await {
             match result {
                 Ok(stream_request) => {
-                    let response = Self::process_stream_request(&service, stream_request).await;
-                    
+                    let message_id = message_id_counter;
+                    message_id_counter += 1;
+
+                    let response =
+                        Self::process_stream_request(&service, stream_request, message_id).await;
+
                     if tx.send(Ok(response)).await.is_err() {
                         warn!("Stream receiver dropped - terminating handler");
                         break;
@@ -355,24 +367,65 @@ impl UnityMcpServiceImpl {
                 }
             }
         }
-        
+
         info!("Stream message handler terminated");
     }
 
-    /// Process individual stream requests using shared service instance
+    /// Process individual stream requests using shared service instance with validation
     async fn process_stream_request(
         service: &Arc<Self>,
         stream_request: StreamRequest,
+        message_id: u64,
     ) -> StreamResponse {
-        debug!("Processing stream request");
-        
-        match stream_request.message {
-            Some(request_message) => {
-                Self::handle_request_message(service, request_message).await
+        debug!("Processing stream request with validation");
+
+        // 検証コンテキストの作成
+        let context = ValidationContext {
+            client_id: "unity_client".to_string(), // TODO: 実際のクライアント識別子を取得
+            connection_id: "stream_connection".to_string(), // TODO: 実際の接続識別子を取得
+            message_id,
+            timestamp: std::time::SystemTime::now(),
+            client_info: Some(ClientInfo {
+                user_agent: None,
+                ip_address: None,
+                unity_version: None,
+            }),
+        };
+
+        // 検証実行
+        match service
+            .validation_engine
+            .validate_stream_request(&stream_request, &context)
+            .await
+        {
+            Ok(_) => {
+                // 検証成功 - サニタイゼーション実行
+                match service
+                    .validation_engine
+                    .sanitize_stream_request(stream_request, &context)
+                    .await
+                {
+                    Ok(sanitized_request) => {
+                        // 正常処理続行
+                        match sanitized_request.message {
+                            Some(request_message) => {
+                                Self::handle_request_message(service, request_message).await
+                            }
+                            None => {
+                                warn!("Sanitized request has no message content");
+                                Self::create_empty_message_error()
+                            }
+                        }
+                    }
+                    Err(sanitize_error) => {
+                        // サニタイゼーションエラー
+                        Self::create_validation_error_response(sanitize_error, message_id)
+                    }
+                }
             }
-            None => {
-                warn!("Received stream request with no message content");
-                Self::create_empty_message_error()
+            Err(validation_error) => {
+                // 検証失敗
+                Self::create_validation_error_response(validation_error, message_id)
             }
         }
     }
@@ -401,14 +454,14 @@ impl UnityMcpServiceImpl {
     fn create_stream_error_response(status: Status) -> StreamResponse {
         let error_type = StreamErrorType::map_grpc_status_to_error_type(&status);
         let context = ErrorContext::new(None);
-        
+
         Self::log_stream_error(
             &error_type,
             &format!("Stream processing error: {}", status.message()),
             &context,
             Some(&status),
         );
-        
+
         Self::create_error_response(
             error_type,
             &format!("Stream processing error: {}", status.message()),
@@ -426,9 +479,9 @@ impl UnityMcpServiceImpl {
     ) -> StreamResponse {
         let mut context = ErrorContext::new(request_type.map(String::from));
         context.add_info("error_type".to_string(), format!("{:?}", error_type));
-        
+
         let enhanced_details = format!("{} | Context: {}", details, context.to_details_string());
-        
+
         let mcp_error = McpError {
             code: error_type.to_grpc_code(),
             message: message.to_string(),
@@ -437,50 +490,40 @@ impl UnityMcpServiceImpl {
 
         match request_type {
             Some("import_asset") => StreamResponse {
-                message: Some(stream_response::Message::ImportAsset(
-                    ImportAssetResponse {
-                        asset: None,
-                        error: Some(mcp_error),
-                    },
-                )),
+                message: Some(stream_response::Message::ImportAsset(ImportAssetResponse {
+                    asset: None,
+                    error: Some(mcp_error),
+                })),
             },
             Some("move_asset") => StreamResponse {
-                message: Some(stream_response::Message::MoveAsset(
-                    MoveAssetResponse {
-                        asset: None,
-                        error: Some(mcp_error),
-                    },
-                )),
+                message: Some(stream_response::Message::MoveAsset(MoveAssetResponse {
+                    asset: None,
+                    error: Some(mcp_error),
+                })),
             },
             Some("delete_asset") => StreamResponse {
-                message: Some(stream_response::Message::DeleteAsset(
-                    DeleteAssetResponse {
-                        success: false,
-                        error: Some(mcp_error),
-                    },
-                )),
+                message: Some(stream_response::Message::DeleteAsset(DeleteAssetResponse {
+                    success: false,
+                    error: Some(mcp_error),
+                })),
             },
             Some("refresh") => StreamResponse {
-                message: Some(stream_response::Message::Refresh(
-                    RefreshResponse {
-                        success: false,
-                        error: Some(mcp_error),
-                    },
-                )),
+                message: Some(stream_response::Message::Refresh(RefreshResponse {
+                    success: false,
+                    error: Some(mcp_error),
+                })),
             },
             _ => {
                 // Generic error response - use ImportAsset but mark as generic
                 StreamResponse {
-                    message: Some(stream_response::Message::ImportAsset(
-                        ImportAssetResponse {
-                            asset: None,
-                            error: Some(McpError {
-                                code: error_type.to_grpc_code(),
-                                message: format!("Generic stream error: {}", message),
-                                details: format!("GENERIC_ERROR | {}", enhanced_details),
-                            }),
-                        },
-                    )),
+                    message: Some(stream_response::Message::ImportAsset(ImportAssetResponse {
+                        asset: None,
+                        error: Some(McpError {
+                            code: error_type.to_grpc_code(),
+                            message: format!("Generic stream error: {}", message),
+                            details: format!("GENERIC_ERROR | {}", enhanced_details),
+                        }),
+                    })),
                 }
             }
         }
@@ -529,7 +572,7 @@ impl UnityMcpServiceImpl {
             &context,
             None,
         );
-        
+
         Self::create_error_response(
             StreamErrorType::InvalidRequest,
             "Empty stream request received",
@@ -546,7 +589,7 @@ impl UnityMcpServiceImpl {
     ) -> StreamResponse {
         let operation_name = H::get_operation_name();
         let debug_info = H::extract_debug_info(&request);
-        
+
         // Log debug information
         let mut debug_msg = format!("Processing {} stream request", operation_name);
         for (key, value) in &debug_info {
@@ -568,32 +611,56 @@ impl UnityMcpServiceImpl {
             Err(status) => {
                 let error_type = StreamErrorType::map_grpc_status_to_error_type(&status);
                 let mut context = ErrorContext::new(Some(operation_name.to_string()));
-                
+
                 // Add debug info to error context
                 for (key, value) in debug_info {
                     context.add_info(key.to_string(), value);
                 }
-                
+
                 Self::log_stream_error(
                     &error_type,
                     &format!("{} operation failed: {}", operation_name, status.message()),
                     &context,
                     Some(&status),
                 );
-                
+
                 Self::create_error_response(
                     error_type,
                     &format!("{} operation failed: {}", operation_name, status.message()),
-                    &format!("gRPC status: {:?} | Details: {}", status.code(), status.message()),
+                    &format!(
+                        "gRPC status: {:?} | Details: {}",
+                        status.code(),
+                        status.message()
+                    ),
                     Some(operation_name),
                 )
             }
         }
     }
 
+    /// Create validation error response from StreamValidationError
+    fn create_validation_error_response(
+        error: StreamValidationError,
+        message_id: u64,
+    ) -> StreamResponse {
+        warn!(
+            message_id = message_id,
+            error = %error,
+            "Stream request validation failed"
+        );
+
+        Self::create_error_response(
+            StreamErrorType::ValidationError,
+            &format!("Request validation failed: {}", error),
+            &format!(
+                "Message: {} | Validation error details: {:?}",
+                message_id, error
+            ),
+            None,
+        )
+    }
+
     // Legacy individual handler methods removed - replaced by generic trait approach above
-
-
 }
 
 // ============================================================================
@@ -1078,13 +1145,13 @@ impl UnityMcpService for UnityMcpServiceImpl {
 
         let stream = request.into_inner();
         let (tx, rx) = tokio::sync::mpsc::channel(Self::STREAM_CHANNEL_CAPACITY);
-        
+
         // Create shared service instance using Arc
         let service = Arc::new(UnityMcpServiceImpl::new());
-        
+
         // Create and start stream handler with proper task lifecycle management
         let _stream_handler = StreamHandler::new(service, stream, tx);
-        
+
         // Convert the receiver into a stream
         let response_stream = tokio_stream::wrappers::ReceiverStream::new(rx);
         let boxed_stream: Self::StreamStream = Box::pin(response_stream);
@@ -1373,28 +1440,24 @@ mod tests {
         let (tx, _rx) = tokio::sync::mpsc::channel::<Result<StreamResponse, Status>>(
             UnityMcpServiceImpl::STREAM_CHANNEL_CAPACITY,
         );
-        
+
         // Fill the channel to capacity
         for _ in 0..UnityMcpServiceImpl::STREAM_CHANNEL_CAPACITY {
             let response = StreamResponse {
-                message: Some(stream_response::Message::ImportAsset(
-                    ImportAssetResponse {
-                        asset: None,
-                        error: None,
-                    },
-                )),
+                message: Some(stream_response::Message::ImportAsset(ImportAssetResponse {
+                    asset: None,
+                    error: None,
+                })),
             };
             assert!(tx.try_send(Ok(response)).is_ok());
         }
-        
+
         // The next send should fail due to capacity limit
         let overflow_response = StreamResponse {
-            message: Some(stream_response::Message::ImportAsset(
-                ImportAssetResponse {
-                    asset: None,
-                    error: None,
-                },
-            )),
+            message: Some(stream_response::Message::ImportAsset(ImportAssetResponse {
+                asset: None,
+                error: None,
+            })),
         };
         assert!(matches!(
             tx.try_send(Ok(overflow_response)),
@@ -1405,14 +1468,15 @@ mod tests {
     #[tokio::test]
     async fn test_create_backpressure_error() {
         let error_response = UnityMcpServiceImpl::create_backpressure_error();
-        
+
         // Verify the response structure
         assert!(error_response.message.is_some());
-        
-        if let Some(stream_response::Message::ImportAsset(import_response)) = error_response.message {
+
+        if let Some(stream_response::Message::ImportAsset(import_response)) = error_response.message
+        {
             assert!(import_response.asset.is_none());
             assert!(import_response.error.is_some());
-            
+
             let error = import_response.error.unwrap();
             assert_eq!(error.code, 8); // RESOURCE_EXHAUSTED
             assert_eq!(error.message, "Stream processing capacity exceeded");
@@ -1428,17 +1492,17 @@ mod tests {
         // Test that Arc<UnityMcpServiceImpl> can be shared across operations
         let service = Arc::new(UnityMcpServiceImpl::new());
         let service_clone = Arc::clone(&service);
-        
+
         // Both references should point to the same instance
         assert!(Arc::ptr_eq(&service, &service_clone));
-        
+
         // Test that both can perform operations
         let request1 = Request::new(ListToolsRequest {});
         let request2 = Request::new(ListResourcesRequest {});
-        
+
         let response1 = service.list_tools(request1).await;
         let response2 = service_clone.list_resources(request2).await;
-        
+
         assert!(response1.is_ok());
         assert!(response2.is_ok());
     }
@@ -1447,18 +1511,18 @@ mod tests {
     async fn test_stream_handler_components() {
         // Test that StreamHandler components work correctly
         let service = Arc::new(UnityMcpServiceImpl::new());
-        let (tx, _rx) = tokio::sync::mpsc::channel::<Result<StreamResponse, Status>>(1);
-        
+        let (_tx, _rx) = tokio::sync::mpsc::channel::<Result<StreamResponse, Status>>(1);
+
         // Test that we can create and use Arc<UnityMcpServiceImpl>
         let service_clone = Arc::clone(&service);
-        
+
         // Both should be usable
         assert!(Arc::ptr_eq(&service, &service_clone));
-        
+
         // Test CancellationToken functionality
         let token = CancellationToken::new();
         assert!(!token.is_cancelled());
-        
+
         token.cancel();
         assert!(token.is_cancelled());
     }
@@ -1466,16 +1530,17 @@ mod tests {
     #[tokio::test]
     async fn test_process_stream_request() {
         let service = Arc::new(UnityMcpServiceImpl::new());
-        
+
         // Test import asset request
         let import_request = StreamRequest {
             message: Some(stream_request::Message::ImportAsset(ImportAssetRequest {
                 asset_path: "Assets/Test/texture.png".to_string(),
             })),
         };
-        
-        let response = UnityMcpServiceImpl::process_stream_request(&service, import_request).await;
-        
+
+        let response =
+            UnityMcpServiceImpl::process_stream_request(&service, import_request, 1).await;
+
         assert!(response.message.is_some());
         if let Some(stream_response::Message::ImportAsset(import_response)) = response.message {
             assert!(import_response.asset.is_some());
@@ -1488,18 +1553,17 @@ mod tests {
     #[tokio::test]
     async fn test_empty_stream_request() {
         let service = Arc::new(UnityMcpServiceImpl::new());
-        
-        let empty_request = StreamRequest {
-            message: None,
-        };
-        
-        let response = UnityMcpServiceImpl::process_stream_request(&service, empty_request).await;
-        
+
+        let empty_request = StreamRequest { message: None };
+
+        let response =
+            UnityMcpServiceImpl::process_stream_request(&service, empty_request, 2).await;
+
         assert!(response.message.is_some());
         if let Some(stream_response::Message::ImportAsset(import_response)) = response.message {
             assert!(import_response.asset.is_none());
             assert!(import_response.error.is_some());
-            
+
             let error = import_response.error.unwrap();
             assert_eq!(error.code, 3); // INVALID_ARGUMENT
             assert!(error.message.contains("Generic stream error"));
@@ -1539,7 +1603,7 @@ mod tests {
             "Asset path validation failed",
             Some("import_asset"),
         );
-        
+
         assert!(import_response.message.is_some());
         if let Some(stream_response::Message::ImportAsset(response)) = import_response.message {
             assert!(response.asset.is_none());
@@ -1559,7 +1623,7 @@ mod tests {
             "Source asset not found",
             Some("move_asset"),
         );
-        
+
         if let Some(stream_response::Message::MoveAsset(response)) = move_response.message {
             assert!(response.asset.is_none());
             assert!(response.error.is_some());
@@ -1577,7 +1641,7 @@ mod tests {
             "Internal deletion error",
             Some("delete_asset"),
         );
-        
+
         if let Some(stream_response::Message::DeleteAsset(response)) = delete_response.message {
             assert_eq!(response.success, false);
             assert!(response.error.is_some());
@@ -1594,7 +1658,7 @@ mod tests {
             "System resources exhausted",
             Some("refresh"),
         );
-        
+
         if let Some(stream_response::Message::Refresh(response)) = refresh_response.message {
             assert_eq!(response.success, false);
             assert!(response.error.is_some());
@@ -1614,7 +1678,7 @@ mod tests {
             "Request type could not be determined",
             None,
         );
-        
+
         assert!(generic_response.message.is_some());
         if let Some(stream_response::Message::ImportAsset(response)) = generic_response.message {
             assert!(response.asset.is_none());
@@ -1632,7 +1696,7 @@ mod tests {
     async fn test_error_context_tracking() {
         let mut context = ErrorContext::new(Some("test_operation".to_string()));
         context.add_info("test_key".to_string(), "test_value".to_string());
-        
+
         // Test context serialization
         let details = context.to_details_string();
         assert!(details.contains("test_operation"));
@@ -1650,7 +1714,7 @@ mod tests {
     #[tokio::test]
     async fn test_empty_message_error_handling() {
         let error_response = UnityMcpServiceImpl::create_empty_message_error();
-        
+
         assert!(error_response.message.is_some());
         if let Some(stream_response::Message::ImportAsset(response)) = error_response.message {
             assert!(response.asset.is_none());
@@ -1659,7 +1723,9 @@ mod tests {
             assert_eq!(error.code, 3); // INVALID_ARGUMENT
             assert!(error.message.contains("Generic stream error"));
             assert!(error.details.contains("GENERIC_ERROR"));
-            assert!(error.details.contains("StreamRequest must contain a valid message field"));
+            assert!(error
+                .details
+                .contains("StreamRequest must contain a valid message field"));
         } else {
             panic!("Expected ImportAsset response for empty message error");
         }
@@ -1669,7 +1735,7 @@ mod tests {
     async fn test_stream_error_response_handling() {
         let status = Status::new(tonic::Code::Unavailable, "Service unavailable");
         let error_response = UnityMcpServiceImpl::create_stream_error_response(status);
-        
+
         assert!(error_response.message.is_some());
         if let Some(stream_response::Message::ImportAsset(response)) = error_response.message {
             assert!(response.asset.is_none());
@@ -1687,20 +1753,20 @@ mod tests {
     async fn test_memory_efficiency_improvement() {
         // This test demonstrates the memory efficiency improvement
         // by using Arc<UnityMcpServiceImpl> instead of multiple instances
-        
+
         let shared_service = Arc::new(UnityMcpServiceImpl::new());
         let mut clones = Vec::new();
-        
+
         // Create multiple references to the same instance
         for _ in 0..100 {
             clones.push(Arc::clone(&shared_service));
         }
-        
+
         // All clones should point to the same memory location
         for clone in &clones {
             assert!(Arc::ptr_eq(&shared_service, clone));
         }
-        
+
         // Strong reference count should be 101 (original + 100 clones)
         assert_eq!(Arc::strong_count(&shared_service), 101);
     }
