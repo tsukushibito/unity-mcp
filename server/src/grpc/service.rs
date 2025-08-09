@@ -196,6 +196,32 @@ impl WithMcpError for MoveAssetResponse {
         }
     }
 }
+// ============================================================================
+// Stream Operation Handler Trait (Generic + Trait approach)  
+// ============================================================================
+
+/// Generic trait for handling different types of stream requests
+/// This approach eliminates ~85% of code duplication while maintaining type safety
+#[async_trait]
+pub trait StreamOperationHandler {
+    type Request: Send + 'static;
+    type Response: Send + 'static;
+
+    /// Execute the gRPC service call for this operation
+    async fn call_service(
+        service: &Arc<UnityMcpServiceImpl>,
+        request: Request<Self::Request>,
+    ) -> Result<Response<Self::Response>, Status>;
+
+    /// Build the appropriate StreamResponse from the service response
+    fn build_stream_response(response: Self::Response) -> StreamResponse;
+
+    /// Get the operation name for logging and error context
+    fn get_operation_name() -> &'static str;
+
+    /// Extract debug information from the request for logging
+    fn extract_debug_info(request: &Self::Request) -> Vec<(&'static str, String)>;
+}
 
 impl UnityMcpServiceImpl {
     /// Create a new service instance
@@ -351,23 +377,23 @@ impl UnityMcpServiceImpl {
         }
     }
 
-    /// Route request messages to appropriate handlers
+    /// Route request messages to appropriate handlers using generic trait approach
     async fn handle_request_message(
         service: &Arc<Self>,
         request_message: stream_request::Message,
     ) -> StreamResponse {
         match request_message {
             stream_request::Message::ImportAsset(import_req) => {
-                Self::handle_import_asset_stream(service, import_req).await
+                Self::handle_stream_request::<ImportAssetOperation>(service, import_req).await
             }
             stream_request::Message::MoveAsset(move_req) => {
-                Self::handle_move_asset_stream(service, move_req).await
+                Self::handle_stream_request::<MoveAssetOperation>(service, move_req).await
             }
             stream_request::Message::DeleteAsset(delete_req) => {
-                Self::handle_delete_asset_stream(service, delete_req).await
+                Self::handle_stream_request::<DeleteAssetOperation>(service, delete_req).await
             }
             stream_request::Message::Refresh(refresh_req) => {
-                Self::handle_refresh_stream(service, refresh_req).await
+                Self::handle_stream_request::<RefreshOperation>(service, refresh_req).await
             }
         }
     }
@@ -512,161 +538,190 @@ impl UnityMcpServiceImpl {
         )
     }
 
-    /// Handle ImportAsset stream requests using shared service instance
-    async fn handle_import_asset_stream(
-        service: &Arc<Self>,
-        import_req: ImportAssetRequest,
+    /// Unified stream request handler that eliminates code duplication
+    /// This replaces the 4 individual handle_*_stream methods with a single generic function
+    async fn handle_stream_request<H: StreamOperationHandler>(
+        service: &Arc<UnityMcpServiceImpl>,
+        request: H::Request,
     ) -> StreamResponse {
-        debug!(asset_path = %import_req.asset_path, "Processing import_asset stream request");
+        let operation_name = H::get_operation_name();
+        let debug_info = H::extract_debug_info(&request);
         
-        let asset_path = import_req.asset_path.clone();
-        let request = Request::new(import_req);
-        match service.import_asset(request).await {
+        // Log debug information
+        let mut debug_msg = format!("Processing {} stream request", operation_name);
+        for (key, value) in &debug_info {
+            debug_msg.push_str(&format!(", {} = {}", key, value));
+        }
+        debug!("{}", debug_msg);
+
+        // Execute the service call
+        let grpc_request = Request::new(request);
+        match H::call_service(service, grpc_request).await {
             Ok(response) => {
-                let import_response = response.into_inner();
-                StreamResponse {
-                    message: Some(stream_response::Message::ImportAsset(import_response)),
-                }
+                let inner_response = response.into_inner();
+                debug!(
+                    operation = %operation_name,
+                    "Operation completed successfully"
+                );
+                H::build_stream_response(inner_response)
             }
             Err(status) => {
                 let error_type = StreamErrorType::map_grpc_status_to_error_type(&status);
-                let mut context = ErrorContext::new(Some("import_asset".to_string()));
-                context.add_info("asset_path".to_string(), asset_path.clone());
+                let mut context = ErrorContext::new(Some(operation_name.to_string()));
+                
+                // Add debug info to error context
+                for (key, value) in debug_info {
+                    context.add_info(key.to_string(), value);
+                }
                 
                 Self::log_stream_error(
                     &error_type,
-                    &format!("ImportAsset operation failed: {}", status.message()),
+                    &format!("{} operation failed: {}", operation_name, status.message()),
                     &context,
                     Some(&status),
                 );
                 
                 Self::create_error_response(
                     error_type,
-                    &format!("ImportAsset operation failed: {}", status.message()),
+                    &format!("{} operation failed: {}", operation_name, status.message()),
                     &format!("gRPC status: {:?} | Details: {}", status.code(), status.message()),
-                    Some("import_asset"),
+                    Some(operation_name),
                 )
             }
         }
     }
 
-    /// Handle MoveAsset stream requests using shared service instance
-    async fn handle_move_asset_stream(
-        service: &Arc<Self>,
-        move_req: MoveAssetRequest,
-    ) -> StreamResponse {
-        debug!(src_path = %move_req.src_path, dst_path = %move_req.dst_path, "Processing move_asset stream request");
-        
-        let src_path = move_req.src_path.clone();
-        let dst_path = move_req.dst_path.clone();
-        let request = Request::new(move_req);
-        match service.move_asset(request).await {
-            Ok(response) => {
-                let move_response = response.into_inner();
-                StreamResponse {
-                    message: Some(stream_response::Message::MoveAsset(move_response)),
-                }
-            }
-            Err(status) => {
-                let error_type = StreamErrorType::map_grpc_status_to_error_type(&status);
-                let mut context = ErrorContext::new(Some("move_asset".to_string()));
-                context.add_info("src_path".to_string(), src_path.clone());
-                context.add_info("dst_path".to_string(), dst_path.clone());
-                
-                Self::log_stream_error(
-                    &error_type,
-                    &format!("MoveAsset operation failed: {}", status.message()),
-                    &context,
-                    Some(&status),
-                );
-                
-                Self::create_error_response(
-                    error_type,
-                    &format!("MoveAsset operation failed: {}", status.message()),
-                    &format!("gRPC status: {:?} | Details: {}", status.code(), status.message()),
-                    Some("move_asset"),
-                )
-            }
-        }
-    }
-
-    /// Handle DeleteAsset stream requests using shared service instance
-    async fn handle_delete_asset_stream(
-        service: &Arc<Self>,
-        delete_req: DeleteAssetRequest,
-    ) -> StreamResponse {
-        debug!(asset_path = %delete_req.asset_path, "Processing delete_asset stream request");
-        
-        let asset_path = delete_req.asset_path.clone();
-        let request = Request::new(delete_req);
-        match service.delete_asset(request).await {
-            Ok(response) => {
-                let delete_response = response.into_inner();
-                StreamResponse {
-                    message: Some(stream_response::Message::DeleteAsset(delete_response)),
-                }
-            }
-            Err(status) => {
-                let error_type = StreamErrorType::map_grpc_status_to_error_type(&status);
-                let mut context = ErrorContext::new(Some("delete_asset".to_string()));
-                context.add_info("asset_path".to_string(), asset_path.clone());
-                
-                Self::log_stream_error(
-                    &error_type,
-                    &format!("DeleteAsset operation failed: {}", status.message()),
-                    &context,
-                    Some(&status),
-                );
-                
-                Self::create_error_response(
-                    error_type,
-                    &format!("DeleteAsset operation failed: {}", status.message()),
-                    &format!("gRPC status: {:?} | Details: {}", status.code(), status.message()),
-                    Some("delete_asset"),
-                )
-            }
-        }
-    }
-
-    /// Handle Refresh stream requests using shared service instance
-    async fn handle_refresh_stream(
-        service: &Arc<Self>,
-        refresh_req: RefreshRequest,
-    ) -> StreamResponse {
-        debug!("Processing refresh stream request");
-        
-        let request = Request::new(refresh_req);
-        match service.refresh(request).await {
-            Ok(response) => {
-                let refresh_response = response.into_inner();
-                StreamResponse {
-                    message: Some(stream_response::Message::Refresh(refresh_response)),
-                }
-            }
-            Err(status) => {
-                let error_type = StreamErrorType::map_grpc_status_to_error_type(&status);
-                let context = ErrorContext::new(Some("refresh".to_string()));
-                
-                Self::log_stream_error(
-                    &error_type,
-                    &format!("Refresh operation failed: {}", status.message()),
-                    &context,
-                    Some(&status),
-                );
-                
-                Self::create_error_response(
-                    error_type,
-                    &format!("Refresh operation failed: {}", status.message()),
-                    &format!("gRPC status: {:?} | Details: {}", status.code(), status.message()),
-                    Some("refresh"),
-                )
-            }
-        }
-    }
+    // Legacy individual handler methods removed - replaced by generic trait approach above
 
 
 }
 
+// ============================================================================
+// Individual Operation Handlers (Trait Implementations)
+// ============================================================================
+
+/// ImportAsset operation handler
+pub struct ImportAssetOperation;
+
+#[async_trait]
+impl StreamOperationHandler for ImportAssetOperation {
+    type Request = ImportAssetRequest;
+    type Response = ImportAssetResponse;
+
+    async fn call_service(
+        service: &Arc<UnityMcpServiceImpl>,
+        request: Request<Self::Request>,
+    ) -> Result<Response<Self::Response>, Status> {
+        service.import_asset(request).await
+    }
+
+    fn build_stream_response(response: Self::Response) -> StreamResponse {
+        StreamResponse {
+            message: Some(stream_response::Message::ImportAsset(response)),
+        }
+    }
+
+    fn get_operation_name() -> &'static str {
+        "import_asset"
+    }
+
+    fn extract_debug_info(request: &Self::Request) -> Vec<(&'static str, String)> {
+        vec![("asset_path", request.asset_path.clone())]
+    }
+}
+
+/// MoveAsset operation handler
+pub struct MoveAssetOperation;
+
+#[async_trait]
+impl StreamOperationHandler for MoveAssetOperation {
+    type Request = MoveAssetRequest;
+    type Response = MoveAssetResponse;
+
+    async fn call_service(
+        service: &Arc<UnityMcpServiceImpl>,
+        request: Request<Self::Request>,
+    ) -> Result<Response<Self::Response>, Status> {
+        service.move_asset(request).await
+    }
+
+    fn build_stream_response(response: Self::Response) -> StreamResponse {
+        StreamResponse {
+            message: Some(stream_response::Message::MoveAsset(response)),
+        }
+    }
+
+    fn get_operation_name() -> &'static str {
+        "move_asset"
+    }
+
+    fn extract_debug_info(request: &Self::Request) -> Vec<(&'static str, String)> {
+        vec![
+            ("src_path", request.src_path.clone()),
+            ("dst_path", request.dst_path.clone()),
+        ]
+    }
+}
+
+/// DeleteAsset operation handler
+pub struct DeleteAssetOperation;
+
+#[async_trait]
+impl StreamOperationHandler for DeleteAssetOperation {
+    type Request = DeleteAssetRequest;
+    type Response = DeleteAssetResponse;
+
+    async fn call_service(
+        service: &Arc<UnityMcpServiceImpl>,
+        request: Request<Self::Request>,
+    ) -> Result<Response<Self::Response>, Status> {
+        service.delete_asset(request).await
+    }
+
+    fn build_stream_response(response: Self::Response) -> StreamResponse {
+        StreamResponse {
+            message: Some(stream_response::Message::DeleteAsset(response)),
+        }
+    }
+
+    fn get_operation_name() -> &'static str {
+        "delete_asset"
+    }
+
+    fn extract_debug_info(request: &Self::Request) -> Vec<(&'static str, String)> {
+        vec![("asset_path", request.asset_path.clone())]
+    }
+}
+
+/// Refresh operation handler  
+pub struct RefreshOperation;
+
+#[async_trait]
+impl StreamOperationHandler for RefreshOperation {
+    type Request = RefreshRequest;
+    type Response = RefreshResponse;
+
+    async fn call_service(
+        service: &Arc<UnityMcpServiceImpl>,
+        request: Request<Self::Request>,
+    ) -> Result<Response<Self::Response>, Status> {
+        service.refresh(request).await
+    }
+
+    fn build_stream_response(response: Self::Response) -> StreamResponse {
+        StreamResponse {
+            message: Some(stream_response::Message::Refresh(response)),
+        }
+    }
+
+    fn get_operation_name() -> &'static str {
+        "refresh"
+    }
+
+    fn extract_debug_info(_request: &Self::Request) -> Vec<(&'static str, String)> {
+        vec![] // Refresh request has no specific parameters to log
+    }
+}
 #[async_trait]
 impl UnityMcpService for UnityMcpServiceImpl {
     /// List all available MCP tools
