@@ -17,7 +17,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_list_tools() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(ListToolsRequest {});
 
         let response = service.list_tools(request).await.unwrap();
@@ -29,7 +29,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_call_tool_valid() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(CallToolRequest {
             tool_id: "test_tool".to_string(),
             input_json: r#"{"param": "value"}"#.to_string(),
@@ -44,7 +44,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_call_tool_empty_tool_id() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(CallToolRequest {
             tool_id: "".to_string(),
             input_json: r#"{"param": "value"}"#.to_string(),
@@ -62,7 +62,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_list_resources() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(ListResourcesRequest {});
 
         let response = service.list_resources(request).await.unwrap();
@@ -75,7 +75,7 @@ use super::*;
     // Path validation tests
     #[tokio::test]
     async fn test_validate_asset_path_traversal() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Test various path traversal attempts
         assert!(service
@@ -94,7 +94,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_validate_asset_path_valid() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Test valid asset paths
         assert!(service
@@ -113,7 +113,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_validate_asset_path_invalid_prefix() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Test paths that don't start with Assets/
         assert!(service
@@ -131,7 +131,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_validate_asset_path_invalid_characters() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Test paths with invalid characters
         assert!(service
@@ -147,7 +147,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_validate_asset_path_length_limit() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Create a path that exceeds MAX_PATH_LENGTH (260 characters)
         // "Assets/" = 7 chars, ".png" = 4 chars, so filename needs 260 - 7 - 4 + 1 = 250 chars to exceed
@@ -168,7 +168,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_validate_move_paths_same() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Test that source and destination paths must be different
         assert!(service
@@ -181,7 +181,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_validate_move_paths_valid() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Test valid move operations
         assert!(service
@@ -195,7 +195,7 @@ use super::*;
     // Error response tests
     #[tokio::test]
     async fn test_import_asset_error_response() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(ImportAssetRequest {
             asset_path: "invalid_path".to_string(),
         });
@@ -212,7 +212,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_move_asset_error_response() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(MoveAssetRequest {
             src_path: "Assets/texture.png".to_string(),
             dst_path: "Assets/texture.png".to_string(), // Same path should fail
@@ -230,7 +230,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_import_asset_success() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(ImportAssetRequest {
             asset_path: "Assets/Textures/texture.png".to_string(),
         });
@@ -249,7 +249,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_move_asset_success() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(MoveAssetRequest {
             src_path: "Assets/texture.png".to_string(),
             dst_path: "Assets/Textures/texture.png".to_string(),
@@ -269,7 +269,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_get_project_info() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let request = Request::new(GetProjectInfoRequest {});
 
         let response = service.get_project_info(request).await.unwrap();
@@ -340,7 +340,7 @@ use super::*;
     #[tokio::test]
     async fn test_service_instance_sharing() {
         // Test that Arc<UnityMcpServiceImpl> can be shared across operations
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let service_clone = Arc::clone(&service);
 
         // Both references should point to the same instance
@@ -360,7 +360,7 @@ use super::*;
     #[tokio::test]
     async fn test_stream_handler_components() {
         // Test that StreamHandler components work correctly
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let (_tx, _rx) = tokio::sync::mpsc::channel::<Result<StreamResponse, Status>>(1);
 
         // Test that we can create and use Arc<UnityMcpServiceImpl>
@@ -379,7 +379,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_process_stream_request() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         // Test import asset request
         let import_request = StreamRequest {
@@ -402,7 +402,7 @@ use super::*;
 
     #[tokio::test]
     async fn test_empty_stream_request() {
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
 
         let empty_request = StreamRequest { message: None };
 
@@ -604,7 +604,7 @@ use super::*;
         // This test demonstrates the memory efficiency improvement
         // by using Arc<UnityMcpServiceImpl> instead of multiple instances
 
-        let shared_service = Arc::new(UnityMcpServiceImpl::new());
+        let shared_service = Arc::new(UnityMcpServiceImpl::new().expect("Failed to create service"));
         let mut clones = Vec::new();
 
         // Create multiple references to the same instance
@@ -678,7 +678,7 @@ use super::*;
     impl StreamTestHarness {
         pub fn new() -> Self {
             Self {
-                service: Arc::new(UnityMcpServiceImpl::new_for_testing()),
+                service: Arc::new(UnityMcpServiceImpl::new_for_testing().expect("Failed to create service")),
                 test_data_generator: TestDataGenerator::new(),
                 performance_monitor: TestPerformanceMonitor::new(),
             }

@@ -110,7 +110,7 @@ pub struct UnityMcpServiceImpl {
 
 impl Default for UnityMcpServiceImpl {
     fn default() -> Self {
-        Self::new()
+        Self::new().expect("Failed to create default UnityMcpServiceImpl")
     }
 }
 
@@ -233,19 +233,19 @@ pub trait StreamOperationHandler {
 
 impl UnityMcpServiceImpl {
     /// Create a new service instance
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(Self {
             validation_engine: StreamValidationEngine::new(),
-            cache: StreamCache::new(),
-        }
+            cache: StreamCache::new()?,
+        })
     }
 
     /// Create a new service instance with test-friendly settings
-    pub fn new_for_testing() -> Self {
-        Self {
+    pub fn new_for_testing() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(Self {
             validation_engine: StreamValidationEngine::new_for_testing(),
-            cache: StreamCache::new(),
-        }
+            cache: StreamCache::new()?,
+        })
     }
 
     /// Check if a path is under the Assets directory using proper path component analysis
@@ -1187,7 +1187,10 @@ impl UnityMcpService for UnityMcpServiceImpl {
         let (tx, rx) = tokio::sync::mpsc::channel(Self::STREAM_CHANNEL_CAPACITY);
 
         // Create shared service instance using Arc
-        let service = Arc::new(UnityMcpServiceImpl::new());
+        let service = Arc::new(
+            UnityMcpServiceImpl::new()
+                .map_err(|e| Status::internal(format!("Failed to create service: {}", e)))?
+        );
 
         // Create and start stream handler with proper task lifecycle management
         let _stream_handler = StreamHandler::new(service, stream, tx);

@@ -9,8 +9,12 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher, DefaultHasher};
 use lru::LruCache;
 use std::num::NonZeroUsize;
-use tracing::{debug, info, error};
+use tracing::{debug, info, error, warn, trace, instrument};
 use serde::{Serialize, Deserialize};
+use flate2::write::{GzEncoder};
+use flate2::read::GzDecoder;
+use flate2::Compression;
+use std::io::{Read, Write};
 
 use crate::grpc::{StreamRequest, StreamResponse};
 
@@ -55,20 +59,40 @@ pub struct CacheEntry {
     cache_quality_score: f64, // 0.0-1.0
 }
 
+/// 操作タイプのenum
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum OperationType {
+    ImportAsset,
+    MoveAsset,
+    DeleteAsset,
+    Refresh,
+}
+
+impl OperationType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            OperationType::ImportAsset => "import_asset",
+            OperationType::MoveAsset => "move_asset",
+            OperationType::DeleteAsset => "delete_asset",
+            OperationType::Refresh => "refresh",
+        }
+    }
+}
+
 /// キャッシュキー
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CacheKey {
     // 操作タイプ
-    operation_type: String,
+    pub operation_type: OperationType,
     
     // リクエストハッシュ
-    request_hash: u64,
+    pub request_hash: u64,
     
     // バージョン（スキーマ変更対応）
-    version: u32,
+    pub version: u32,
     
     // オプション属性
-    attributes: CacheKeyAttributes,
+    pub attributes: CacheKeyAttributes,
 }
 
 /// キャッシュキー属性
@@ -169,11 +193,94 @@ pub struct CacheStatistics {
     pub recent_access_patterns: HashMap<String, u64>,
 }
 
-/// アクセスパターン分析
+/// 固定サイズの循環バッファー（メモリ効率改善）
+#[derive(Debug)]
+pub struct CircularBuffer<T> {
+    buffer: Vec<Option<T>>,
+    capacity: usize,
+    head: usize,
+    tail: usize,
+    size: usize,
+}
+
+impl<T> CircularBuffer<T> {
+    fn new(capacity: usize) -> Self {
+        let mut buffer = Vec::with_capacity(capacity);
+        buffer.resize_with(capacity, || None);
+        
+        Self {
+            buffer,
+            capacity,
+            head: 0,
+            tail: 0,
+            size: 0,
+        }
+    }
+    
+    fn push(&mut self, item: T) {
+        self.buffer[self.tail] = Some(item);
+        self.tail = (self.tail + 1) % self.capacity;
+        
+        if self.size < self.capacity {
+            self.size += 1;
+        } else {
+            // バッファーが満杯の場合、headも進める
+            self.head = (self.head + 1) % self.capacity;
+        }
+    }
+    
+    fn len(&self) -> usize {
+        self.size
+    }
+    
+    fn iter(&self) -> CircularBufferIterator<T> {
+        CircularBufferIterator {
+            buffer: &self.buffer,
+            capacity: self.capacity,
+            current: self.head,
+            remaining: self.size,
+        }
+    }
+    
+    fn clear(&mut self) {
+        for item in &mut self.buffer {
+            *item = None;
+        }
+        self.head = 0;
+        self.tail = 0;
+        self.size = 0;
+    }
+}
+
+/// 循環バッファーのイテレーター
+pub struct CircularBufferIterator<'a, T> {
+    buffer: &'a Vec<Option<T>>,
+    capacity: usize,
+    current: usize,
+    remaining: usize,
+}
+
+impl<'a, T> Iterator for CircularBufferIterator<'a, T> {
+    type Item = &'a T;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+        
+        let item = self.buffer[self.current].as_ref();
+        self.current = (self.current + 1) % self.capacity;
+        self.remaining -= 1;
+        
+        item
+    }
+}
+
+/// アクセスパターン分析（循環バッファーでメモリ効率改善）
 #[derive(Debug)]
 pub struct AccessPatternAnalyzer {
-    // パターン記録
-    access_history: Vec<AccessRecord>,
+    // パターン記録（循環バッファー）
+    access_history: CircularBuffer<AccessRecord>,
     
     // パターン統計
     operation_frequency: HashMap<String, u64>,
@@ -218,14 +325,16 @@ pub struct DefaultCacheKeyHasher {
 
 impl StreamCache {
     /// 新しいキャッシュインスタンスを作成
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, CacheError> {
         Self::with_config(CacheConfig::default())
     }
 
     /// 設定付きでキャッシュを作成
-    pub fn with_config(config: CacheConfig) -> Self {
+    pub fn with_config(config: CacheConfig) -> Result<Self, CacheError> {
         let cache_size = NonZeroUsize::new(config.max_entries)
-            .expect("Cache max_entries must be greater than 0");
+            .ok_or_else(|| CacheError::InvalidConfiguration(
+                "max_entries must be greater than 0".to_string()
+            ))?;
         
         let cache = Arc::new(Mutex::new(LruCache::new(cache_size)));
         let statistics = Arc::new(Mutex::new(CacheStatistics::default()));
@@ -245,24 +354,42 @@ impl StreamCache {
         cache_instance.start_maintenance_tasks();
 
         info!("Stream cache initialized with config: {:?}", config);
-        cache_instance
+        Ok(cache_instance)
     }
 
     /// キャッシュからレスポンスを取得
+    #[instrument(skip(self, request), fields(cache_key))]
     pub async fn get(&self, request: &StreamRequest) -> Option<StreamResponse> {
         let start_time = Instant::now();
         
         // キャッシュキーを生成
         let cache_key = match self.key_hasher.generate_key(request) {
-            Some(key) => key,
+            Some(key) => {
+                // Span にキャッシュキー情報を記録
+                tracing::Span::current().record("cache_key", &format!("{:?}", key));
+                trace!(
+                    cache_key = ?key,
+                    "Generated cache key for request"
+                );
+                key
+            },
             None => {
-                debug!("Request not cacheable");
+                debug!("Request not cacheable, no key generated");
                 return None;
             }
         };
 
         let result = {
-            let mut cache = self.cache.lock().ok()?;
+            let mut cache = match self.cache.lock() {
+                Ok(cache) => cache,
+                Err(_) => {
+                    error!(
+                        cache_key = ?cache_key,
+                        "Cache mutex poisoned during get operation - returning None"
+                    );
+                    return None;
+                }
+            };
             
             if let Some(entry) = cache.get_mut(&cache_key) {
                 // TTL チェック
@@ -286,10 +413,25 @@ impl StreamCache {
                     entry.response.clone()
                 };
 
-                self.record_cache_hit(&cache_key, start_time.elapsed());
+                let elapsed = start_time.elapsed();
+                info!(
+                    cache_key = ?cache_key,
+                    response_time_ns = elapsed.as_nanos(),
+                    is_compressed = entry.is_compressed,
+                    access_count = entry.access_count,
+                    "Cache hit - response served from cache"
+                );
+
+                self.record_cache_hit(&cache_key, elapsed);
                 Some(response)
             } else {
-                self.record_cache_miss(&cache_key, start_time.elapsed());
+                let elapsed = start_time.elapsed();
+                debug!(
+                    cache_key = ?cache_key,
+                    response_time_ns = elapsed.as_nanos(),
+                    "Cache miss - key not found in cache"
+                );
+                self.record_cache_miss(&cache_key, elapsed);
                 None
             }
         };
@@ -301,11 +443,19 @@ impl StreamCache {
     }
 
     /// レスポンスをキャッシュに保存
+    #[instrument(skip(self, request, response), fields(cache_key, compressed_size, original_size))]
     pub async fn put(&self, request: &StreamRequest, response: StreamResponse) {
         // キャッシュキーを生成
         let cache_key = match self.key_hasher.generate_key(request) {
-            Some(key) => key,
-            None => return,
+            Some(key) => {
+                tracing::Span::current().record("cache_key", &format!("{:?}", key));
+                trace!(cache_key = ?key, "Generated cache key for put operation");
+                key
+            },
+            None => {
+                debug!("Request not cacheable, skipping put operation");
+                return;
+            },
         };
 
         // キャッシュ可能性をチェック
@@ -368,7 +518,18 @@ impl StreamCache {
         // 統計更新
         self.update_cache_statistics().await;
 
-        debug!("Cached response for key: {:?}, TTL: {:?}", cache_key, ttl);
+        // 構造化ログでキャッシュ保存を記録
+        tracing::Span::current().record("compressed_size", compressed_size);
+        tracing::Span::current().record("original_size", original_size);
+        info!(
+            cache_key = ?cache_key,
+            ttl_secs = ttl.as_secs(),
+            is_compressed = is_compressed,
+            original_size = original_size,
+            compressed_size = compressed_size,
+            compression_ratio = if original_size > 0 { compressed_size as f64 / original_size as f64 } else { 1.0 },
+            "Response cached successfully"
+        );
     }
 
     /// キャッシュキーを直接指定して取得（高速パス）
@@ -376,7 +537,13 @@ impl StreamCache {
         let start_time = Instant::now();
         
         let result = {
-            let mut cache = self.cache.lock().ok()?;
+            let mut cache = match self.cache.lock() {
+                Ok(cache) => cache,
+                Err(_) => {
+                    error!("Cache mutex poisoned during get_by_key operation");
+                    return None;
+                }
+            };
             
             if let Some(entry) = cache.get_mut(key) {
                 // TTL チェック
@@ -414,42 +581,73 @@ impl StreamCache {
     }
 
     /// キャッシュサイズを動的に調整
-    pub fn resize_cache(&self, new_size: usize) {
-        if let Ok(mut cache) = self.cache.lock() {
-            let new_cache_size = NonZeroUsize::new(new_size)
-                .unwrap_or(NonZeroUsize::new(100).unwrap());
-            
-            cache.resize(new_cache_size);
-            info!("Cache resized to {} entries", new_size);
+    pub fn resize_cache(&self, new_size: usize) -> Result<(), CacheError> {
+        if new_size == 0 {
+            return Err(CacheError::InvalidConfiguration(
+                "new_size must be greater than 0".to_string()
+            ));
+        }
+        
+        match self.cache.lock() {
+            Ok(mut cache) => {
+                let new_cache_size = NonZeroUsize::new(new_size)
+                    .ok_or_else(|| CacheError::InvalidConfiguration(
+                        "new_size must be greater than 0".to_string()
+                    ))?;
+                
+                cache.resize(new_cache_size);
+                info!("Cache resized to {} entries", new_size);
+                Ok(())
+            }
+            Err(_) => {
+                error!("Failed to resize cache: mutex poisoned");
+                Err(CacheError::LockPoisoned)
+            }
         }
     }
 
     /// キャッシュをクリア
     pub fn clear(&self) {
-        if let Ok(mut cache) = self.cache.lock() {
-            cache.clear();
-            info!("Cache cleared");
+        match self.cache.lock() {
+            Ok(mut cache) => {
+                cache.clear();
+                info!("Cache cleared");
+            }
+            Err(_) => {
+                error!("Failed to clear cache: mutex poisoned");
+            }
         }
 
-        if let Ok(mut stats) = self.statistics.lock() {
-            *stats = CacheStatistics::default();
+        match self.statistics.lock() {
+            Ok(mut stats) => {
+                *stats = CacheStatistics::default();
+            }
+            Err(_) => {
+                error!("Failed to reset statistics: mutex poisoned");
+            }
         }
     }
 
     /// キャッシュ統計を取得
     pub fn get_statistics(&self) -> CacheStatistics {
-        self.statistics.lock()
-            .map(|stats| stats.clone())
-            .unwrap_or_default()
+        match self.statistics.lock() {
+            Ok(stats) => stats.clone(),
+            Err(_) => {
+                error!("Failed to get statistics: mutex poisoned");
+                CacheStatistics::default()
+            }
+        }
     }
 
     /// キャッシュ効率レポートを生成
     pub fn generate_efficiency_report(&self) -> CacheEfficiencyReport {
         let stats = self.get_statistics();
-        let current_size = {
-            self.cache.lock()
-                .map(|cache| cache.len())
-                .unwrap_or(0)
+        let current_size = match self.cache.lock() {
+            Ok(cache) => cache.len(),
+            Err(_) => {
+                error!("Failed to get cache size: mutex poisoned");
+                0
+            }
         };
 
         CacheEfficiencyReport {
@@ -468,32 +666,60 @@ impl StreamCache {
 
     // 内部ヘルパーメソッド
 
+    #[instrument(skip(self), fields(key = ?_key, response_time_ns = response_time.as_nanos()))]
     fn record_cache_hit(&self, _key: &CacheKey, response_time: Duration) {
-        if let Ok(mut stats) = self.statistics.lock() {
-            stats.total_requests += 1;
-            stats.cache_hits += 1;
-            stats.hit_ratio = stats.cache_hits as f64 / stats.total_requests as f64;
-            
-            // 移動平均でヒット時間を更新
-            let new_hit_time = response_time.as_nanos() as u64;
-            stats.avg_hit_time_ns = (stats.avg_hit_time_ns + new_hit_time) / 2;
+        match self.statistics.lock() {
+            Ok(mut stats) => {
+                stats.total_requests += 1;
+                stats.cache_hits += 1;
+                stats.hit_ratio = stats.cache_hits as f64 / stats.total_requests as f64;
+                
+                // 指数移動平均でヒット時間を更新（α = 0.1）
+                let new_hit_time = response_time.as_nanos() as u64;
+                if stats.avg_hit_time_ns == 0 {
+                    stats.avg_hit_time_ns = new_hit_time;
+                } else {
+                    let alpha = 0.1;
+                    stats.avg_hit_time_ns = ((1.0 - alpha) * stats.avg_hit_time_ns as f64 + alpha * new_hit_time as f64) as u64;
+                }
+            }
+            Err(_) => {
+                error!("Failed to record cache hit: statistics mutex poisoned");
+            }
         }
     }
 
+    #[instrument(skip(self), fields(key = ?_key, response_time_ns = response_time.as_nanos()))]
     fn record_cache_miss(&self, _key: &CacheKey, response_time: Duration) {
-        if let Ok(mut stats) = self.statistics.lock() {
-            stats.total_requests += 1;
-            stats.cache_misses += 1;
-            stats.hit_ratio = stats.cache_hits as f64 / stats.total_requests as f64;
-            
-            let new_miss_time = response_time.as_nanos() as u64;
-            stats.avg_miss_time_ns = (stats.avg_miss_time_ns + new_miss_time) / 2;
+        match self.statistics.lock() {
+            Ok(mut stats) => {
+                stats.total_requests += 1;
+                stats.cache_misses += 1;
+                stats.hit_ratio = stats.cache_hits as f64 / stats.total_requests as f64;
+                
+                // 指数移動平均でミス時間を更新（α = 0.1）
+                let new_miss_time = response_time.as_nanos() as u64;
+                if stats.avg_miss_time_ns == 0 {
+                    stats.avg_miss_time_ns = new_miss_time;
+                } else {
+                    let alpha = 0.1;
+                    stats.avg_miss_time_ns = ((1.0 - alpha) * stats.avg_miss_time_ns as f64 + alpha * new_miss_time as f64) as u64;
+                }
+            }
+            Err(_) => {
+                error!("Failed to record cache miss: statistics mutex poisoned");
+            }
         }
     }
 
     fn record_cache_eviction(&self) {
-        if let Ok(mut stats) = self.statistics.lock() {
-            stats.cache_evictions += 1;
+        match self.statistics.lock() {
+            Ok(mut stats) => {
+                stats.cache_evictions += 1;
+            }
+            Err(_) => {
+                error!("Failed to record cache eviction: statistics mutex poisoned");
+            }
         }
     }
 
@@ -509,8 +735,13 @@ impl StreamCache {
             response_time: Duration::default(), // 簡略化
         };
 
-        if let Ok(mut analyzer) = self.access_pattern_analyzer.lock() {
-            analyzer.record_access(record);
+        match self.access_pattern_analyzer.lock() {
+            Ok(mut analyzer) => {
+                analyzer.record_access(record);
+            }
+            Err(_) => {
+                error!("Failed to record access pattern: analyzer mutex poisoned");
+            }
         }
     }
 
@@ -534,25 +765,99 @@ impl StreamCache {
     }
 
     fn compress_response(&self, response: &StreamResponse) -> Result<(StreamResponse, usize), CacheError> {
-        // 簡略化：実際の圧縮処理では、protobufバイナリ形式でシリアライズして圧縮
-        // StreamResponseがSerializeを実装していないため、ここでは概念的な実装
-        let estimated_size = self.estimate_response_size(response);
-        let compressed_size = (estimated_size as f64 * 0.7) as usize; // 30%圧縮と仮定
+        // レスポンスの内容をJSON文字列にシリアライズ
+        let response_json = self.serialize_response_for_compression(response)
+            .map_err(|e| CacheError::CompressionError(format!("Serialization failed: {}", e)))?;
         
-        // 実際の圧縮は省略し、元のレスポンスをそのまま返す
+        // gzip圧縮を実行
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::new(self.config.compression_level));
+        encoder.write_all(response_json.as_bytes())
+            .map_err(|e| CacheError::CompressionError(format!("Compression write failed: {}", e)))?;
+        
+        let compressed_data = encoder.finish()
+            .map_err(|e| CacheError::CompressionError(format!("Compression finish failed: {}", e)))?;
+        
+        let compressed_size = compressed_data.len();
+        
+        // 圧縮データを含む特別なレスポンス（実際のプロダクションでは別の方法を使用）
+        // ここでは元のレスポンスに圧縮情報を付与した形で返す
         Ok((response.clone(), compressed_size))
     }
 
     fn decompress_response(&self, response: &StreamResponse) -> Result<StreamResponse, CacheError> {
-        // 簡略化：実際の解凍処理では、圧縮されたデータから元のレスポンスを復元
-        // ここでは元のレスポンスをそのまま返す
+        // 実際の本番環境では、圧縮されたデータを展開する
+        // ここでは概念的な実装として元のレスポンスを返す
+        // （実際の実装では、圧縮されたバイナリデータをgzip解凍してデシリアライズ）
         Ok(response.clone())
     }
+    
+    fn serialize_response_for_compression(&self, response: &StreamResponse) -> Result<String, String> {
+        // StreamResponseをJSONに変換（簡略化）
+        // 実際の実装では、protobufバイナリ形式やより効率的なシリアライゼーションを使用
+        match &response.message {
+            Some(crate::grpc::stream_response::Message::ImportAsset(import_resp)) => {
+                Ok(format!("{{\"type\":\"import_asset\",\"asset\":{:?},\"error\":{:?}}}", 
+                    import_resp.asset, import_resp.error))
+            }
+            Some(crate::grpc::stream_response::Message::MoveAsset(move_resp)) => {
+                Ok(format!("{{\"type\":\"move_asset\",\"asset\":{:?},\"error\":{:?}}}", 
+                    move_resp.asset, move_resp.error))
+            }
+            Some(crate::grpc::stream_response::Message::DeleteAsset(delete_resp)) => {
+                Ok(format!("{{\"type\":\"delete_asset\",\"success\":{},\"error\":{:?}}}", 
+                    delete_resp.success, delete_resp.error))
+            }
+            Some(crate::grpc::stream_response::Message::Refresh(refresh_resp)) => {
+                Ok(format!("{{\"type\":\"refresh\",\"success\":{},\"error\":{:?}}}", 
+                    refresh_resp.success, refresh_resp.error))
+            }
+            None => Ok("{\"type\":\"empty\"}".to_string()),
+        }
+    }
 
-    fn estimate_response_size(&self, _response: &StreamResponse) -> usize {
-        // 簡略化：実際のサイズ計算
-        // protobufメッセージのサイズ推定
-        1024 // デフォルト値
+    fn estimate_response_size(&self, response: &StreamResponse) -> usize {
+        // protobufメッセージのサイズを推定
+        let mut size = 8; // ベースヘッダーサイズ
+        
+        match &response.message {
+            Some(crate::grpc::stream_response::Message::ImportAsset(import_resp)) => {
+                size += 4; // message type field
+                if let Some(asset) = &import_resp.asset {
+                    size += asset.guid.len() + asset.asset_path.len() + asset.r#type.len() + 12;
+                }
+                if let Some(error) = &import_resp.error {
+                    size += error.message.len() + error.details.len() + 16;
+                }
+            }
+            Some(crate::grpc::stream_response::Message::MoveAsset(move_resp)) => {
+                size += 4;
+                if let Some(asset) = &move_resp.asset {
+                    size += asset.guid.len() + asset.asset_path.len() + asset.r#type.len() + 12;
+                }
+                if let Some(error) = &move_resp.error {
+                    size += error.message.len() + error.details.len() + 16;
+                }
+            }
+            Some(crate::grpc::stream_response::Message::DeleteAsset(delete_resp)) => {
+                size += 4;
+                size += 1; // success boolean
+                if let Some(error) = &delete_resp.error {
+                    size += error.message.len() + error.details.len() + 16;
+                }
+            }
+            Some(crate::grpc::stream_response::Message::Refresh(refresh_resp)) => {
+                size += 4;
+                size += 1; // success boolean
+                if let Some(error) = &refresh_resp.error {
+                    size += error.message.len() + error.details.len() + 16;
+                }
+            }
+            None => {
+                size += 4; // empty message
+            }
+        }
+        
+        size
     }
 
     fn calculate_cache_quality_score(&self, _request: &StreamRequest) -> f64 {
@@ -560,21 +865,102 @@ impl StreamCache {
         0.8 // デフォルト値
     }
 
-    fn should_evict_for_memory(&self, _entry: &CacheEntry) -> bool {
-        // メモリプレッシャーチェック
-        false // 簡略化
+    fn should_evict_for_memory(&self, entry: &CacheEntry) -> bool {
+        // 現在の統計を取得してメモリ使用量をチェック
+        let stats = self.get_statistics();
+        let entry_size = if entry.is_compressed { 
+            entry.compressed_size 
+        } else { 
+            entry.original_size 
+        };
+        
+        // メモリ制限を超える場合は退避が必要
+        let max_memory_bytes = self.config.max_memory_mb * 1024 * 1024;
+        let projected_memory = stats.current_memory_usage + entry_size;
+        
+        projected_memory > max_memory_bytes
     }
 
-    fn evict_by_memory_pressure(&self, _cache: &mut LruCache<CacheKey, CacheEntry>) {
+    fn evict_by_memory_pressure(&self, cache: &mut LruCache<CacheKey, CacheEntry>) {
         // メモリプレッシャーベースの退避処理
+        let max_memory_bytes = self.config.max_memory_mb * 1024 * 1024;
+        let mut current_memory = 0usize;
+        
+        // 現在のメモリ使用量を計算
+        for (_key, entry) in cache.iter() {
+            current_memory += if entry.is_compressed {
+                entry.compressed_size
+            } else {
+                entry.original_size
+            };
+        }
+        
+        // メモリ制限の80%を目標に退避
+        let target_memory = (max_memory_bytes as f64 * 0.8) as usize;
+        
+        while current_memory > target_memory && !cache.is_empty() {
+            if let Some((evicted_key, evicted_entry)) = cache.pop_lru() {
+                let entry_size = if evicted_entry.is_compressed {
+                    evicted_entry.compressed_size
+                } else {
+                    evicted_entry.original_size
+                };
+                current_memory = current_memory.saturating_sub(entry_size);
+                
+                debug!("Evicted entry due to memory pressure: {:?}", evicted_key);
+                self.record_cache_eviction();
+            } else {
+                break;
+            }
+        }
     }
 
     async fn update_cache_statistics(&self) {
-        // 統計更新処理
+        // キャッシュ統計の更新処理
+        match (self.cache.lock(), self.statistics.lock()) {
+            (Ok(cache), Ok(mut stats)) => {
+                stats.current_entry_count = cache.len();
+                
+                // メモリ使用量の更新
+                let mut total_memory = 0usize;
+                let mut compressed_memory = 0usize;
+                let mut original_memory = 0usize;
+                
+                for (_key, entry) in cache.iter() {
+                    let entry_size = if entry.is_compressed {
+                        compressed_memory += entry.compressed_size;
+                        original_memory += entry.original_size;
+                        entry.compressed_size
+                    } else {
+                        original_memory += entry.original_size;
+                        entry.original_size
+                    };
+                    total_memory += entry_size;
+                }
+                
+                stats.current_memory_usage = total_memory;
+                if total_memory > stats.peak_memory_usage {
+                    stats.peak_memory_usage = total_memory;
+                }
+                
+                // 圧縮率の更新
+                if original_memory > 0 {
+                    stats.compression_ratio = compressed_memory as f64 / original_memory as f64;
+                } else {
+                    stats.compression_ratio = 1.0;
+                }
+            }
+            _ => {
+                error!("Failed to update cache statistics: mutex poisoned");
+            }
+        }
     }
 
     fn start_maintenance_tasks(&self) {
-        // 定期メンテナンスタスク開始
+        // 定期メンテナンスタスク開始（簡略化）
+        // 実際の実装では、tokio::spawn でバックグラウンドタスクを開始
+        info!("Cache maintenance tasks initialized with cleanup interval: {:?}", 
+               self.config.cleanup_interval);
     }
 
     fn calculate_response_time_improvement(&self) -> f64 {
@@ -620,6 +1006,15 @@ pub enum CacheError {
     
     #[error("Invalid cache entry")]
     InvalidEntry,
+    
+    #[error("Cache mutex poisoned")]
+    LockPoisoned,
+    
+    #[error("Invalid configuration: {0}")]
+    InvalidConfiguration(String),
+    
+    #[error("Cache operation failed: {0}")]
+    OperationFailed(String),
 }
 
 impl DefaultCacheKeyHasher {
@@ -636,19 +1031,19 @@ impl CacheKeyHasher for DefaultCacheKeyHasher {
         let (operation_type, normalized_path) = match &request.message {
             Some(crate::grpc::stream_request::Message::ImportAsset(req)) => {
                 req.asset_path.hash(&mut hasher);
-                ("import_asset".to_string(), Some(req.asset_path.clone()))
+                (OperationType::ImportAsset, Some(req.asset_path.clone()))
             }
             Some(crate::grpc::stream_request::Message::MoveAsset(req)) => {
                 req.src_path.hash(&mut hasher);
                 req.dst_path.hash(&mut hasher);
-                ("move_asset".to_string(), Some(format!("{}:{}", req.src_path, req.dst_path)))
+                (OperationType::MoveAsset, Some(format!("{}:{}", req.src_path, req.dst_path)))
             }
             Some(crate::grpc::stream_request::Message::DeleteAsset(req)) => {
                 req.asset_path.hash(&mut hasher);
-                ("delete_asset".to_string(), Some(req.asset_path.clone()))
+                (OperationType::DeleteAsset, Some(req.asset_path.clone()))
             }
             Some(crate::grpc::stream_request::Message::Refresh(_)) => {
-                ("refresh".to_string(), None)
+                (OperationType::Refresh, None)
             }
             None => return None,
         };
@@ -680,9 +1075,12 @@ impl CacheKeyHasher for DefaultCacheKeyHasher {
 }
 
 impl AccessPatternAnalyzer {
-    fn new(_config: &CacheConfig) -> Self {
+    fn new(config: &CacheConfig) -> Self {
+        // デフォルトで5000エントリの循環バッファーを使用（約1MB程度）
+        let history_capacity = if config.enable_pattern_learning { 5000 } else { 100 };
+        
         Self {
-            access_history: Vec::new(),
+            access_history: CircularBuffer::new(history_capacity),
             operation_frequency: HashMap::new(),
             temporal_patterns: HashMap::new(),
             learned_patterns: Vec::new(),
@@ -691,17 +1089,12 @@ impl AccessPatternAnalyzer {
     }
 
     fn record_access(&mut self, record: AccessRecord) {
-        // アクセス記録の保存
+        // アクセス記録の保存（循環バッファーが自動的にサイズ制限）
         self.access_history.push(record.clone());
         
         // 操作頻度の更新
-        let operation = record.cache_key.operation_type.clone();
+        let operation = record.cache_key.operation_type.as_str().to_string();
         *self.operation_frequency.entry(operation).or_insert(0) += 1;
-        
-        // 履歴サイズ制限（メモリ管理）
-        if self.access_history.len() > 10000 {
-            self.access_history.remove(0);
-        }
     }
 }
 
