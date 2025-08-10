@@ -17,6 +17,7 @@ use crate::grpc::error::{no_error, not_found_error, validation_error};
 use crate::grpc::validation::{
     ClientInfo, StreamValidationEngine, StreamValidationError, ValidationContext,
 };
+use crate::grpc::performance::cache::StreamCache;
 use crate::grpc::{
     stream_request, stream_response, unity_mcp_service_server::UnityMcpService, CallToolRequest,
     CallToolResponse, DeleteAssetRequest, DeleteAssetResponse, GetProjectInfoRequest,
@@ -104,6 +105,7 @@ impl ErrorContext {
 /// while other methods are provided as minimal stubs.
 pub struct UnityMcpServiceImpl {
     validation_engine: StreamValidationEngine,
+    cache: StreamCache,
 }
 
 impl Default for UnityMcpServiceImpl {
@@ -234,6 +236,7 @@ impl UnityMcpServiceImpl {
     pub fn new() -> Self {
         Self {
             validation_engine: StreamValidationEngine::new(),
+            cache: StreamCache::new(),
         }
     }
 
@@ -241,6 +244,7 @@ impl UnityMcpServiceImpl {
     pub fn new_for_testing() -> Self {
         Self {
             validation_engine: StreamValidationEngine::new_for_testing(),
+            cache: StreamCache::new(),
         }
     }
 
@@ -384,7 +388,15 @@ impl UnityMcpServiceImpl {
         stream_request: StreamRequest,
         message_id: u64,
     ) -> StreamResponse {
-        debug!("Processing stream request with validation");
+        debug!("Processing stream request with validation and caching");
+
+        // キャッシュからレスポンスを取得を試みる
+        if let Some(cached_response) = service.cache.get(&stream_request).await {
+            debug!("Cache hit for message_id: {}", message_id);
+            return cached_response;
+        }
+
+        debug!("Cache miss for message_id: {}, proceeding with validation", message_id);
 
         // 検証コンテキストの作成
         let context = ValidationContext {
@@ -409,12 +421,12 @@ impl UnityMcpServiceImpl {
                 // 検証成功 - サニタイゼーション実行
                 match service
                     .validation_engine
-                    .sanitize_stream_request(stream_request, &context)
+                    .sanitize_stream_request(stream_request.clone(), &context)
                     .await
                 {
                     Ok(sanitized_request) => {
                         // 正常処理続行
-                        match sanitized_request.message {
+                        let response = match sanitized_request.message {
                             Some(request_message) => {
                                 Self::handle_request_message(service, request_message).await
                             }
@@ -422,7 +434,12 @@ impl UnityMcpServiceImpl {
                                 warn!("Sanitized request has no message content");
                                 Self::create_empty_message_error()
                             }
-                        }
+                        };
+
+                        // レスポンスをキャッシュに保存
+                        service.cache.put(&stream_request, response.clone()).await;
+                        
+                        response
                     }
                     Err(sanitize_error) => {
                         // サニタイゼーションエラー

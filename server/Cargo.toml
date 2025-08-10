@@ -43,6 +43,7 @@ num_cpus = "1.17.0"
 futures = "0.3.31"
 metrics = "0.24.2"
 metrics-exporter-prometheus = "0.17.2"
+flate2 = "1.0"
 
 [build-dependencies]
 tonic-prost-build = "0.14"
