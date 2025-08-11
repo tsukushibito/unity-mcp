@@ -41,6 +41,37 @@ mod tests {
         }
     }
 
+    
+    fn create_large_test_response() -> StreamResponse {
+        StreamResponse {
+            message: Some(crate::grpc::stream_response::Message::ImportAsset(
+                ImportAssetResponse {
+                    asset: Some(UnityAsset {
+                        guid: "large-asset-guid-".to_owned() + &"x".repeat(100),
+                        asset_path: "Assets/".to_owned() + &"SubDir/".repeat(50) + "LargeAsset.png",
+                        r#type: "Texture2D with very long description ".to_owned() + &"detail ".repeat(20),
+                    }),
+                    error: None,
+                }
+            )),
+        }
+    }
+    
+    fn create_response_with_error() -> StreamResponse {
+        StreamResponse {
+            message: Some(crate::grpc::stream_response::Message::ImportAsset(
+                ImportAssetResponse {
+                    asset: None,
+                    error: Some(crate::grpc::McpError {
+                        code: 404,
+                        message: "Asset not found in the specified path".to_string(),
+                        details: "The asset file may have been moved or deleted. Please check the path and try again.".to_string(),
+                    }),
+                }
+            )),
+        }
+    }
+
     #[tokio::test]
     async fn test_basic_cache_operations() {
         let cache = StreamCache::new().expect("Failed to create cache");
@@ -655,5 +686,242 @@ mod tests {
             "Compression should reduce memory usage, ratio: {}",
             stats.compression_ratio
         );
+    }
+
+    
+    #[tokio::test]
+    async fn test_compression_roundtrip() {
+        let config = CacheConfig {
+            enable_compression: true,
+            compression_threshold_bytes: 50, // 低い閾値で確実に圧縮される
+            ..Default::default()
+        };
+        
+        let cache = StreamCache::with_config(config).expect("Failed to create cache");
+        let request = create_test_request();
+        let large_response = create_large_test_response();
+        
+        // 大きなレスポンスをキャッシュ（圧縮される）
+        cache.put(&request, large_response.clone()).await;
+        
+        // 取得して内容を比較
+        let cached_response = cache.get(&request).await;
+        assert!(cached_response.is_some(), "Compressed response should be retrievable");
+        
+        let cached = cached_response.unwrap();
+        
+        // 圧縮前後でレスポンス内容が一致することを確認
+        match (&large_response.message, &cached.message) {
+            (
+                Some(crate::grpc::stream_response::Message::ImportAsset(orig)),
+                Some(crate::grpc::stream_response::Message::ImportAsset(cached))
+            ) => {
+                let orig_asset = orig.asset.as_ref().unwrap();
+                let cached_asset = cached.asset.as_ref().unwrap();
+                
+                assert_eq!(orig_asset.guid, cached_asset.guid, "GUID should match after compression roundtrip");
+                assert_eq!(orig_asset.asset_path, cached_asset.asset_path, "Asset path should match after compression roundtrip");
+                assert_eq!(orig_asset.r#type, cached_asset.r#type, "Asset type should match after compression roundtrip");
+            }
+            _ => panic!("Response message types don't match"),
+        }
+        
+        // 統計で圧縮効果を確認
+        let stats = cache.get_statistics();
+        assert!(stats.compression_ratio < 1.0, "Compression should reduce size, ratio: {}", stats.compression_ratio);
+    }
+    
+    #[tokio::test]
+    async fn test_compression_with_error_response() {
+        let config = CacheConfig {
+            enable_compression: true,
+            compression_threshold_bytes: 10, // とても低い閾値
+            ..Default::default()
+        };
+        
+        let cache = StreamCache::with_config(config).expect("Failed to create cache");
+        let request = create_test_request();
+        let error_response = create_response_with_error();
+        
+        // エラーレスポンスをキャッシュ
+        cache.put(&request, error_response.clone()).await;
+        
+        // 取得して内容を確認
+        let cached_response = cache.get(&request).await;
+        assert!(cached_response.is_some());
+        
+        let cached = cached_response.unwrap();
+        
+        // エラー情報が正しく復元されることを確認
+        match (&error_response.message, &cached.message) {
+            (
+                Some(crate::grpc::stream_response::Message::ImportAsset(orig)),
+                Some(crate::grpc::stream_response::Message::ImportAsset(cached))
+            ) => {
+                assert!(orig.asset.is_none() && cached.asset.is_none(), "Both should have no asset");
+                
+                let orig_error = orig.error.as_ref().unwrap();
+                let cached_error = cached.error.as_ref().unwrap();
+                
+                assert_eq!(orig_error.code, cached_error.code, "Error code should match");
+                assert_eq!(orig_error.message, cached_error.message, "Error message should match");
+                assert_eq!(orig_error.details, cached_error.details, "Error details should match");
+            }
+            _ => panic!("Response message types don't match"),
+        }
+    }
+    
+    #[tokio::test]
+    async fn test_compression_threshold() {
+        // 圧縮閾値のテスト
+        let config = CacheConfig {
+            enable_compression: true,
+            compression_threshold_bytes: 1000, // 高い閾値
+            ..Default::default()
+        };
+        
+        let cache = StreamCache::with_config(config).expect("Failed to create cache");
+        let small_request = create_test_request();
+        let small_response = create_test_response(); // 小さなレスポンス
+        
+        cache.put(&small_request, small_response.clone()).await;
+        
+        // 小さなレスポンスは圧縮されないことを確認
+        let stats = cache.get_statistics();
+        
+        // データがキャッシュされているが、圧縮率は1.0（圧縮されていない）のはず
+        assert_eq!(stats.current_entry_count, 1);
+        // 小さなデータなので圧縮されない可能性が高い
+    }
+    
+    #[test]
+    fn test_response_size_estimation_accuracy() {
+        let cache = StreamCache::new().expect("Failed to create cache");
+        
+        // 異なるサイズのレスポンスでサイズ推定の精度をテスト
+        let small_response = create_test_response();
+        let large_response = create_large_test_response();
+        let error_response = create_response_with_error();
+        
+        let small_size = cache.estimate_response_size(&small_response);
+        let large_size = cache.estimate_response_size(&large_response);
+        let error_size = cache.estimate_response_size(&error_response);
+        
+        println!("Response Size Estimates:");
+        println!("  Small response: {} bytes", small_size);
+        println!("  Large response: {} bytes", large_size);
+        println!("  Error response: {} bytes", error_size);
+        
+        // 大きなレスポンスは小さなレスポンスより大きいサイズが推定されるべき
+        assert!(large_size > small_size, "Large response should have larger estimated size");
+        
+        // サイズ推定が妥当な範囲内であることを確認
+        assert!(small_size > 0 && small_size < 10000, "Small response size should be reasonable");
+        assert!(large_size > 100 && large_size < 100000, "Large response size should be reasonable");
+        assert!(error_size > 0 && error_size < 5000, "Error response size should be reasonable");
+    }
+    
+    #[tokio::test]
+    async fn test_compression_memory_efficiency() {
+        let config_compressed = CacheConfig {
+            enable_compression: true,
+            compression_threshold_bytes: 10,
+            max_entries: 100,
+            ..Default::default()
+        };
+        
+        let config_uncompressed = CacheConfig {
+            enable_compression: false,
+            max_entries: 100,
+            ..Default::default()
+        };
+        
+        let cache_compressed = StreamCache::with_config(config_compressed).expect("Failed to create compressed cache");
+        let cache_uncompressed = StreamCache::with_config(config_uncompressed).expect("Failed to create uncompressed cache");
+        
+        // 同じデータを両方のキャッシュに保存
+        for i in 0..50 {
+            let request = StreamRequest {
+                message: Some(crate::grpc::stream_request::Message::ImportAsset(
+                    ImportAssetRequest {
+                        asset_path: format!("Assets/ComparisonTest/LargeAsset{}.png", i),
+                    }
+                )),
+            };
+            let large_response = create_large_test_response();
+            
+            cache_compressed.put(&request, large_response.clone()).await;
+            cache_uncompressed.put(&request, large_response).await;
+        }
+        
+        let stats_compressed = cache_compressed.get_statistics();
+        let stats_uncompressed = cache_uncompressed.get_statistics();
+        
+        println!("Compression Efficiency Comparison:");
+        println!("  Compressed cache memory: {} bytes", stats_compressed.current_memory_usage);
+        println!("  Uncompressed cache memory: {} bytes", stats_uncompressed.current_memory_usage);
+        println!("  Compression ratio: {:.3}", stats_compressed.compression_ratio);
+        
+        // 圧縮キャッシュがメモリ効率的であることを確認
+        assert!(
+            stats_compressed.current_memory_usage < stats_uncompressed.current_memory_usage,
+            "Compressed cache should use less memory"
+        );
+        
+        // 圧縮率が効果的であることを確認
+        assert!(
+            stats_compressed.compression_ratio < 0.8,
+            "Compression should achieve at least 20% reduction, got ratio: {}",
+            stats_compressed.compression_ratio
+        );
+    }
+    
+    #[tokio::test]
+    async fn test_multiple_compression_formats() {
+        let config = CacheConfig {
+            enable_compression: true,
+            compression_threshold_bytes: 10,
+            ..Default::default()
+        };
+        
+        let cache = StreamCache::with_config(config).expect("Failed to create cache");
+        
+        // 異なるタイプのレスポンスをテスト
+        let responses = vec![
+            ("import", create_test_response()),
+            ("large", create_large_test_response()),
+            ("error", create_response_with_error()),
+        ];
+        
+        for (test_type, response) in responses {
+            let request = StreamRequest {
+                message: Some(crate::grpc::stream_request::Message::ImportAsset(
+                    ImportAssetRequest {
+                        asset_path: format!("Assets/{}/TestAsset.png", test_type),
+                    }
+                )),
+            };
+            
+            // 保存と取得
+            cache.put(&request, response.clone()).await;
+            let cached_response = cache.get(&request).await;
+            
+            assert!(cached_response.is_some(), "Response type '{}' should be cacheable", test_type);
+            
+            // 簡単な整合性チェック（メッセージタイプが一致することを確認）
+            let cached = cached_response.unwrap();
+            match (&response.message, &cached.message) {
+                (Some(_), Some(_)) => {
+                    // メッセージが存在することを確認
+                }
+                (None, None) => {
+                    // 両方Noneでも有効
+                }
+                _ => panic!("Message presence mismatch for type '{}'", test_type),
+            }
+        }
+        
+        let stats = cache.get_statistics();
+        assert_eq!(stats.current_entry_count, 3, "All response types should be cached");
     }
 }

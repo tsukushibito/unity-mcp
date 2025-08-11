@@ -54,6 +54,7 @@ pub struct CacheEntry {
     is_compressed: bool,
     original_size: usize,
     compressed_size: usize,
+    compressed_data: Option<Vec<u8>>, // 圧縮されたバイナリデータ
     
     // 品質情報
     cache_quality_score: f64, // 0.0-1.0
@@ -407,7 +408,7 @@ impl StreamCache {
                 entry.access_count += 1;
 
                 let response = if entry.is_compressed {
-                    self.decompress_response(&entry.response)
+                    self.decompress_response(entry)
                         .unwrap_or_else(|_| entry.response.clone())
                 } else {
                     entry.response.clone()
@@ -473,12 +474,12 @@ impl StreamCache {
         };
 
         // レスポンス圧縮（必要に応じて）
-        let (final_response, is_compressed, original_size, compressed_size) = 
+        let (final_response, is_compressed, original_size, compressed_size, compressed_data) = 
             if self.config.enable_compression {
                 self.compress_response_if_beneficial(&response)
             } else {
                 let size = self.estimate_response_size(&response);
-                (response, false, size, size)
+                (response, false, size, size, None)
             };
 
         // キャッシュエントリを作成
@@ -491,6 +492,7 @@ impl StreamCache {
             is_compressed,
             original_size,
             compressed_size,
+            compressed_data,
             cache_quality_score: self.calculate_cache_quality_score(request),
         };
 
@@ -558,7 +560,7 @@ impl StreamCache {
                 entry.access_count += 1;
 
                 let response = if entry.is_compressed {
-                    self.decompress_response(&entry.response)
+                    self.decompress_response(entry)
                         .unwrap_or_else(|_| entry.response.clone())
                 } else {
                     entry.response.clone()
@@ -745,26 +747,27 @@ impl StreamCache {
         }
     }
 
-    fn compress_response_if_beneficial(&self, response: &StreamResponse) -> (StreamResponse, bool, usize, usize) {
+    fn compress_response_if_beneficial(&self, response: &StreamResponse) -> (StreamResponse, bool, usize, usize, Option<Vec<u8>>) {
         let original_size = self.estimate_response_size(response);
         
         if original_size < self.config.compression_threshold_bytes {
-            return (response.clone(), false, original_size, original_size);
+            return (response.clone(), false, original_size, original_size, None);
         }
 
         // 実際の圧縮実装
         match self.compress_response(response) {
-            Ok((compressed_response, compressed_size)) => {
-                (compressed_response, true, original_size, compressed_size)
+            Ok((compressed_response, compressed_data)) => {
+                let compressed_size = compressed_data.len();
+                (compressed_response, true, original_size, compressed_size, Some(compressed_data))
             }
             Err(_) => {
                 // 圧縮に失敗した場合は元のレスポンスを返す
-                (response.clone(), false, original_size, original_size)
+                (response.clone(), false, original_size, original_size, None)
             }
         }
     }
 
-    fn compress_response(&self, response: &StreamResponse) -> Result<(StreamResponse, usize), CacheError> {
+    fn compress_response(&self, response: &StreamResponse) -> Result<(StreamResponse, Vec<u8>), CacheError> {
         // レスポンスの内容をJSON文字列にシリアライズ
         let response_json = self.serialize_response_for_compression(response)
             .map_err(|e| CacheError::CompressionError(format!("Serialization failed: {}", e)))?;
@@ -777,87 +780,343 @@ impl StreamCache {
         let compressed_data = encoder.finish()
             .map_err(|e| CacheError::CompressionError(format!("Compression finish failed: {}", e)))?;
         
-        let compressed_size = compressed_data.len();
+        // 圧縮されたことを示すマーカーレスポンスを作成
+        // 実際の本番環境では、メタデータフィールドで圧縮を示すか、
+        // 別のメッセージタイプを使用する
+        let compressed_marker_response = StreamResponse {
+            message: Some(crate::grpc::stream_response::Message::ImportAsset(
+                crate::grpc::ImportAssetResponse {
+                    asset: Some(crate::grpc::UnityAsset {
+                        guid: "__COMPRESSED_DATA_MARKER__".to_string(),
+                        asset_path: format!("compressed:{}bytes", compressed_data.len()),
+                        r#type: "application/gzip".to_string(),
+                    }),
+                    error: None,
+                }
+            )),
+        };
         
-        // 圧縮データを含む特別なレスポンス（実際のプロダクションでは別の方法を使用）
-        // ここでは元のレスポンスに圧縮情報を付与した形で返す
-        Ok((response.clone(), compressed_size))
+        Ok((compressed_marker_response, compressed_data))
     }
 
-    fn decompress_response(&self, response: &StreamResponse) -> Result<StreamResponse, CacheError> {
-        // 実際の本番環境では、圧縮されたデータを展開する
-        // ここでは概念的な実装として元のレスポンスを返す
-        // （実際の実装では、圧縮されたバイナリデータをgzip解凍してデシリアライズ）
-        Ok(response.clone())
+    fn decompress_response(&self, entry: &CacheEntry) -> Result<StreamResponse, CacheError> {
+        // 圧縮されていない場合は元のレスポンスをそのまま返す
+        if !entry.is_compressed || entry.compressed_data.is_none() {
+            return Ok(entry.response.clone());
+        }
+        
+        let compressed_data = entry.compressed_data.as_ref()
+            .ok_or_else(|| CacheError::DecompressionError("No compressed data available".to_string()))?;
+        
+        // gzip解凍を実行
+        let mut decoder = GzDecoder::new(&compressed_data[..]);
+        let mut decompressed_json = String::new();
+        decoder.read_to_string(&mut decompressed_json)
+            .map_err(|e| CacheError::DecompressionError(format!("Decompression failed: {}", e)))?;
+        
+        // JSONからStreamResponseを復元
+        self.deserialize_response_from_json(&decompressed_json)
+            .map_err(|e| CacheError::DecompressionError(format!("Deserialization failed: {}", e)))
+    }
+
+    
+    fn deserialize_response_from_json(&self, json_str: &str) -> Result<StreamResponse, String> {
+        use serde_json::Value;
+        
+        let json_value: Value = serde_json::from_str(json_str)
+            .map_err(|e| format!("JSON parse failed: {}", e))?;
+        
+        let response_type = json_value.get("type")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| "Missing or invalid response type".to_string())?;
+        
+        let message = match response_type {
+            "import_asset" => {
+                let asset = json_value.get("asset").and_then(|a| {
+                    if a.is_null() { None } else {
+                        Some(crate::grpc::UnityAsset {
+                            guid: a.get("guid")?.as_str()?.to_string(),
+                            asset_path: a.get("asset_path")?.as_str()?.to_string(),
+                            r#type: a.get("type")?.as_str()?.to_string(),
+                        })
+                    }
+                });
+                
+                let error = json_value.get("error").and_then(|e| {
+                    if e.is_null() { None } else {
+                        Some(crate::grpc::McpError {
+                            code: e.get("code")?.as_i64()? as i32,
+                            message: e.get("message")?.as_str()?.to_string(),
+                            details: e.get("details")?.as_str()?.to_string(),
+                        })
+                    }
+                });
+                
+                Some(crate::grpc::stream_response::Message::ImportAsset(
+                    crate::grpc::ImportAssetResponse { asset, error }
+                ))
+            }
+            "move_asset" => {
+                let asset = json_value.get("asset").and_then(|a| {
+                    if a.is_null() { None } else {
+                        Some(crate::grpc::UnityAsset {
+                            guid: a.get("guid")?.as_str()?.to_string(),
+                            asset_path: a.get("asset_path")?.as_str()?.to_string(),
+                            r#type: a.get("type")?.as_str()?.to_string(),
+                        })
+                    }
+                });
+                
+                let error = json_value.get("error").and_then(|e| {
+                    if e.is_null() { None } else {
+                        Some(crate::grpc::McpError {
+                            code: e.get("code")?.as_i64()? as i32,
+                            message: e.get("message")?.as_str()?.to_string(),
+                            details: e.get("details")?.as_str()?.to_string(),
+                        })
+                    }
+                });
+                
+                Some(crate::grpc::stream_response::Message::MoveAsset(
+                    crate::grpc::MoveAssetResponse { asset, error }
+                ))
+            }
+            "delete_asset" => {
+                let success = json_value.get("success")
+                    .and_then(|s| s.as_bool())
+                    .unwrap_or(false);
+                
+                let error = json_value.get("error").and_then(|e| {
+                    if e.is_null() { None } else {
+                        Some(crate::grpc::McpError {
+                            code: e.get("code")?.as_i64()? as i32,
+                            message: e.get("message")?.as_str()?.to_string(),
+                            details: e.get("details")?.as_str()?.to_string(),
+                        })
+                    }
+                });
+                
+                Some(crate::grpc::stream_response::Message::DeleteAsset(
+                    crate::grpc::DeleteAssetResponse { success, error }
+                ))
+            }
+            "refresh" => {
+                let success = json_value.get("success")
+                    .and_then(|s| s.as_bool())
+                    .unwrap_or(false);
+                
+                let error = json_value.get("error").and_then(|e| {
+                    if e.is_null() { None } else {
+                        Some(crate::grpc::McpError {
+                            code: e.get("code")?.as_i64()? as i32,
+                            message: e.get("message")?.as_str()?.to_string(),
+                            details: e.get("details")?.as_str()?.to_string(),
+                        })
+                    }
+                });
+                
+                Some(crate::grpc::stream_response::Message::Refresh(
+                    crate::grpc::RefreshResponse { success, error }
+                ))
+            }
+            "empty" => None,
+            _ => return Err(format!("Unknown response type: {}", response_type))
+        };
+        
+        Ok(StreamResponse { message })
     }
     
     fn serialize_response_for_compression(&self, response: &StreamResponse) -> Result<String, String> {
-        // StreamResponseをJSONに変換（簡略化）
-        // 実際の実装では、protobufバイナリ形式やより効率的なシリアライゼーションを使用
-        match &response.message {
+        use serde_json::json;
+        
+        // StreamResponseを構造化されたJSONに変換
+        let json_value = match &response.message {
             Some(crate::grpc::stream_response::Message::ImportAsset(import_resp)) => {
-                Ok(format!("{{\"type\":\"import_asset\",\"asset\":{:?},\"error\":{:?}}}", 
-                    import_resp.asset, import_resp.error))
+                json!({
+                    "type": "import_asset",
+                    "asset": import_resp.asset.as_ref().map(|asset| json!({
+                        "guid": asset.guid,
+                        "asset_path": asset.asset_path,
+                        "type": asset.r#type
+                    })),
+                    "error": import_resp.error.as_ref().map(|error| json!({
+                        "code": error.code,
+                        "message": error.message,
+                        "details": error.details
+                    }))
+                })
             }
             Some(crate::grpc::stream_response::Message::MoveAsset(move_resp)) => {
-                Ok(format!("{{\"type\":\"move_asset\",\"asset\":{:?},\"error\":{:?}}}", 
-                    move_resp.asset, move_resp.error))
+                json!({
+                    "type": "move_asset",
+                    "asset": move_resp.asset.as_ref().map(|asset| json!({
+                        "guid": asset.guid,
+                        "asset_path": asset.asset_path,
+                        "type": asset.r#type
+                    })),
+                    "error": move_resp.error.as_ref().map(|error| json!({
+                        "code": error.code,
+                        "message": error.message,
+                        "details": error.details
+                    }))
+                })
             }
             Some(crate::grpc::stream_response::Message::DeleteAsset(delete_resp)) => {
-                Ok(format!("{{\"type\":\"delete_asset\",\"success\":{},\"error\":{:?}}}", 
-                    delete_resp.success, delete_resp.error))
+                json!({
+                    "type": "delete_asset",
+                    "success": delete_resp.success,
+                    "error": delete_resp.error.as_ref().map(|error| json!({
+                        "code": error.code,
+                        "message": error.message,
+                        "details": error.details
+                    }))
+                })
             }
             Some(crate::grpc::stream_response::Message::Refresh(refresh_resp)) => {
-                Ok(format!("{{\"type\":\"refresh\",\"success\":{},\"error\":{:?}}}", 
-                    refresh_resp.success, refresh_resp.error))
+                json!({
+                    "type": "refresh",
+                    "success": refresh_resp.success,
+                    "error": refresh_resp.error.as_ref().map(|error| json!({
+                        "code": error.code,
+                        "message": error.message,
+                        "details": error.details
+                    }))
+                })
             }
-            None => Ok("{\"type\":\"empty\"}".to_string()),
-        }
+            None => json!({"type": "empty"})
+        };
+        
+        // JSON文字列に変換
+        serde_json::to_string(&json_value)
+            .map_err(|e| format!("JSON serialization failed: {}", e))
     }
 
     fn estimate_response_size(&self, response: &StreamResponse) -> usize {
-        // protobufメッセージのサイズを推定
-        let mut size = 8; // ベースヘッダーサイズ
+        // より正確なprotobufサイズ推定
+        // protobufエンコーディング特性を考慮した計算
+        let mut size = 0usize;
+        
+        // protobufメッセージのベースオーバーヘッド
+        size += 4; // メッセージタイプとlengthフィールド
         
         match &response.message {
             Some(crate::grpc::stream_response::Message::ImportAsset(import_resp)) => {
-                size += 4; // message type field
+                // フィールド1: asset (optional message)
                 if let Some(asset) = &import_resp.asset {
-                    size += asset.guid.len() + asset.asset_path.len() + asset.r#type.len() + 12;
+                    size += 1; // field tag
+                    let asset_size = self.estimate_asset_info_size(asset);
+                    size += self.estimate_varint_size(asset_size) + asset_size;
                 }
+                
+                // フィールド2: error (optional message)  
                 if let Some(error) = &import_resp.error {
-                    size += error.message.len() + error.details.len() + 16;
+                    size += 1; // field tag
+                    let error_size = self.estimate_error_info_size(error);
+                    size += self.estimate_varint_size(error_size) + error_size;
                 }
             }
             Some(crate::grpc::stream_response::Message::MoveAsset(move_resp)) => {
-                size += 4;
                 if let Some(asset) = &move_resp.asset {
-                    size += asset.guid.len() + asset.asset_path.len() + asset.r#type.len() + 12;
+                    size += 1;
+                    let asset_size = self.estimate_asset_info_size(asset);
+                    size += self.estimate_varint_size(asset_size) + asset_size;
                 }
+                
                 if let Some(error) = &move_resp.error {
-                    size += error.message.len() + error.details.len() + 16;
+                    size += 1;
+                    let error_size = self.estimate_error_info_size(error);
+                    size += self.estimate_varint_size(error_size) + error_size;
                 }
             }
             Some(crate::grpc::stream_response::Message::DeleteAsset(delete_resp)) => {
-                size += 4;
-                size += 1; // success boolean
+                // success boolean field
+                size += 1 + 1; // field tag + boolean value
+                
                 if let Some(error) = &delete_resp.error {
-                    size += error.message.len() + error.details.len() + 16;
+                    size += 1;
+                    let error_size = self.estimate_error_info_size(error);
+                    size += self.estimate_varint_size(error_size) + error_size;
                 }
             }
             Some(crate::grpc::stream_response::Message::Refresh(refresh_resp)) => {
-                size += 4;
-                size += 1; // success boolean
+                // success boolean field
+                size += 1 + 1;
+                
                 if let Some(error) = &refresh_resp.error {
-                    size += error.message.len() + error.details.len() + 16;
+                    size += 1;
+                    let error_size = self.estimate_error_info_size(error);
+                    size += self.estimate_varint_size(error_size) + error_size;
                 }
             }
             None => {
-                size += 4; // empty message
+                // 空のメッセージ
+                size += 1;
             }
         }
         
         size
+    }
+
+    
+    /// protobuf AssetInfoのサイズを推定
+    fn estimate_asset_info_size(&self, asset: &crate::grpc::UnityAsset) -> usize {
+        let mut size = 0usize;
+        
+        // guid field (string)
+        if !asset.guid.is_empty() {
+            size += 1; // field tag
+            size += self.estimate_varint_size(asset.guid.len()) + asset.guid.len();
+        }
+        
+        // asset_path field (string)
+        if !asset.asset_path.is_empty() {
+            size += 1;
+            size += self.estimate_varint_size(asset.asset_path.len()) + asset.asset_path.len();
+        }
+        
+        // type field (string)  
+        if !asset.r#type.is_empty() {
+            size += 1;
+            size += self.estimate_varint_size(asset.r#type.len()) + asset.r#type.len();
+        }
+        
+        size
+    }
+    
+    /// protobuf ErrorInfoのサイズを推定
+    fn estimate_error_info_size(&self, error: &crate::grpc::McpError) -> usize {
+        let mut size = 0usize;
+        
+        // code field (int32)
+        if error.code != 0 {
+            size += 1; // field tag
+            size += self.estimate_varint_size(error.code.abs() as usize);
+        }
+        
+        // message field (string)
+        if !error.message.is_empty() {
+            size += 1; // field tag
+            size += self.estimate_varint_size(error.message.len()) + error.message.len();
+        }
+        
+        // details field (string)
+        if !error.details.is_empty() {
+            size += 1;
+            size += self.estimate_varint_size(error.details.len()) + error.details.len();
+        }
+        
+        size
+    }
+    
+    /// protobuf varintエンコーディングのサイズを推定
+    fn estimate_varint_size(&self, value: usize) -> usize {
+        match value {
+            0..=127 => 1,
+            128..=16383 => 2,
+            16384..=2097151 => 3,
+            2097152..=268435455 => 4,
+            _ => 5, // 最大5バイト
+        }
     }
 
     fn calculate_cache_quality_score(&self, _request: &StreamRequest) -> f64 {
