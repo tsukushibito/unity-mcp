@@ -1,0 +1,12 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+
+// Generic empty placeholder to avoid google.protobuf.Empty at L0.
+message Empty {}
+
+// Minimal operation reference for streaming/event demos.
+message OperationRef {
+  string id = 1; // opaque identifier
+}
