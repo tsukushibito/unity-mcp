@@ -28,6 +28,13 @@
       "args": [
         "mcp"
       ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ]
     }
   }
 }
