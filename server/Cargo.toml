@@ -1,52 +1,6 @@
 [package]
 name = "server"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-rmcp = { version = "0.4", features = [
-    "server",
-    "transport-sse-server",
-    "transport-io",
-    "transport-streamable-http-server",
-] }
-tokio = { version = "1", features = [
-    "macros",
-    "rt",
-    "rt-multi-thread",
-    "io-std",
-    "signal",
-] }
-anyhow = "1.0"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = [
-    "env-filter",
-    "std",
-    "fmt",
-] }
-
-# gRPC dependencies
-tonic = "0.14"
-prost = "0.14"
-prost-types = "0.14"
-tonic-prost = "0.14"
-async-trait = "0.1"
-tokio-stream = { version = "0.1" }
-tokio-util = { version = "0.7", features = ["rt"] }
-uuid = { version = "1.0", features = ["v4"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-regex = "1.10"
-thiserror = "1.0"
-lru = "0.16.0"
-num_cpus = "1.17.0"
-futures = "0.3.31"
-metrics = "0.24.2"
-metrics-exporter-prometheus = "0.17.2"
-flate2 = "1.0"
-
-[build-dependencies]
-tonic-prost-build = "0.14"
-
-[dev-dependencies]
-rand = "0.8"
