@@ -1,0 +1,18 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+import "mcp/unity/v1/common.proto";
+
+service EditorControl {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc GetPlayMode(Empty) returns (GetPlayModeResponse);
+  rpc SetPlayMode(SetPlayModeRequest) returns (SetPlayModeResponse);
+}
+
+message HealthRequest {}
+message HealthResponse { string status = 1; /* e.g., "OK" */ }
+
+message GetPlayModeResponse { bool is_playing = 1; }
+message SetPlayModeRequest { bool play = 1; }
+message SetPlayModeResponse { bool applied = 1; }
