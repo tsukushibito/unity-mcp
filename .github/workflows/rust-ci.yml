@@ -1,0 +1,22 @@
+name: Rust CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install protoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build server
+        run: cargo build -p server --locked --verbose
+      - name: Run tests
+        run: cargo test -p server --locked --verbose
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Run clippy
+        run: cargo clippy --all-targets -- -D warnings

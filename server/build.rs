@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tonic_prost_build::configure()
         .build_server(false)
-        .compile_protos(&files, &[proto_root.clone()])?;
+        .compile_protos(&files, std::slice::from_ref(&proto_root))?;
 
     println!("cargo:rerun-if-changed={}", proto_root.display());
     for f in &files {

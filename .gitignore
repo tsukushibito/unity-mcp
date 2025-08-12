@@ -2,3 +2,18 @@
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Rust
+/target
+**/*.rs.bk
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+Thumbs.db
