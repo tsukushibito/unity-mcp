@@ -1,0 +1,16 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+import "mcp/unity/v1/common.proto";
+
+service Events {
+  // Server streaming example (bridge -> client). The Rust side will be a client receiving the stream.
+  rpc SubscribeOperation(OperationRef) returns (stream OperationEvent);
+}
+
+message OperationEvent {
+  string id = 1;     // operation id
+  string kind = 2;   // e.g., "progress", "completed", "error"
+  string payload = 3;// free-form JSON string at L0
+}
