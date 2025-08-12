@@ -4,3 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.99"
+prost = "0.14.1"
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+tonic = { version = "0.14.1", features = ["transport", "tls-webpki-roots"] }
+
+[build-dependencies]
+tonic-build = "0.14.1"
