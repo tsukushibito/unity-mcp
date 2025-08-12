@@ -1,0 +1,11 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+
+service Assets {
+  rpc ImportAsset(ImportAssetRequest) returns (ImportAssetResponse);
+}
+
+message ImportAssetRequest { string path = 1; }
+message ImportAssetResponse { bool queued = 1; string op_id = 2; }

@@ -1,0 +1,16 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+import "mcp/unity/v1/common.proto";
+
+service Operations {
+  rpc GetOperation(OperationGetRequest) returns (OperationGetResponse);
+  rpc CancelOperation(OperationCancelRequest) returns (OperationCancelResponse);
+}
+
+message OperationGetRequest { string id = 1; }
+message OperationGetResponse { string id = 1; string state = 2; string message = 3; }
+
+message OperationCancelRequest { string id = 1; }
+message OperationCancelResponse { bool accepted = 1; }

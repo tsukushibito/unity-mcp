@@ -1,0 +1,11 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+
+service Build {
+  rpc BuildPlayer(BuildPlayerRequest) returns (BuildPlayerResponse);
+}
+
+message BuildPlayerRequest { string target = 1; /* e.g., "Android" */ }
+message BuildPlayerResponse { bool started = 1; string op_id = 2; }
