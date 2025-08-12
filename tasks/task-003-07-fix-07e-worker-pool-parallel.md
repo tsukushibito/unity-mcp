@@ -1,13 +1,13 @@
-# Task 3.7 Fix 07-E: 並列処理ワーカープール（Rayon活用版）
+# Task 3.7 Fix 07-E: 既存WorkerPool並列処理拡張（Rayon統合版）
 
 ## 概要
-Rayonクレートを活用した高性能並列処理システムを実装します。Rayonの実証済みwork-stealingアルゴリズムとCPU最適化されたスレッドプールを利用することで、シンプルかつ効率的な並列処理によるスループット向上とレスポンス時間短縮を実現します。
+既存のWorkerPoolを拡張し、Rayonクレートを活用したCPU集約的並列処理機能を追加します。既存の非同期タスク処理機能を維持しながら、CPU集約的なワークロード専用の並列処理メソッドを統合することで、アーキテクチャの一貫性を保ちつつパフォーマンス向上を実現します。
 
 ## 優先度
 **🔴 最高優先度** - スループット向上の中核コンポーネント
 
 ## 実装時間見積もり
-**30分** - 集中作業時間（Rayon活用により大幅短縮）
+**30分** - 集中作業時間（既存WorkerPool拡張アプローチによる効率化）
 
 ## 依存関係
 - Task 3.7 Fix 07-A (基盤インフラ整備) 完了必須
@@ -16,15 +16,15 @@ Rayonクレートを活用した高性能並列処理システムを実装しま
 ## 受け入れ基準
 
 ### 並列処理要件
-- [ ] Rayonによる自動CPU最適化
+- [ ] 既存WorkerPoolへのRayon統合
+- [ ] CPU集約的タスク専用メソッド追加
 - [ ] Work-stealingアルゴリズムによる効率的負荷分散
 - [ ] Parallel iteratorによるバッチ処理最適化
-- [ ] カスタムThreadPoolBuilder設定
 
-### 負荷制御要件
-- [ ] セマフォによるバックプレッシャー制御
-- [ ] 非同期タスクとの統合（tokio-rayon）
-- [ ] シンプルな優先度制御
+### 既存機能互換性要件
+- [ ] 非同期タスク処理機能の完全保持
+- [ ] 既存APIとの後方互換性維持
+- [ ] グレースフルシャットダウン機能継続
 - [ ] 統計収集とパフォーマンス監視統合
 
 ### 安定性要件
@@ -41,7 +41,7 @@ Rayonクレートを活用した高性能並列処理システムを実装しま
 
 ## 技術的詳細
 
-### ParallelProcessor 実装（Rayon活用）
+### WorkerPool拡張実装（Rayon統合）
 
 #### server/Cargo.toml への依存追加
 ```toml
@@ -50,341 +50,273 @@ rayon = "1.8"
 tokio-rayon = "2.1"  # tokioとの統合用
 ```
 
-#### src/grpc/performance/parallel_processor.rs
+#### src/grpc/performance/worker_pool.rs への拡張
 ```rust
-//! Rayon活用並列処理システム
+//! ワーカープールモジュール（Rayon並列処理拡張）
 //! 
-//! Unity MCP Server のストリーミング処理において、Rayonの実証済み
-//! work-stealingアルゴリズムによる高効率並列処理を実現する。
+//! 非同期タスクのワーカープールに加えて、CPU集約的並列処理機能を提供します。
 
-use std::sync::{Arc, Mutex, atomic::{AtomicU64, Ordering}};
-use std::time::{Duration, Instant};
+use futures::future::BoxFuture;
 use rayon::prelude::*;
-use rayon::{ThreadPool, ThreadPoolBuilder};
-use tokio::sync::Semaphore;
-use tracing::{debug, info, warn, error, instrument};
-use uuid::Uuid;
-use crate::grpc::service::UnityMcpServiceImpl;
-use crate::grpc::performance::monitor::StreamPerformanceMonitor;
-use crate::unity::{StreamRequest, StreamResponse};
+use std::sync::Arc;
+use tokio::sync::{mpsc, Mutex, oneshot};
+use tracing::{debug, info, instrument};
 
-/// Rayon並列処理システム
-pub struct ParallelProcessor {
-    // Rayonスレッドプール
-    thread_pool: ThreadPool,
-    
-    // 非同期制御
-    semaphore: Arc<Semaphore>,
-    
-    // 統計情報
-    stats: Arc<ProcessingStatistics>,
-    
-    // パフォーマンス監視
-    performance_monitor: Option<Arc<StreamPerformanceMonitor>>,
-    
-    // 設定
-    config: ParallelConfig,
+/// ワーカープール（Rayon拡張版）
+pub struct WorkerPool {
+    // 既存フィールド（変更なし）
+    sender: mpsc::Sender<BoxFuture<'static, ()>>,
+    handles: Vec<tokio::task::JoinHandle<()>>,
 }
 
-/// 並列処理設定
-#[derive(Debug, Clone)]
-pub struct ParallelConfig {
-    // Rayonスレッドプール設定
-    pub thread_count: Option<usize>,  // Noneの場合はCPUコア数自動設定
-    pub thread_name_prefix: String,
-    
-    // バッチ処理設定
-    pub batch_size: usize,
-    pub max_concurrent_batches: usize,
-    
-    // バックプレッシャー制御
-    pub max_pending_tasks: usize,
-    
-    // 監視設定
-    pub enable_statistics: bool,
-}
-
-impl Default for ParallelConfig {
-    fn default() -> Self {
-        Self {
-            thread_count: None,  // Rayonが自動設定
-            thread_name_prefix: "unity-mcp-worker".to_string(),
-            batch_size: 10,
-            max_concurrent_batches: 100,
-            max_pending_tasks: 1000,
-            enable_statistics: true,
-        }
-    }
-}
-
-/// 処理統計
-#[derive(Debug, Default)]
-pub struct ProcessingStatistics {
-    pub total_processed: AtomicU64,
-    pub total_failed: AtomicU64,
-    pub total_processing_time: Mutex<Duration>,
-}
-
-impl ParallelProcessor {
-    /// 新しい並列プロセッサーを作成
-    pub fn new() -> anyhow::Result<Self> {
-        Self::with_config(ParallelConfig::default())
-    }
-
-    /// 設定付きで並列プロセッサーを作成
-    pub fn with_config(config: ParallelConfig) -> anyhow::Result<Self> {
-        let mut builder = ThreadPoolBuilder::new()
-            .thread_name(|i| format!("{}-{}", config.thread_name_prefix, i));
-        
-        if let Some(count) = config.thread_count {
-            builder = builder.num_threads(count);
-        }
-        
-        let thread_pool = builder.build()?;
-        let semaphore = Arc::new(Semaphore::new(config.max_pending_tasks));
-        let stats = Arc::new(ProcessingStatistics::default());
-        
-        info!(
-            "Parallel processor initialized with {} threads", 
-            thread_pool.current_num_threads()
-        );
-        
-        Ok(Self {
-            thread_pool,
-            semaphore,
-            stats,
-            performance_monitor: None,
-            config,
-        })
-    }
-
-    /// パフォーマンス監視を設定
-    pub fn with_performance_monitor(mut self, monitor: Arc<StreamPerformanceMonitor>) -> Self {
-        self.performance_monitor = Some(monitor);
-        self
-    }
-
-    /// 並列バッチ処理を実行
-    #[instrument(skip(self, requests))]
-    pub async fn execute_parallel_batch(
-        &self,
-        requests: Vec<StreamRequest>,
-    ) -> Vec<Result<StreamResponse, ProcessingError>> {
-        let batch_size = requests.len();
-        let start_time = Instant::now();
-        
-        debug!("Processing batch of {} requests in parallel", batch_size);
-        
-        // バックプレッシャー制御
-        let _permit = self.semaphore.acquire_many(batch_size as u32).await
-            .map_err(|_| ProcessingError::BackpressureExceeded)?;
-        
-        // Rayonで並列処理実行
-        let results = self.thread_pool.install(|| {
-            requests.par_iter()
-                .map(|request| self.process_single_request(request))
-                .collect::<Vec<_>>()
-        });
-        
-        let processing_time = start_time.elapsed();
-        self.record_batch_completion(batch_size, processing_time);
-        
-        Ok(results)
-    }
-
-    /// チャンク分割バッチ処理
-    pub async fn execute_chunked_parallel(
-        &self,
-        requests: Vec<StreamRequest>,
-    ) -> Vec<Result<StreamResponse, ProcessingError>> {
-        let chunk_size = self.config.batch_size;
-        let start_time = Instant::now();
-        
-        let results: Vec<_> = requests
-            .par_chunks(chunk_size)
-            .flat_map(|chunk| {
-                chunk.par_iter()
-                    .map(|request| self.process_single_request(request))
-            })
-            .collect();
-        
-        let processing_time = start_time.elapsed();
-        self.record_batch_completion(requests.len(), processing_time);
-        
-        results
-    }
-
-    /// 単一リクエスト処理（内部実装）
-    fn process_single_request(&self, request: &StreamRequest) -> Result<StreamResponse, ProcessingError> {
-        let start_time = Instant::now();
-        
-        // 実際の処理ロジック（実装時に詳細化）
-        let result = self.execute_request_sync(request);
-        
-        // 統計更新
-        if self.config.enable_statistics {
-            self.update_statistics(&result, start_time.elapsed());
-        }
-        
-        result
-    }
-
-    /// 同期リクエスト実行
-    fn execute_request_sync(&self, _request: &StreamRequest) -> Result<StreamResponse, ProcessingError> {
-        // TODO: 実際のサービス呼び出し実装
-        Err(ProcessingError::NotImplemented)
-    }
-
-    /// 統計更新
-    fn update_statistics(&self, result: &Result<StreamResponse, ProcessingError>, duration: Duration) {
-        self.stats.total_processed.fetch_add(1, Ordering::Relaxed);
-        if result.is_err() {
-            self.stats.total_failed.fetch_add(1, Ordering::Relaxed);
-        }
-        
-        if let Ok(mut total_time) = self.stats.total_processing_time.lock() {
-            *total_time += duration;
-        }
-    }
-
-    /// バッチ完了記録
-    fn record_batch_completion(&self, batch_size: usize, duration: Duration) {
-        debug!(
-            "Batch completed: {} requests in {:?}",
-            batch_size, duration
-        );
-        
-        if let Some(monitor) = &self.performance_monitor {
-            // パフォーマンス監視システムに記録
-        }
-    }
-}
-
-/// 処理エラー
+/// 並列処理エラー
 #[derive(Debug, thiserror::Error)]
-pub enum ProcessingError {
+pub enum ParallelError {
     #[error("Task processing failed: {0}")]
     TaskFailed(String),
     
-    #[error("Backpressure limit exceeded")]
-    BackpressureExceeded,
+    #[error("Task was cancelled")]
+    TaskCancelled,
     
-    #[error("Thread pool error: {0}")]
-    ThreadPoolError(String),
+    #[error("Join error: {0}")]
+    JoinError(#[from] tokio::task::JoinError),
+}
+
+impl WorkerPool {
+    // 既存メソッド（変更なし）
+    pub fn new(worker_count: usize, queue_capacity: usize) -> Self {
+        // 既存実装を保持
+    }
+
+    pub async fn spawn<F>(&self, task: F) -> Result<(), mpsc::error::SendError<BoxFuture<'static, ()>>>
+    where
+        F: futures::Future<Output = ()> + Send + 'static,
+    {
+        // 既存実装を保持
+    }
+
+    // 新機能：CPU集約的並列処理
+    /// CPU集約的な作業を並列実行
+    #[instrument(skip(self, work))]
+    pub async fn spawn_cpu_work<F, T>(&self, work: F) -> Result<T, ParallelError>
+    where
+        F: FnOnce() -> T + Send + 'static,
+        T: Send + 'static,
+    {
+        let (tx, rx) = oneshot::channel();
+        
+        // Rayonで並列実行し、結果を非同期で返す
+        rayon::spawn(move || {
+            let result = work();
+            let _ = tx.send(result);
+        });
+        
+        rx.await.map_err(|_| ParallelError::TaskCancelled)
+    }
     
-    #[error("Not implemented")]
-    NotImplemented,
+    /// バッチデータを並列処理
+    #[instrument(skip(self, items, process_fn))]
+    pub async fn spawn_parallel_batch<T, F, R>(
+        &self, 
+        items: Vec<T>, 
+        process_fn: F
+    ) -> Result<Vec<R>, ParallelError>
+    where
+        T: Send + 'static,
+        F: Fn(T) -> R + Send + Sync + 'static,
+        R: Send + 'static,
+    {
+        let (tx, rx) = oneshot::channel();
+        let process_fn = Arc::new(process_fn);
+        
+        tokio::task::spawn_blocking(move || {
+            let results: Vec<R> = items
+                .into_par_iter()
+                .map(|item| process_fn(item))
+                .collect();
+            let _ = tx.send(results);
+        });
+        
+        rx.await.map_err(|_| ParallelError::TaskCancelled)
+    }
+    
+    /// チャンク分割並列処理
+    pub async fn spawn_chunked_parallel<T, F, R>(
+        &self,
+        items: Vec<T>,
+        chunk_size: usize,
+        process_fn: F,
+    ) -> Result<Vec<R>, ParallelError>
+    where
+        T: Send + 'static,
+        F: Fn(T) -> R + Send + Sync + 'static,
+        R: Send + 'static,
+    {
+        let (tx, rx) = oneshot::channel();
+        let process_fn = Arc::new(process_fn);
+        
+        tokio::task::spawn_blocking(move || {
+            let results: Vec<R> = items
+                .par_chunks(chunk_size)
+                .flat_map(|chunk| {
+                    chunk.par_iter()
+                        .map(|item| process_fn(item.clone()))
+                })
+                .collect();
+            let _ = tx.send(results);
+        });
+        
+        rx.await.map_err(|_| ParallelError::TaskCancelled)
+    }
+
+    // 既存メソッド（変更なし）
+    pub async fn shutdown(mut self) -> Result<(), tokio::task::JoinError> {
+        // 既存実装を保持
+    }
+
+    pub fn worker_count(&self) -> usize {
+        // 既存実装を保持
+    }
 }
 ```
 
-## 実装計画（Rayon活用版）
+## 実装計画（WorkerPool拡張版）
 
-### Step 1: Rayon統合とCargo設定 (10分)
+### Step 1: Rayon依存関係追加 (5分)
 1. `Cargo.toml` にrayon依存関係追加
-2. `ParallelProcessor` 基本構造実装
-3. ThreadPoolBuilder設定
+2. 既存WorkerPoolモジュールへのRayonインポート追加
 
-### Step 2: 並列処理機能実装 (15分)
-1. `execute_parallel_batch()` メソッド実装
-2. `execute_chunked_parallel()` メソッド実装
-3. バックプレッシャー制御（Semaphore）
+### Step 2: WorkerPool並列処理メソッド追加 (15分)
+1. `spawn_cpu_work()` メソッド実装 - CPU集約的単一タスク
+2. `spawn_parallel_batch()` メソッド実装 - バッチ並列処理
+3. `spawn_chunked_parallel()` メソッド実装 - チャンク分割処理
+4. `ParallelError` エラー型定義
 
-### Step 3: 統計とモニタリング統合 (5分)
-1. 簡単な統計収集機能
-2. `StreamPerformanceMonitor` 統合
-3. 基本テスト実装
+### Step 3: テストと検証 (10分)
+1. 既存メソッドの回帰テスト実行
+2. 新並列処理メソッドのテスト実装
+3. パフォーマンス比較ベンチマーク
 
-## テスト要件（Rayon版）
+## テスト要件（WorkerPool拡張版）
 
-### 並列処理機能テスト
+### 既存機能回帰テスト
 ```rust
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Instant;
 
     #[tokio::test]
-    async fn test_parallel_processor_creation() {
-        let processor = ParallelProcessor::new().unwrap();
-        assert!(processor.thread_pool.current_num_threads() > 0);
+    async fn test_existing_async_functionality() {
+        let pool = WorkerPool::new(4, 100);
+        
+        // 既存の非同期タスク処理が正常動作することを確認
+        let result = pool.spawn(async {
+            // テストタスク
+        }).await;
+        
+        assert!(result.is_ok());
+        assert_eq!(pool.worker_count(), 4);
+    }
+
+    #[tokio::test]
+    async fn test_cpu_work_parallel_processing() {
+        let pool = WorkerPool::new(4, 100);
+        
+        // CPU集約的タスクを並列実行
+        let result = pool.spawn_cpu_work(|| {
+            // 重い計算タスクのシミュレーション
+            (0..1000000).sum::<u64>()
+        }).await;
+        
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 499999500000u64);
     }
 
     #[tokio::test]
     async fn test_parallel_batch_processing() {
-        let processor = ParallelProcessor::new().unwrap();
+        let pool = WorkerPool::new(4, 100);
         
-        let requests: Vec<StreamRequest> = (0..100)
-            .map(|i| create_test_stream_request(i))
-            .collect();
-
-        let results = processor.execute_parallel_batch(requests).await;
+        let items: Vec<u32> = (0..100).collect();
+        let results = pool.spawn_parallel_batch(items, |x| x * 2).await;
+        
         assert!(results.is_ok());
-        assert_eq!(results.unwrap().len(), 100);
+        let results = results.unwrap();
+        assert_eq!(results.len(), 100);
+        assert_eq!(results[0], 0);
+        assert_eq!(results[99], 198);
     }
 
     #[tokio::test]
     async fn test_chunked_parallel_processing() {
-        let processor = ParallelProcessor::new().unwrap();
+        let pool = WorkerPool::new(4, 100);
         
-        let requests: Vec<StreamRequest> = (0..50)
-            .map(|i| create_test_stream_request(i))
-            .collect();
-
-        let results = processor.execute_chunked_parallel(requests).await;
+        let items: Vec<u32> = (0..50).collect();
+        let results = pool.spawn_chunked_parallel(items, 10, |x| x * x).await;
+        
+        assert!(results.is_ok());
+        let results = results.unwrap();
         assert_eq!(results.len(), 50);
+        assert_eq!(results[0], 0);
+        assert_eq!(results[49], 2401);
     }
 
     #[tokio::test]
-    async fn test_backpressure_control() {
-        let config = ParallelConfig {
-            max_pending_tasks: 10,
-            ..Default::default()
-        };
-        let processor = ParallelProcessor::with_config(config).unwrap();
+    async fn test_performance_comparison() {
+        let pool = WorkerPool::new(4, 100);
         
-        // 大量リクエストでバックプレッシャーテスト
-        let requests: Vec<StreamRequest> = (0..1000)
-            .map(|i| create_test_stream_request(i))
-            .collect();
-
-        let result = processor.execute_parallel_batch(requests).await;
-        // バックプレッシャー制御の動作確認
-        assert!(result.is_ok() || matches!(result, Err(ProcessingError::BackpressureExceeded)));
+        let items: Vec<u32> = (0..10000).collect();
+        
+        // 逐次処理の時間測定
+        let start = Instant::now();
+        let _sequential: Vec<u64> = items.iter().map(|&x| expensive_computation(x)).collect();
+        let sequential_time = start.elapsed();
+        
+        // 並列処理の時間測定
+        let start = Instant::now();
+        let _parallel = pool.spawn_parallel_batch(items, expensive_computation).await.unwrap();
+        let parallel_time = start.elapsed();
+        
+        // 並列処理が高速であることを確認（理想的には）
+        println!("Sequential: {:?}, Parallel: {:?}", sequential_time, parallel_time);
+        
+        // 最低限、並列処理が完了することを確認
+        assert!(parallel_time < sequential_time * 2); // 寛大なチェック
     }
 
-    fn create_test_stream_request(id: usize) -> StreamRequest {
-        // テスト用リクエスト作成
-        StreamRequest {
-            message: Some(format!("test-message-{}", id).into()),
-        }
+    fn expensive_computation(x: u32) -> u64 {
+        // 簡単なCPU集約的計算
+        (0..x % 1000).map(|i| i as u64).sum()
     }
 }
 ```
 
-## 成功基準（Rayon版）
+## 成功基準（WorkerPool拡張版）
 
-### 機能基準
-- Rayonによる自動並列処理が正常動作
-- バッチ処理効率 > 90%（Rayon最適化）
-- 軽量なエラーハンドリング
-- シンプルな統計収集機能
+### 統合性基準
+- 既存の非同期タスク処理機能に影響なし
+- 全ての既存テストがパス
+- 既存APIとの完全な後方互換性
+- グレースフルシャットダウン機能の継続
 
-### パフォーマンス基準
-- スループット > 2000 req/s（Rayonによる最適化）
-- Work-stealing効率 > 80%
-- タスク分散遅延 < 1ms（Rayon内蔵最適化）
-- セマフォによるバックプレッシャー制御
+### 並列処理機能基準
+- CPU集約的タスクでのパフォーマンス向上 2-4倍
+- バッチ処理効率 > 85%
+- チャンク分割処理の正常動作
+- メモリ使用量増加 < 20%
 
 ### 開発効率基準
-- 実装時間大幅短縮（75分 → 30分）
-- 保守性向上（プロベンライブラリ活用）
-- コード複雑度削減（自作実装 → Rayon活用）
+- アーキテクチャの一貫性保持
+- 新しいAPIの学習コスト最小化
+- 単一クラスでの統一された概念
+- コード重複の回避
 
 ## 次のステップ
 
-Rayon並列処理システム完了後：
-1. Task 3.7 Fix 07-F: 最適化プロセッサー統合実装
-2. 全コンポーネントの統合テスト
-3. パフォーマンスベンチマーク実行（Rayon効果測定）
+WorkerPool並列処理拡張完了後：
+1. Task 3.7 Fix 07-F: 最適化プロセッサーでの拡張WorkerPool統合
+2. 既存システムとの統合テスト
+3. 非同期 vs CPU並列処理のパフォーマンス比較ベンチマーク
 
 ## 関連ドキュメント
 - Task 3.7 Fix 07-A (基盤インフラ整備)
