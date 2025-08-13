@@ -39,6 +39,7 @@
 				"dbaeumer.vscode-eslint",
 				// Git/GitHub
 				"github.vscode-pull-request-github",
+				"github.vscode-github-actions",
 				// Unity 開発
 				"visualstudiotoolsforunity.vstuc",
 				// 開発効率化

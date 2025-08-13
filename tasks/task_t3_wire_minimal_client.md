@@ -1,59 +1,163 @@
-# T3 — Wire up a minimal client (EditorControl)
+# T3 — Minimal Client (EditorControl): Fixes & Final `main.rs`
 
-## 概要
-EditorControlクライアントを使用した最小限のクライアント実装を行います。
+This document fixes pitfalls in the original plan and provides a production‑ready `main.rs` that:
 
-## 成果物
+* initializes tracing with an env filter (`RUST_LOG`),
+* loads `GrpcConfig` from env (with safe defaults),
+* connects via `ChannelManager` with endpoint‑level timeouts,
+* calls `EditorControl.Health` once,
+* does **not** panic when offline, and
+* exits with clear, non‑zero codes on failure.
 
-### `server/src/main.rs` の更新
-- tracingの初期化
-- 設定読み込みとChannelManager接続
-- Health RPC呼び出しとログ出力
+It assumes:
 
-## 実装詳細
+* `server/src/lib.rs` re‑exports `pub mod config; pub mod grpc; pub mod generated;` as in T1/T2.
+* tonic `transport,tls-webpki-roots` features are enabled.
 
-### 初期化シーケンス
-1. トレーシング初期化
-2. 設定読み込み (`GrpcConfig::from_env()`)
-3. ChannelManager接続
-4. EditorControlクライアント取得
+---
 
-### Health RPC呼び出し
-- `Health` RPCを一度呼び出し
-- 結果またはエラーをログ出力
-- オフライン時でもパニックしない
+## Key Fixes
 
-### エラーハンドリング
-- 接続エラー時の適切なログ出力
-- プロセス終了時の適切な処理
+1. **No panics / explicit exit codes**
+   `main` handles each failure case and uses `std::process::exit` with distinct codes:
 
-## 実装スケルトン
+   * `2`: connect failure,
+   * `3`: Health RPC failed,
+   * `4`: Health responded but `ready=false`.
+
+2. **Env‑driven tracing**
+   Use `RUST_LOG` (e.g., `RUST_LOG=server=debug,info`) via `tracing_subscriber::EnvFilter`, defaulting to `info` if unset. Pretty/compact output for CLI readability.
+
+3. **Token handling**
+   If a token is configured, use the **intercepted** client so all calls automatically carry `Authorization` without per‑call wrappers. (You can still switch to `editor_control_client()` + `with_meta()` if you want per‑call control.)
+
+4. **No per‑call timeouts**
+   Rely on **endpoint‑level** `timeout` configured in `ChannelManager::connect`, matching the architectural constraint to avoid legacy `Request::set_timeout`.
+
+---
+
+## File: `server/src/main.rs`
 
 ```rust
-#[tokio::main]
-async fn main() -> Result<()> {
-    // トレーシング初期化
-    tracing_subscriber::fmt::init();
-    
-    // 設定読み込み
-    let config = GrpcConfig::from_env();
-    
-    // ChannelManager接続
-    let manager = ChannelManager::connect(&config).await?;
-    
-    // Health RPC呼び出し
-    let mut client = manager.editor_control_client();
+use std::process;
+use tracing::{error, info, warn};
+
+use server::grpc::channel::ChannelManager;
+use server::grpc::config::GrpcConfig;
+use server::generated::mcp::unity::v1::editor_control::HealthRequest;
+
+#[tokio::main(flavor = "multi_thread")]
+async fn main() {
+    init_tracing();
+
+    let cfg = GrpcConfig::from_env();
+    info!(addr = %cfg.addr, timeout_secs = cfg.default_timeout_secs, "Starting minimal EditorControl client");
+
+    let manager = match ChannelManager::connect(&cfg).await {
+        Ok(m) => m,
+        Err(e) => {
+            error!(error = %e, "Failed to connect to gRPC bridge");
+            process::exit(2);
+        }
+    };
+
+    // If a token is configured, prefer the intercepted client so headers are auto‑injected.
+    let mut client = if cfg.token.is_some() {
+        manager.editor_control_client_intercepted()
+    } else {
+        manager.editor_control_client()
+    };
+
     match client.health(HealthRequest {}).await {
-        Ok(response) => tracing::info!("Health check successful: {:?}", response),
-        Err(e) => tracing::error!("Health check failed: {}", e),
+        Ok(resp) => {
+            let body = resp.into_inner();
+            if body.ready {
+                info!(version = %body.version, "Bridge is ready");
+                process::exit(0);
+            } else {
+                warn!(version = %body.version, "Bridge responded but not ready");
+                process::exit(4);
+            }
+        }
+        Err(status) => {
+            error!(code = ?status.code(), message = %status.message(), "Health RPC failed");
+            process::exit(3);
+        }
     }
-    
-    Ok(())
+}
+
+fn init_tracing() {
+    use tracing_subscriber::{fmt, EnvFilter};
+
+    let filter = EnvFilter::try_from_default_env()
+        .or_else(|_| EnvFilter::try_new("info"))
+        .expect("valid RUST_LOG");
+
+    fmt::Subscriber::builder()
+        .with_env_filter(filter)
+        .with_target(false)
+        .compact()
+        .init();
 }
 ```
 
-## 受入条件
-- main.rsが正常にビルドされること
-- Health RPC呼び出しが実行されること
-- オフライン時にパニックしないこと
-- 適切なログ出力が行われること
+---
+
+## Cargo additions
+
+**`Cargo.toml` (server)**
+
+```toml
+[dependencies]
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# tonic/anyhow etc. are already pinned per project preconditions.
+```
+
+---
+
+## Run Examples
+
+```bash
+# Default (localhost:8080, 30s timeout, no token)
+RUST_LOG=info cargo run -p server
+
+# Custom bridge and token
+RUST_LOG=server=debug,info \
+MCP_BRIDGE_ADDR=https://127.0.0.1:7443 \
+MCP_BRIDGE_TOKEN=secret-token \
+MCP_BRIDGE_TIMEOUT=5 \
+cargo run -p server
+```
+
+Expected logs (examples):
+
+```
+INFO  Starting minimal EditorControl client addr=https://127.0.0.1:7443 timeout_secs=5
+INFO  Bridge is ready version=test
+```
+
+Or on failure:
+
+```
+ERROR Failed to connect to gRPC bridge error=transport error: connection refused
+```
+
+---
+
+## Acceptance Checklist
+
+* ✅ Builds cleanly.
+* ✅ Calls `EditorControl.Health` once at startup.
+* ✅ No panics offline; exits with non‑zero code and clear logs on failure.
+* ✅ Tracing is configurable via `RUST_LOG` and defaults to `info`.
+* ✅ Uses endpoint‑level timeouts (no per‑call timeouts).
+
+---
+
+## Common Pitfalls (and how this code avoids them)
+
+* **Missing URI scheme**: `GrpcConfig` normalizes to `http://…` if the scheme is absent.
+* **Empty token**: treated as `None`; the intercepted client is only used when a non‑empty token exists.
+* **Hanging calls**: avoided with `Endpoint::timeout` in `ChannelManager::connect`.
+* **Module paths**: `server::…` imports assume the presence of `src/lib.rs` that re‑exports modules; keep it aligned with T1/T2 docs.
