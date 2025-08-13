@@ -35,8 +35,15 @@ RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/package
     && rm -rf /var/lib/apt/lists/*
 
 # Install protoc compiler
-RUN apt-get update && apt-get install -y protobuf-compiler \
-    && rm -rf /var/lib/apt/lists/*
+ARG PROTOC_VERSION=31.1
+RUN apt-get update && apt-get install -y curl unzip \
+ && rm -rf /var/lib/apt/lists/* \
+ && ARCH=$(uname -m | sed 's/aarch64/aarch_64/;s/x86_64/x86_64/') \
+ && curl -fsSL -o /tmp/protoc.zip \
+      "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${ARCH}.zip" \
+ && unzip -o /tmp/protoc.zip -d /usr/local \
+ && rm -f /tmp/protoc.zip \
+ && protoc --version
 
 # Install GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
