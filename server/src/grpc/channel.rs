@@ -66,8 +66,6 @@ impl ChannelManager {
         let interceptor = AuthInterceptor::new(self.token.clone());
         EditorControlClient::with_interceptor(self.channel(), interceptor)
     }
-
-
 }
 
 /// Lightweight auth interceptor; stores a prebuilt header string when possible.

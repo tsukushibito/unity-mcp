@@ -14,7 +14,9 @@ use server::generated::mcp::unity::v1::{
 };
 
 #[cfg(feature = "server-stubs")]
-use server::generated::mcp::unity::v1::editor_control_server::{EditorControl, EditorControlServer};
+use server::generated::mcp::unity::v1::editor_control_server::{
+    EditorControl, EditorControlServer,
+};
 
 #[cfg(feature = "server-stubs")]
 #[derive(Debug, Default)]

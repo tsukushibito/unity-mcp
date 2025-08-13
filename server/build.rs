@@ -31,14 +31,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Control server stub generation via feature flag or env var
     // - Feature 'server-stubs': explicit control for tests/CI
     // - Env var TONIC_BUILD_SERVER=1: fallback for compatibility
-    let build_server = cfg!(feature = "server-stubs") 
-        || env::var("TONIC_BUILD_SERVER").map(|v| v == "1").unwrap_or(false);
+    let build_server = cfg!(feature = "server-stubs")
+        || env::var("TONIC_BUILD_SERVER")
+            .map(|v| v == "1")
+            .unwrap_or(false);
 
     // Use the configure() builder pattern with all includes
     tonic_prost_build::configure()
         .build_server(build_server)
         .build_client(true)
-        .compile_protos(&proto_files, &[proto_root.clone()])?;
+        .compile_protos(&proto_files, std::slice::from_ref(&proto_root))?;
 
     println!("cargo:rerun-if-changed={}", proto_root.display());
     Ok(())

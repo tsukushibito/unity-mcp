@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build, Lint, Test (matrix)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_BACKTRACE: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up protoc 3.21.12
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "3.21.12"
+
+      - name: Set up Rust (stable + fmt + clippy)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo (target/ + registries)
+        uses: Swatinem/rust-cache@v2
+        with:
+          # Auto-detects workspace and caches target/ and registries
+          # Customize if needed: cache-on-failure: true
+          cache-on-failure: true
+
+      - name: Show tool versions
+        run: |
+          rustc -V
+          cargo -V
+          protoc --version
+
+      - name: Check formatting
+        run: cd server && cargo fmt --all -- --check
+
+      - name: Lint (clippy)
+        run: cd server && cargo clippy --all-targets -- -D warnings
+
+      - name: Build (server, locked)
+        run: cd server && cargo build --locked
+
+      - name: Test server (with server stubs)
+        run: cd server && cargo test --features server-stubs -- --nocapture
