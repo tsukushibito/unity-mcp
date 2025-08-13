@@ -14,9 +14,10 @@
 		"--env-file",
 		".devcontainer/.env"
 	],
-	"containerEnv": {
-		"CLAUDE_CONFIG_DIR": "/workspaces/unity-mcp/.claude-config"
-	},
+	// NOTE: CLAUDE_CONFIG_DIR を設定するとIDE連携が機能しなくなるので、修正されるまでは定義しない
+	// "containerEnv": {
+	// 	"CLAUDE_CONFIG_DIR": "/workspaces/unity-mcp/.claude-config"
+	// },
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
