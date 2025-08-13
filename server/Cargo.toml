@@ -9,6 +9,8 @@ prost = "0.14.1"
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
 tonic = { version = "0.14.1", features = ["transport", "tls-webpki-roots"] }
 tonic-prost = "0.14.1"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
 [build-dependencies]
 tonic-prost-build = "0.14.1"

@@ -58,19 +58,16 @@ impl ChannelManager {
         req
     }
 
-    /// Plain client (no automatic auth headers). Use together with `with_meta(...)` when needed.
-    pub fn editor_control_client(&self) -> EditorControlClient<Channel> {
-        EditorControlClient::new(self.channel())
-    }
-
-    /// Client with an interceptor that always adds Authorization headers (if token configured).
-    /// Convenient when *all* calls should carry auth without wrapping each `Request`.
-    pub fn editor_control_client_intercepted(
+    /// Client with an interceptor that adds Authorization headers when token is configured.
+    /// When no token is present, the interceptor acts as a no-op.
+    pub fn editor_control_client(
         &self,
     ) -> EditorControlClient<InterceptedService<Channel, AuthInterceptor>> {
         let interceptor = AuthInterceptor::new(self.token.clone());
         EditorControlClient::with_interceptor(self.channel(), interceptor)
     }
+
+
 }
 
 /// Lightweight auth interceptor; stores a prebuilt header string when possible.

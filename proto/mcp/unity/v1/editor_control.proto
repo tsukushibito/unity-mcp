@@ -11,7 +11,11 @@ service EditorControl {
 }
 
 message HealthRequest {}
-message HealthResponse { string status = 1; /* e.g., "OK" */ }
+message HealthResponse { 
+  bool ready = 1;
+  string version = 2;
+  string status = 3; /* e.g., "OK" - kept for backward compatibility */
+}
 
 message GetPlayModeResponse { bool is_playing = 1; }
 message SetPlayModeRequest { bool play = 1; }
