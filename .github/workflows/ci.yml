@@ -28,10 +28,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up protoc 3.21.12
+      - name: Set up protoc 3.31.1
         uses: arduino/setup-protoc@v3
         with:
-          version: "21.12"
+          version: "31.1"
 
       - name: Set up Rust (stable + fmt + clippy)
         uses: dtolnay/rust-toolchain@stable
