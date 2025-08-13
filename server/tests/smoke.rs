@@ -1,17 +1,26 @@
+#[cfg(feature = "server-stubs")]
 use std::{net::SocketAddr, time::Duration};
+#[cfg(feature = "server-stubs")]
 use tokio::{net::TcpListener, sync::oneshot, time::timeout};
+#[cfg(feature = "server-stubs")]
 use tokio_stream::wrappers::TcpListenerStream;
+#[cfg(feature = "server-stubs")]
 use tonic::{Request, Response, Status, transport::Server};
 
+#[cfg(feature = "server-stubs")]
 use server::generated::mcp::unity::v1::{
     Empty, GetPlayModeResponse, HealthRequest, HealthResponse, SetPlayModeRequest,
     SetPlayModeResponse,
-    editor_control_server::{EditorControl, EditorControlServer},
 };
 
+#[cfg(feature = "server-stubs")]
+use server::generated::mcp::unity::v1::editor_control_server::{EditorControl, EditorControlServer};
+
+#[cfg(feature = "server-stubs")]
 #[derive(Debug, Default)]
 struct TestEditorControlService;
 
+#[cfg(feature = "server-stubs")]
 #[tonic::async_trait]
 impl EditorControl for TestEditorControlService {
     async fn health(
@@ -40,6 +49,7 @@ impl EditorControl for TestEditorControlService {
     }
 }
 
+#[cfg(feature = "server-stubs")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn channel_manager_roundtrip_health() -> anyhow::Result<()> {
     // 1) Bind a local port and capture it before serving
