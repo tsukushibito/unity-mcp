@@ -54,13 +54,17 @@ impl GrpcConfig {
 
         if let Some(token_raw) = get(Self::ENV_TOKEN) {
             let t = token_raw.trim();
-            cfg.token = if t.is_empty() { None } else { Some(t.to_string()) };
+            cfg.token = if t.is_empty() {
+                None
+            } else {
+                Some(t.to_string())
+            };
         }
 
-        if let Some(timeout_raw) = get(Self::ENV_TIMEOUT) {
-            if let Ok(secs) = timeout_raw.trim().parse::<u64>() {
-                cfg.default_timeout_secs = secs;
-            }
+        if let Some(timeout_raw) = get(Self::ENV_TIMEOUT)
+            && let Ok(secs) = timeout_raw.trim().parse::<u64>()
+        {
+            cfg.default_timeout_secs = secs;
         }
 
         cfg
@@ -102,7 +106,10 @@ mod tests {
     #[test]
     fn overrides_work_and_addr_is_normalized() {
         let cfg = GrpcConfig::from_map([
-            (GrpcConfig::ENV_ADDR.to_string(), "127.0.0.1:50051".to_string()),
+            (
+                GrpcConfig::ENV_ADDR.to_string(),
+                "127.0.0.1:50051".to_string(),
+            ),
             (GrpcConfig::ENV_TOKEN.to_string(), "abc".to_string()),
             (GrpcConfig::ENV_TIMEOUT.to_string(), "5".to_string()),
         ]);
@@ -123,7 +130,10 @@ mod tests {
 
     #[test]
     fn endpoint_parses_with_https() {
-        let cfg = GrpcConfig::from_map([(GrpcConfig::ENV_ADDR.to_string(), "https://localhost:7443".to_string())]);
+        let cfg = GrpcConfig::from_map([(
+            GrpcConfig::ENV_ADDR.to_string(),
+            "https://localhost:7443".to_string(),
+        )]);
         assert!(cfg.endpoint().is_ok());
     }
 }

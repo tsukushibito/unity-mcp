@@ -1,10 +1,5 @@
 use anyhow::Result;
 
-// Maps to files generated in OUT_DIR by tonic-build
-pub mod mcp_unity_v1 {
-    tonic::include_proto!("mcp.unity.v1");
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     // tonic 0.14.1推奨パターン: from_static + connect
