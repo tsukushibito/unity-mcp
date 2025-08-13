@@ -12,5 +12,12 @@ tonic-prost = "0.14.1"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
+[features]
+# Enable gRPC server stubs (needed only for tests here)
+server-stubs = []
+
+[dev-dependencies]
+tokio-stream = "0.1.17"
+
 [build-dependencies]
 tonic-prost-build = "0.14.1"

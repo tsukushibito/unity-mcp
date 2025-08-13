@@ -1,6 +1,4 @@
-pub mod grpc;
-
-// Re-export generated protobuf modules
+// Re-export the prost/tonic generated modules for tests and other crates.
 pub mod generated {
     pub mod mcp {
         pub mod unity {
@@ -9,4 +7,10 @@ pub mod generated {
             }
         }
     }
+}
+
+// Re-export ChannelManager and config so tests can use them as `server::grpc::...`
+pub mod grpc {
+    pub mod config;   // defines GrpcConfig
+    pub mod channel;  // defines ChannelManager
 }
