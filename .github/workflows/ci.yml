@@ -31,7 +31,7 @@ jobs:
       - name: Set up protoc 3.21.12
         uses: arduino/setup-protoc@v3
         with:
-          version: "3.21.12"
+          version: "21.12"
 
       - name: Set up Rust (stable + fmt + clippy)
         uses: dtolnay/rust-toolchain@stable
