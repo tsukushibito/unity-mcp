@@ -31,6 +31,7 @@
 				// Rust 開発
 				"rust-lang.rust-analyzer",
 				"vadimcn.vscode-lldb",
+				"tamasfe.even-better-toml",
 				// C#/.NET 開発
 				"ms-dotnettools.csharp",
 				"ms-dotnettools.vscode-dotnet-runtime",
