@@ -71,6 +71,10 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 - C#: try/catch with UnityEngine.Debug logging
 - No panics in request handlers
 
+**Module Structure:**
+- Use `module_name.rs` instead of `mod.rs` for submodules (Rust 2018+ convention)
+- Avoid `mod.rs` files except for the root module
+
 **Configuration:**
 - TOML files in server/config/
 - CLI flag overrides planned for future
