@@ -8,12 +8,7 @@
 
 ## 0) Scope & DoD (Definition of Done)
 
-* [ ] **MCP stdio server** boots via `cargo run` and exposes tool list.
-* [ ] **`unity.editor.health`** calls gRPC `EditorControl.Health` and returns structured JSON.
-* [ ] **`unity.events.subscribe_logs`** streams heartbeat events from a relay (dummy for Phase 1).
-* [ ] **Per-call timeouts** are honored (Health=5s; Logs subscribe start=30s) via `ChannelManager` override.
-* [ ] **Unit tests** cover Health happy/timeout paths and Logs heartbeat reception.
-* [ ] **CI** (current `ci.yml`) builds, formats, lints, and runs tests on Ubuntu with `protoc 31.1`.
+*
 
 Out of scope (Phase 2+): SSE transport, Unity Bridge implementation, true Events stream from the Bridge.
 
@@ -35,7 +30,7 @@ Out of scope (Phase 2+): SSE transport, Unity Bridge implementation, true Events
   * `MCP_BRIDGE_TIMEOUT` (seconds; default 30)
 * **Error mapping (gRPC → MCP):**
 
-  * `Unavailable` → `service_unavailable` *(fallback: `internal_error` if ambiguous)*
+  * `Unavailable` → `service_unavailable` *(fallback: ****\`\`**** if ambiguous)*
   * `DeadlineExceeded` → `timeout_error`
   * *otherwise* → `internal_error`
 * **Per-call timeouts:** `ChannelManager` may override default endpoint timeouts per request (e.g., Health=5s) without changing global config.
@@ -67,20 +62,27 @@ Notes:
 
 ### 2.2 Source tree additions (all under `server/src`)
 
-Create the following modules:
+Create the following modules (use **module\_name.rs** as module roots, not `mod.rs`):
 
 ```
 server/src/
+  mcp.rs               # module root; declares submodules in mcp/
   mcp/
-    mod.rs           # MCP stdio bootstrap: init server, register tools, serve
-    context.rs       # AppContext { cm: ChannelManager, cfg: GrpcConfig }
-    error.rs         # (optional) tonic::Status → MCP error mapping
+    server.rs          # MCP stdio bootstrap: init server, register tools, serve
+    context.rs         # AppContext { cm: ChannelManager, cfg: GrpcConfig }
+    error.rs           # (optional) tonic::Status → MCP error mapping
+
+  tools.rs             # module root; declares submodules in tools/
   tools/
-    editor.rs        # Tool: unity.editor.health
-    events.rs        # Tool: unity.events.subscribe_logs (stream)
+    editor.rs          # Tool: unity.editor.health
+    events.rs          # Tool: unity.events.subscribe_logs (stream)
+
+  relay.rs             # module root; declares submodules in relay/
   relay/
-    logs.rs          # Heartbeat producer + broadcast relay (dummy for Phase 1)
+    logs.rs            # Heartbeat producer + broadcast relay (dummy for Phase 1)
 ```
+
+> In each `*_root.rs` (e.g., `mcp.rs`, `tools.rs`, `relay.rs`), declare `pub mod ...;` for the files in the corresponding directory.
 
 > Note: this adopts the agreed layout (tools at `server/src/tools/*`).
 
@@ -94,7 +96,7 @@ server/src/
   2. load `GrpcConfig` from env (`MCP_BRIDGE_*`)
   3. build `ChannelManager`
   4. spawn `LogsRelay` (dummy heartbeat)
-  5. `mcp::run_stdio_server(AppContext{ cm, cfg })`
+  5. `mcp::server::run_stdio_server(AppContext{ cm, cfg })`
 
 Per-call timeout examples (pseudo):
 
@@ -248,18 +250,7 @@ Add a minimal Quickstart and config reference:
 
 ## 8) File-by-File Checklist
 
-* [ ] `server/Cargo.toml`: add `rmcp`, `serde`, `serde_json`, `tokio-stream`, (optional) `futures`.
-* [ ] `server/src/mcp/mod.rs`: stdio server bootstrap & tool registration.
-* [ ] `server/src/mcp/context.rs`: shared `AppContext`.
-* [ ] `server/src/mcp/error.rs`: gRPC → MCP error mapping.
-* [ ] `server/src/tools/editor.rs`: implement `unity.editor.health`.
-* [ ] `server/src/tools/events.rs`: implement `unity.events.subscribe_logs`.
-* [ ] `server/src/relay/logs.rs`: heartbeat relay with broadcast channel.
-* [ ] `server/src/main.rs`: default MCP, keep `--health-check` client mode.
-* [ ] `server/tests/mcp_tools_health.rs`: unit tests for tool, error mapping.
-* [ ] `server/tests/logs_relay.rs`: unit tests for relay heartbeat and backpressure.
-* [ ] `.github/workflows/ci.yml`: keep protoc 31.1; add cargo cache; ensure `server/` working dir.
-* [ ] `server/README.md`: quickstart, config, tools, tests, error mapping.
+*
 
 ---
 
