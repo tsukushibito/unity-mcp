@@ -12,5 +12,13 @@ pub mod generated {
 // Re-export ChannelManager and config so tests can use them as `server::grpc::...`
 pub mod grpc {
     pub mod channel;
-    pub mod config; // defines GrpcConfig // defines ChannelManager
+    pub mod config; // re-exports from unified config
 }
+
+// MCP-related modules
+pub mod mcp;
+pub mod mcp_types;
+pub mod observability;
+
+// Unified configuration module
+pub mod config;
