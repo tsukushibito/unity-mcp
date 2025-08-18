@@ -4,8 +4,8 @@
 Protocol Buffer ファイルから C# gRPC/Protobuf スタブを生成し、Unity プロジェクトにコミットする作業の詳細計画。
 
 ## 前提条件
-- `.devcontainer/Dockerfile` で `grpc_csharp_plugin` が追加済み
-- コンテナの再ビルドが完了済み
+- ~~ `.devcontainer/Dockerfile` で `grpc_csharp_plugin` が追加済み ~~
+- ~~ コンテナの再ビルドが完了済み ~~
 
 ## 作業ステップ
 
