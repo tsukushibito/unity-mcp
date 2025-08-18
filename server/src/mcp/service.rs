@@ -25,6 +25,16 @@ impl McpService {
         })
     }
 
+    /// Create McpService with explicit configuration for testing
+    pub async fn with_config(config: ServerConfig) -> anyhow::Result<Self> {
+        let channel_manager = ChannelManager::connect(&config.grpc).await?;
+        Ok(Self {
+            tool_router: Self::tool_router(),
+            channel_manager,
+            config,
+        })
+    }
+
     pub async fn serve_stdio(self) -> anyhow::Result<()> {
         let service = self.serve(stdio()).await?;
         service.waiting().await?;

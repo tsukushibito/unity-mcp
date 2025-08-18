@@ -27,6 +27,15 @@ impl BridgeConfig {
             health_timeout_ms,
         }
     }
+
+    /// Create BridgeConfig with explicit values for testing
+    pub fn with_values(host: String, port: u16, health_timeout_ms: u64) -> Self {
+        Self {
+            host,
+            port,
+            health_timeout_ms,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -131,6 +140,11 @@ impl ServerConfig {
             grpc: GrpcConfig::from_env(),
             bridge: BridgeConfig::load(),
         }
+    }
+
+    /// Create ServerConfig with explicit configurations for testing
+    pub fn with_configs(grpc: GrpcConfig, bridge: BridgeConfig) -> Self {
+        Self { grpc, bridge }
     }
 
     pub fn health_timeout(&self) -> Duration {
