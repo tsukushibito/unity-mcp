@@ -115,6 +115,25 @@ fn normalize_addr(s: &str) -> String {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct ServerConfig {
+    pub grpc: GrpcConfig,
+    pub bridge: BridgeConfig,
+}
+
+impl ServerConfig {
+    pub fn load() -> Self {
+        Self {
+            grpc: GrpcConfig::from_env(),
+            bridge: BridgeConfig::load(),
+        }
+    }
+    
+    pub fn health_timeout(&self) -> Duration {
+        Duration::from_millis(self.bridge.health_timeout_ms)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -160,5 +179,25 @@ mod tests {
             "https://localhost:7443".to_string(),
         )]);
         assert!(cfg.endpoint().is_ok());
+    }
+
+    #[test]
+    fn server_config_loads_both_configs() {
+        let server_config = ServerConfig::load();
+        
+        // Should contain both grpc and bridge config
+        assert_eq!(server_config.grpc.addr, "http://localhost:8080"); // default
+        assert_eq!(server_config.bridge.host, "127.0.0.1"); // default
+        assert_eq!(server_config.bridge.port, 50051); // default
+        assert_eq!(server_config.bridge.health_timeout_ms, 2000); // default
+    }
+
+    #[test]
+    fn server_config_health_timeout_returns_duration() {
+        let server_config = ServerConfig::load();
+        let timeout = server_config.health_timeout();
+        
+        // Default timeout should be 2000ms
+        assert_eq!(timeout, Duration::from_millis(2000));
     }
 }

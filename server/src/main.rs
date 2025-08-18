@@ -1,14 +1,9 @@
-mod config;
-mod observability;
-mod mcp;
-mod mcp_types;
-
-use crate::mcp::service::McpService;
+use server::{mcp::service::McpService, observability};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
     observability::init_tracing();
-    
-    let svc = McpService::new();
+
+    let svc = McpService::new().await?;
     svc.serve_stdio().await
 }

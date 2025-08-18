@@ -6,9 +6,10 @@ use tonic::transport::{Channel, Endpoint};
 use tonic::{Request, Status};
 
 use crate::generated::mcp::unity::v1::editor_control_client::EditorControlClient;
-use crate::grpc::config::GrpcConfig;
+use super::config::GrpcConfig;
 
 /// Manages a reusable gRPC channel and optional auth token.
+#[derive(Clone)]
 pub struct ChannelManager {
     channel: Channel,
     token: Option<String>,

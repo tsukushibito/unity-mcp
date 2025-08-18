@@ -6,24 +6,41 @@ use rmcp::{
     ServiceExt,
     model::*,
 };
+use crate::grpc::channel::ChannelManager;
+use crate::config::ServerConfig;
 
 #[derive(Clone)]
 pub struct McpService {
     tool_router: ToolRouter<Self>,
+    channel_manager: ChannelManager,
+    config: ServerConfig,
 }
 
 #[tool_router]
 impl McpService {
-    pub fn new() -> Self {
-        Self {
+    pub async fn new() -> anyhow::Result<Self> {
+        let config = ServerConfig::load();
+        let channel_manager = ChannelManager::connect(&config.grpc).await?;
+        Ok(Self {
             tool_router: Self::tool_router(),
-        }
+            channel_manager,
+            config,
+        })
     }
 
     pub async fn serve_stdio(self) -> anyhow::Result<()> {
         let service = self.serve(stdio()).await?;
         service.waiting().await?;
         Ok(())
+    }
+    
+    // 内部アクセサー
+    pub(crate) fn channel_manager(&self) -> &ChannelManager {
+        &self.channel_manager
+    }
+    
+    pub(crate) fn config(&self) -> &ServerConfig {
+        &self.config
     }
 }
 
