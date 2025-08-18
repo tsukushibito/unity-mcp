@@ -18,6 +18,10 @@ Unity MCP Server combines a Rust MCP server with Unity Editor bridge components 
 - `server-stubs` feature flag controls server stub generation (essential for tests)
 - Generated code placed in `server/src/generated/` module
 
+## Development Environment
+
+This project is designed to work in VS Code workspaces or similar development environments. The current working directory should be `/workspaces/unity-mcp/server` for Rust development.
+
 ## Development Commands
 
 **Important: All Rust commands must be run from the `server/` directory.**
@@ -27,7 +31,8 @@ Unity MCP Server combines a Rust MCP server with Unity Editor bridge components 
 # Build and check
 cargo build --locked
 cargo check
-cargo fmt --all -- --check
+cargo fmt --check  # Check formatting
+cargo fmt           # Apply formatting
 cargo clippy --all-targets -- -D warnings
 
 # Tests (server-stubs feature required for integration tests)
@@ -38,6 +43,9 @@ cargo test # Unit tests only (no gRPC server stubs)
 # Development workflow after proto changes
 cargo clean  # Force rebuild when proto files change
 cargo build --features server-stubs
+
+# Run server locally
+cargo run
 ```
 
 **Unity Bridge (bridge/):**
@@ -90,9 +98,10 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 - `docs/` - Architecture documentation
 
 **Core Components:**
-- `ChannelManager` - Manages gRPC connections with token-based authentication  
-- `GrpcConfig` - Configuration loading from environment variables
-- Generated gRPC clients/servers from protocol buffers
+- `McpService` - Main MCP server implementation with unity_health tool for gRPC bridge communication
+- `ChannelManager` - Manages gRPC connections with token-based authentication
+- `BridgeConfig` / `ServerConfig` / `GrpcConfig` - Configuration management from environment variables
+- Generated gRPC clients/servers from protocol buffers (in `src/generated/`)
 
 ## Testing Strategy
 
