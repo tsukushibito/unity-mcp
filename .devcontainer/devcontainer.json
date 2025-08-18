@@ -1,60 +1,102 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/alpine
+// Dev Container for Unity MCP repo
+// - Workspace at repo root to include AI agent configs, server, and bridge sources
+// - Shadow heavy Unity caches (Library/Temp/Logs/obj) to avoid host<->container sync overhead
+// - Keep Bridge C# editable inside container; generated caches are isolated in volumes/tmpfs
 {
-	"name": "Dev Container(Ubunt)",
+	"name": "Unity MCP - Full repo (fast Bridge caches)",
+	// Build the image from your existing Dockerfile at repo-root/.devcontainer/Dockerfile
 	"build": {
 		"dockerfile": "Dockerfile",
 		"context": ".."
 	},
-	"features": {},
+	// Explicitly mount repo root as workspace
+	"workspaceFolder": "/workspaces/unity-mcp",
+	"workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/workspaces/unity-mcp,consistency=cached",
+	// Additional mounts
 	"mounts": [
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+		// SSH keys
+		"type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,consistency=cached",
+		// Shadow heavy Unity directories to keep them out of the host bind mount
+		"type=volume,src=unity-library,dst=/workspaces/unity-mcp/bridge/Library",
+		"type=volume,src=unity-logs,dst=/workspaces/unity-mcp/bridge/Logs",
+		"type=volume,src=unity-obj,dst=/workspaces/unity-mcp/bridge/obj"
 	],
+	// Env-file and tmpfs for Temp (fast, ephemeral). Remove noexec if a tool needs to execute from Temp.
 	"runArgs": [
 		"--env-file",
-		".devcontainer/.env"
+		".devcontainer/.env",
+		"--tmpfs",
+		"/workspaces/unity-mcp/bridge/Temp:rw,nosuid,size=2048m"
 	],
-	// NOTE: CLAUDE_CONFIG_DIR を設定するとIDE連携が機能しなくなるので、修正されるまでは定義しない
+	// NOTE: Defining CLAUDE_CONFIG_DIR currently breaks IDE integration; keep commented until fixed.
 	// "containerEnv": {
-	// 	"CLAUDE_CONFIG_DIR": "/workspaces/unity-mcp/.claude-config"
+	//   "CLAUDE_CONFIG_DIR": "/workspaces/unity-mcp/.claude-config"
 	// },
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
+	// Dev Container features (optional). Keep empty if Dockerfile already installs toolchains.
+	"features": {},
+	// Post-create bootstrap
 	"postCreateCommand": "/bin/sh .devcontainer/setup.sh",
-	// Configure tool-specific properties.
+	// VS Code customizations (extensions + performance excludes)
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				// Rust 開発
+				// Rust
 				"rust-lang.rust-analyzer",
 				"vadimcn.vscode-lldb",
 				"tamasfe.even-better-toml",
-				// C#/.NET 開発
+				// C# / .NET
 				"ms-dotnettools.csharp",
 				"ms-dotnettools.vscode-dotnet-runtime",
 				// Protocol Buffers
 				"zxh404.vscode-proto3",
-				// Node.js/JavaScript
+				// Node.js / JavaScript
 				"dbaeumer.vscode-eslint",
-				// Git/GitHub
+				// Git / GitHub
 				"github.vscode-pull-request-github",
 				"github.vscode-github-actions",
-				// Unity 開発
+				// Unity (tools for C# editing)
 				"visualstudiotoolsforunity.vstuc",
-				// 開発効率化
+				// Productivity
 				"ms-vscode.vscode-json",
 				"redhat.vscode-yaml",
 				"ms-vscode.cmake-tools",
 				"gruntfuggly.todo-tree",
-				// コード品質
+				// Code quality
 				"streetsidesoftware.code-spell-checker",
 				"editorconfig.editorconfig"
-			]
+			],
+			"settings": {
+				// Reduce file watching & search load from Unity caches
+				"files.watcherExclude": {
+					"**/bridge/Library/**": true,
+					"**/bridge/Temp/**": true,
+					"**/bridge/Logs/**": true,
+					"**/bridge/Build/**": true,
+					"**/bridge/obj/**": true,
+					"**/bridge/UserSettings/**": true
+				},
+				"search.exclude": {
+					"**/bridge/Library/**": true,
+					"**/bridge/Temp/**": true,
+					"**/bridge/Logs/**": true,
+					"**/bridge/Build/**": true,
+					"**/bridge/obj/**": true,
+					"**/bridge/UserSettings/**": true
+				},
+				// Hide cache folders from Explorer (optional)
+				"files.exclude": {
+					"**/bridge/Library": true,
+					"**/bridge/Temp": true,
+					"**/bridge/Logs": true,
+					"**/bridge/Build": true,
+					"**/bridge/obj": true,
+					"**/bridge/UserSettings": true
+				}
+				// If you have a solution file, pointing C# to it narrows analysis scope:
+				// "dotnet.defaultSolution": "bridge/YourBridge.sln"
+			}
 		}
 	}
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// Use root if you need elevated permissions
 	// "remoteUser": "root"
 }
