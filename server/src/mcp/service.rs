@@ -1,16 +1,13 @@
-use rmcp::{
-    handler::server::tool::ToolRouter, 
-    tool_router, 
-    transport::stdio,
-    ServerHandler,
-    ServiceExt,
-    model::*,
-};
-use crate::grpc::channel::ChannelManager;
 use crate::config::ServerConfig;
+use crate::grpc::channel::ChannelManager;
+use rmcp::{
+    ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_router,
+    transport::stdio,
+};
 
 #[derive(Clone)]
 pub struct McpService {
+    #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
     channel_manager: ChannelManager,
     config: ServerConfig,
@@ -33,12 +30,12 @@ impl McpService {
         service.waiting().await?;
         Ok(())
     }
-    
+
     // 内部アクセサー
     pub(crate) fn channel_manager(&self) -> &ChannelManager {
         &self.channel_manager
     }
-    
+
     pub(crate) fn config(&self) -> &ServerConfig {
         &self.config
     }

@@ -5,8 +5,8 @@ use tonic::service::Interceptor;
 use tonic::transport::{Channel, Endpoint};
 use tonic::{Request, Status};
 
-use crate::generated::mcp::unity::v1::editor_control_client::EditorControlClient;
 use super::config::GrpcConfig;
+use crate::generated::mcp::unity::v1::editor_control_client::EditorControlClient;
 
 /// Manages a reusable gRPC channel and optional auth token.
 #[derive(Clone)]

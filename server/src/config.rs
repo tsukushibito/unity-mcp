@@ -21,7 +21,11 @@ impl BridgeConfig {
             .ok()
             .and_then(|s| s.parse::<u64>().ok())
             .unwrap_or(2000);
-        Self { host, port, health_timeout_ms }
+        Self {
+            host,
+            port,
+            health_timeout_ms,
+        }
     }
 }
 
@@ -128,7 +132,7 @@ impl ServerConfig {
             bridge: BridgeConfig::load(),
         }
     }
-    
+
     pub fn health_timeout(&self) -> Duration {
         Duration::from_millis(self.bridge.health_timeout_ms)
     }
@@ -184,7 +188,7 @@ mod tests {
     #[test]
     fn server_config_loads_both_configs() {
         let server_config = ServerConfig::load();
-        
+
         // Should contain both grpc and bridge config
         assert_eq!(server_config.grpc.addr, "http://localhost:8080"); // default
         assert_eq!(server_config.bridge.host, "127.0.0.1"); // default
@@ -196,7 +200,7 @@ mod tests {
     fn server_config_health_timeout_returns_duration() {
         let server_config = ServerConfig::load();
         let timeout = server_config.health_timeout();
-        
+
         // Default timeout should be 2000ms
         assert_eq!(timeout, Duration::from_millis(2000));
     }
