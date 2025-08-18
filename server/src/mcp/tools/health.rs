@@ -1,19 +1,54 @@
 use crate::{mcp::service::McpService, mcp_types::HealthOut};
 use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content, tool};
+use crate::generated::mcp::unity::v1::HealthRequest;
+use tonic::{Code, Status};
 
 impl McpService {
     #[tool(description = "Unity Bridge health check")]
     pub async fn unity_health(&self) -> Result<CallToolResult, McpError> {
-        // スタブ実装：固定値を返す
+        // gRPCクライアント取得
+        let mut client = self.channel_manager().editor_control_client();
+        
+        // リクエスト作成
+        let request = HealthRequest {};
+        
+        // タイムアウト設定
+        let timeout = self.config().health_timeout();
+        
+        // gRPC呼び出し（タイムアウト付き）
+        let response = tokio::time::timeout(timeout, client.health(request))
+            .await
+            .map_err(|_| McpError::internal_error("Unity Bridge deadline exceeded", None))?
+            .map_err(to_tool_error)?;
+            
+        let health_response = response.into_inner();
+        
+        // gRPC HealthResponse から HealthOut に変換
         let health = HealthOut {
-            ready: true,
-            version: "stub-0.1.0".to_string(),
+            ready: health_response.ready,
+            version: health_response.version,
         };
 
         let content = serde_json::to_string(&health)
             .map_err(|e| McpError::internal_error(format!("Serialization error: {}", e), None))?;
 
         Ok(CallToolResult::success(vec![Content::text(content)]))
+    }
+}
+
+// gRPC Status -> MCP ToolError マッピング
+fn to_tool_error(status: Status) -> McpError {
+    match status.code() {
+        Code::Unavailable => 
+            McpError::internal_error("Unity Bridge unavailable", None),
+        Code::DeadlineExceeded => 
+            McpError::internal_error("Unity Bridge deadline exceeded", None),
+        Code::Unauthenticated => 
+            McpError::internal_error("Unauthenticated to Unity Bridge", None),
+        Code::PermissionDenied => 
+            McpError::internal_error("Permission denied by Unity Bridge", None),
+        _ => 
+            McpError::internal_error(format!("Unity Bridge error: {}", status.message()), None),
     }
 }
 
