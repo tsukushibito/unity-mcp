@@ -44,6 +44,34 @@ RUN apt-get update && apt-get install -y curl unzip \
  && unzip -o /tmp/protoc.zip -d /usr/local \
  && rm -f /tmp/protoc.zip \
  && protoc --version
+ 
+# -----------------------------------------------------------------------------
+# Install grpc_csharp_plugin (and optional protoc) from NuGet Grpc.Tools
+# - Puts grpc_csharp_plugin into /usr/local/bin (PATH)
+# - Also extracts Grpc.Tools' protoc. If a system protoc already exists, it
+# is saved as /usr/local/bin/protoc-grpctools to avoid overwriting.
+# -----------------------------------------------------------------------------
+ARG GRPC_TOOLS_VERSION=2.72.0
+ARG TARGETARCH
+RUN set -eux; \
+curl -fsSL "https://www.nuget.org/api/v2/package/Grpc.Tools/${GRPC_TOOLS_VERSION}" -o /tmp/grpc.tools.nupkg; \
+mkdir -p /opt/grpc-tools; \
+unzip -q /tmp/grpc.tools.nupkg -d /opt/grpc-tools; \
+case "${TARGETARCH:-$(dpkg --print-architecture)}" in \
+amd64|x86_64) OS_ARCH=linux_x64 ;; \
+arm64|aarch64) OS_ARCH=linux_arm64 ;; \
+*) echo "Unsupported TARGETARCH=${TARGETARCH}"; exit 1 ;; \
+esac; \
+install -m 0755 "/opt/grpc-tools/tools/${OS_ARCH}/grpc_csharp_plugin" /usr/local/bin/grpc_csharp_plugin; \
+if [ ! -x /usr/local/bin/protoc ]; then \
+install -m 0755 "/opt/grpc-tools/tools/${OS_ARCH}/protoc" /usr/local/bin/protoc; \
+else \
+install -m 0755 "/opt/grpc-tools/tools/${OS_ARCH}/protoc" /usr/local/bin/protoc-grpctools; \
+fi; \
+rm -rf /tmp/grpc.tools.nupkg /opt/grpc-tools; \
+command -v grpc_csharp_plugin >/dev/null; \
+/usr/local/bin/protoc --version || true; \
+[ -x /usr/local/bin/protoc-grpctools ] && /usr/local/bin/protoc-grpctools --version || true
 
 # Install GitHub CLI
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
