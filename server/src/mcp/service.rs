@@ -1,4 +1,3 @@
-use crate::config::ServerConfig;
 use crate::ipc::{client::IpcClient, path::IpcConfig};
 use rmcp::{
     ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_router,
@@ -10,30 +9,18 @@ pub struct McpService {
     #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
     ipc: IpcClient,
-    config: ServerConfig,
 }
 
 #[tool_router]
 impl McpService {
     pub async fn new() -> anyhow::Result<Self> {
-        let config = ServerConfig::load();
         let ipc = IpcClient::connect(IpcConfig::default()).await?;
         Ok(Self {
             tool_router: Self::tool_router(),
             ipc,
-            config,
         })
     }
 
-    /// Create McpService with explicit configuration for testing
-    pub async fn with_config(config: ServerConfig) -> anyhow::Result<Self> {
-        let ipc = IpcClient::connect(IpcConfig::default()).await?;
-        Ok(Self {
-            tool_router: Self::tool_router(),
-            ipc,
-            config,
-        })
-    }
 
     pub async fn serve_stdio(self) -> anyhow::Result<()> {
         let service = self.serve(stdio()).await?;
@@ -46,9 +33,6 @@ impl McpService {
         &self.ipc
     }
 
-    pub(crate) fn config(&self) -> &ServerConfig {
-        &self.config
-    }
 }
 
 impl ServerHandler for McpService {

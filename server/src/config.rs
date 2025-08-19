@@ -113,11 +113,6 @@ impl GrpcConfig {
         Duration::from_secs(self.default_timeout_secs)
     }
 
-    /// Convert to `tonic::transport::Endpoint`.
-    #[cfg(feature = "transport-grpc")]
-    pub fn endpoint(&self) -> Result<tonic::transport::Endpoint, tonic::transport::Error> {
-        tonic::transport::Endpoint::from_shared(self.addr.clone())
-    }
 }
 
 fn normalize_addr(s: &str) -> String {
@@ -191,15 +186,6 @@ mod tests {
         assert_eq!(cfg.default_timeout_secs, 30);
     }
 
-    #[test]
-    #[cfg(feature = "transport-grpc")]
-    fn endpoint_parses_with_https() {
-        let cfg = GrpcConfig::from_map([(
-            GrpcConfig::ENV_ADDR.to_string(),
-            "https://localhost:7443".to_string(),
-        )]);
-        assert!(cfg.endpoint().is_ok());
-    }
 
     #[test]
     fn server_config_loads_both_configs() {

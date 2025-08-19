@@ -1,19 +1,19 @@
+use bytes::Bytes;
 use std::{
     collections::HashMap,
     sync::{
-        atomic::{AtomicU64, Ordering},
         Arc,
+        atomic::{AtomicU64, Ordering},
     },
     time::Duration,
 };
+use thiserror::Error;
 use tokio::{
     io::{AsyncRead, AsyncWrite},
     net,
-    sync::{broadcast, mpsc, oneshot, Mutex},
+    sync::{Mutex, broadcast, mpsc, oneshot},
     time,
 };
-use bytes::Bytes;
-use thiserror::Error;
 
 // Trait for stream types that can be used with IPC
 trait IpcStream: AsyncRead + AsyncWrite + Unpin + Send {}
@@ -21,12 +21,11 @@ trait IpcStream: AsyncRead + AsyncWrite + Unpin + Send {}
 // Implement for common stream types
 impl<T> IpcStream for T where T: AsyncRead + AsyncWrite + Unpin + Send {}
 
-use crate::generated::mcp::unity::v1 as pb;
 use super::{
-    codec,
-    framing,
-    path::{default_endpoint, parse_endpoint, Endpoint, IpcConfig},
+    codec, framing,
+    path::{Endpoint, IpcConfig, default_endpoint, parse_endpoint},
 };
+use crate::generated::mcp::unity::v1 as pb;
 
 #[derive(Debug, Error)]
 pub enum IpcError {
@@ -44,14 +43,16 @@ pub enum IpcError {
     Closed,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IpcClient {
     inner: Arc<Inner>,
 }
 
+#[derive(Debug)]
 struct Inner {
     cfg: IpcConfig,
     corr: AtomicU64,
+    #[allow(dead_code)] // Used in spawn_io but not visible to derive
     pending: Mutex<HashMap<String, oneshot::Sender<pb::IpcResponse>>>,
     events_tx: broadcast::Sender<pb::IpcEvent>,
     // Write side: we use an mpsc channel to serialize outgoing frames
@@ -156,7 +157,7 @@ impl IpcClient {
         let hello_bytes = codec::encode_envelope(&env)?;
         use futures::{SinkExt, StreamExt};
         framed.send(hello_bytes).await.map_err(IpcError::Io)?;
-        
+
         // Get handshake response first
         let welcome = time::timeout(inner.cfg.connect_timeout, async {
             while let Some(frame) = framed.next().await {
@@ -177,7 +178,7 @@ impl IpcClient {
         }
 
         // 3) spawn writer and reader
-        let (reader, writer) = framed.split();
+        let (writer, reader) = framed.split();
         tokio::spawn(async move {
             let mut writer = writer;
             while let Some(bytes) = writer_rx.recv().await {
@@ -247,5 +248,80 @@ async fn connect_endpoint(
                 .map_err(|_| IpcError::ConnectTimeout)??;
             Ok(Box::new(stream))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ipc::path::IpcConfig;
+
+    #[test]
+    fn test_next_cid_generates_unique_ids() {
+        let cfg = IpcConfig::default();
+        let inner = Arc::new(Inner {
+            cfg,
+            corr: AtomicU64::new(100),
+            pending: Mutex::new(HashMap::new()),
+            events_tx: broadcast::channel(1).0,
+            tx: mpsc::channel(1).0,
+        });
+        let client = IpcClient { inner };
+
+        let cid1 = client.next_cid();
+        let cid2 = client.next_cid();
+        let cid3 = client.next_cid();
+
+        assert_ne!(cid1, cid2);
+        assert_ne!(cid2, cid3);
+        assert_ne!(cid1, cid3);
+    }
+
+    #[test]
+    fn test_next_cid_format() {
+        let cfg = IpcConfig::default();
+        let inner = Arc::new(Inner {
+            cfg,
+            corr: AtomicU64::new(0x123456789abcdef0),
+            pending: Mutex::new(HashMap::new()),
+            events_tx: broadcast::channel(1).0,
+            tx: mpsc::channel(1).0,
+        });
+        let client = IpcClient { inner };
+
+        let cid = client.next_cid();
+        assert_eq!(cid, "123456789abcdef0");
+    }
+
+    #[test]
+    fn test_ipc_error_display() {
+        let err = IpcError::ConnectTimeout;
+        assert_eq!(err.to_string(), "connect timeout");
+
+        let err = IpcError::Handshake("test error".to_string());
+        assert_eq!(err.to_string(), "handshake failed: test error");
+
+        let err = IpcError::RequestTimeout;
+        assert_eq!(err.to_string(), "request timeout");
+
+        let err = IpcError::Closed;
+        assert_eq!(err.to_string(), "closed");
+    }
+
+    #[test]
+    fn test_events_channel() {
+        let cfg = IpcConfig::default();
+        let inner = Arc::new(Inner {
+            cfg,
+            corr: AtomicU64::new(0),
+            pending: Mutex::new(HashMap::new()),
+            events_tx: broadcast::channel(1).0,
+            tx: mpsc::channel(1).0,
+        });
+        let client = IpcClient { inner };
+
+        // Should be able to get event receiver
+        let _rx = client.events();
+        let _rx2 = client.events();  // Multiple receivers should work
     }
 }

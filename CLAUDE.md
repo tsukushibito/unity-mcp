@@ -10,13 +10,13 @@ Unity MCP Server combines a Rust MCP server with Unity Editor bridge components 
 - `server/` - Rust MCP server with multi-transport support (stdio/WebSocket) using rmcp SDK
 - `bridge/` - Unity Editor tools for launching and coordinating with Rust server  
 - Single repository approach for fast feedback loops, designed for future workspace expansion
-- Communication between Rust MCP server and Unity Editor bridge uses **gRPC**
+- Communication between Rust MCP server and Unity Editor bridge uses **Direct IPC**
 
-**gRPC Code Generation:**
-- Protocol Buffers definitions in `proto/mcp/unity/v1/` (6 proto files: common, editor_control, assets, build, operations, events)
-- Build script `server/build.rs` uses `tonic-prost-build` to generate Rust gRPC client/server code
-- `server-stubs` feature flag controls server stub generation (essential for tests)
+**IPC Protocol Generation:**
+- Protocol Buffers definitions in `proto/mcp/unity/v1/` (7 proto files: common, editor_control, assets, build, operations, events, ipc)
+- Build script `server/build.rs` uses `prost-build` to generate Rust protocol buffer message types
 - Generated code placed in `server/src/generated/` module
+- IPC uses length-delimited framing over Unix domain sockets (Linux/macOS) or Named pipes (Windows)
 
 ## Development Environment
 
@@ -35,14 +35,14 @@ cargo fmt --check  # Check formatting
 cargo fmt           # Apply formatting
 cargo clippy --all-targets -- -D warnings
 
-# Tests (server-stubs feature required for integration tests)
-cargo test --features server-stubs -- --nocapture
-cargo test <module_or_test_name> --features server-stubs
-cargo test # Unit tests only (no gRPC server stubs)
+# Tests
+cargo test -- --nocapture
+cargo test <module_or_test_name>
+cargo test # All tests including IPC integration tests
 
 # Development workflow after proto changes
 cargo clean  # Force rebuild when proto files change
-cargo build --features server-stubs
+cargo build
 
 # Run server locally
 cargo run
@@ -55,9 +55,9 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 ```
 
 **Key Development Notes:**
-- The `server-stubs` feature is essential for running integration tests that need gRPC server implementations
 - Protocol buffer changes require clean rebuild to regenerate code properly
 - CI/CD requires protoc 3.21.12 and runs matrix testing on Ubuntu/macOS
+- IPC endpoints are OS-specific: Unix domain sockets on Unix-like systems, Named pipes on Windows
 - Use scripts/ directory for additional wrapper commands
 
 ## Code Conventions
@@ -90,26 +90,26 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 ## Project Structure
 
 **Key Directories:**
-- `server/src/grpc/` - gRPC client components (config.rs for configuration, channel.rs for ChannelManager)
-- `server/tests/` - Integration tests including smoke.rs for gRPC roundtrip health checks
-- `proto/mcp/unity/v1/` - Protocol buffer definitions for all gRPC services
+- `server/src/ipc/` - IPC client components (client.rs for IpcClient, codec.rs for protocol encoding)
+- `server/tests/` - Integration tests including ipc_integration.rs for IPC handshake and health checks
+- `proto/mcp/unity/v1/` - Protocol buffer definitions for all IPC services
 - `bridge/Assets/MCP/Editor/` - Unity Editor integration (MVP focus)
 - `bridge/Packages/com.example.mcp-bridge/` - UPM package for reusability
 - `docs/` - Architecture documentation
 
 **Core Components:**
-- `McpService` - Main MCP server implementation with unity_health tool for gRPC bridge communication
-- `ChannelManager` - Manages gRPC connections with token-based authentication
-- `BridgeConfig` / `ServerConfig` / `GrpcConfig` - Configuration management from environment variables
-- Generated gRPC clients/servers from protocol buffers (in `src/generated/`)
+- `McpService` - Main MCP server implementation with unity_health tool for IPC bridge communication
+- `IpcClient` - Manages IPC connections with token-based authentication and correlation ID tracking
+- `IpcConfig` - Configuration management from environment variables (MCP_IPC_ENDPOINT, MCP_IPC_TOKEN)
+- Generated protocol buffer message types from proto definitions (in `src/generated/`)
 
 ## Testing Strategy
 
 - Rust: Unit tests placed within modules using cfg(test)
-- Integration tests in server/tests/ (require `--features server-stubs`)
+- Integration tests in server/tests/ with TCP echo server for IPC validation
 - Tests should be deterministic and avoid network dependencies by default
 - Unity: EditMode tests via Unity Test Runner
-- `smoke.rs` provides gRPC roundtrip health check integration tests
+- `ipc_integration.rs` provides IPC handshake and health check integration tests
 
 ## Commit Conventions
 
