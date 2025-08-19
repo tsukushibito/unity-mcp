@@ -4,8 +4,8 @@
 Protocol Buffer ファイルから C# gRPC/Protobuf スタブを生成し、Unity プロジェクトにコミットする作業の詳細計画。
 
 ## 前提条件
-- ~~ `.devcontainer/Dockerfile` で `grpc_csharp_plugin` が追加済み ~~
-- ~~ コンテナの再ビルドが完了済み ~~
+- ~~`.devcontainer/Dockerfile` で `grpc_csharp_plugin` が追加済み~~
+- ~~コンテナの再ビルドが完了済み~~
 
 ## 作業ステップ
 
@@ -21,10 +21,11 @@ Protocol Buffer ファイルから C# gRPC/Protobuf スタブを生成し、Unit
 ```bash
 # プラグインが利用可能であることを確認
 which grpc_csharp_plugin
-grpc_csharp_plugin --version
 
 # protoc が正常に動作することを確認
-protoc --version
+# Grpc.Tools の protoc と 単独でインストールした protoc を区別するため
+# Grpc.Tools の protoc は protoc-grpctools とリネームしています。
+protoc-grpctools --version
 ```
 
 ### 3. ディレクトリ構造の作成
@@ -42,7 +43,7 @@ PROTO_ROOT=proto
 OUT=bridge/Assets/Editor/Generated/Proto
 
 # protoc実行でC#ファイルを生成
-protoc \
+protoc-grpctools \
   -I"$PROTO_ROOT" \
   --csharp_out="$OUT" \
   --grpc_out="$OUT" \
