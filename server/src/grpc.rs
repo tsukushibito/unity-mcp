@@ -1,3 +1,5 @@
+#![cfg(feature = "transport-grpc")]
+
 pub mod channel;
 pub mod config;
 

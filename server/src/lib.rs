@@ -1,15 +1,17 @@
-// Re-export the prost/tonic generated modules for tests and other crates.
+// Re-export the prost generated modules for tests and other crates.
+#![allow(clippy::derive_partial_eq_without_eq)]
 pub mod generated {
     pub mod mcp {
         pub mod unity {
             pub mod v1 {
-                tonic::include_proto!("mcp.unity.v1");
+                include!("generated/mcp.unity.v1.rs");
             }
         }
     }
 }
 
 // Re-export ChannelManager and config so tests can use them as `server::grpc::...`
+#[cfg(feature = "transport-grpc")]
 pub mod grpc {
     pub mod channel;
     pub mod config; // re-exports from unified config

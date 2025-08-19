@@ -1,47 +1,37 @@
-// tonic-build compilation API usage reference:
-// https://docs.rs/tonic-build/latest/tonic_build/
-//
-// This build script uses tonic-prost-build which provides:
-// - configure() -> Builder pattern for setting options
-// - build_server(bool) -> Controls server stub generation
-// - build_client(bool) -> Controls client stub generation
-// - compile_protos(&[PathBuf], &[PathBuf]) -> Compiles proto files with include dirs
-//
-// Alternative APIs available:
-// - tonic_build::compile_protos() for simple cases
-// - Manual service builders for advanced scenarios
+// prost-build compilation for message-only Protocol Buffer generation
+// This build script generates Rust structs for protobuf messages without gRPC services.
+// Output is placed in src/generated/ for stable imports.
 
-use std::{env, path::PathBuf};
+use std::{env, fs, path::PathBuf};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
+fn main() {
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let proto_root = manifest_dir.join("..").join("proto");
 
-    let protos = &[
+    let files = [
         "mcp/unity/v1/common.proto",
-        "mcp/unity/v1/editor_control.proto",
+        "mcp/unity/v1/editor_control.proto", 
         "mcp/unity/v1/assets.proto",
         "mcp/unity/v1/build.proto",
         "mcp/unity/v1/operations.proto",
         "mcp/unity/v1/events.proto",
-    ];
+    ]
+    .into_iter()
+    .map(|rel| proto_root.join(rel))
+    .collect::<Vec<_>>();
 
-    let proto_files: Vec<_> = protos.iter().map(|p| proto_root.join(p)).collect();
-
-    // Control server stub generation via feature flag or env var
-    // - Feature 'server-stubs': explicit control for tests/CI
-    // - Env var TONIC_BUILD_SERVER=1: fallback for compatibility
-    let build_server = cfg!(feature = "server-stubs")
-        || env::var("TONIC_BUILD_SERVER")
-            .map(|v| v == "1")
-            .unwrap_or(false);
-
-    // Use the configure() builder pattern with all includes
-    tonic_prost_build::configure()
-        .build_server(build_server)
-        .build_client(true)
-        .compile_protos(&proto_files, std::slice::from_ref(&proto_root))?;
+    let out_dir = manifest_dir.join("src").join("generated");
+    fs::create_dir_all(&out_dir).unwrap();
 
     println!("cargo:rerun-if-changed={}", proto_root.display());
-    Ok(())
+
+    let mut config = prost_build::Config::new();
+    config.out_dir(&out_dir);
+
+    // IMPORTANT: We are NOT generating any gRPC services here.
+    // This generates only the message types.
+    config.compile_protos(
+        &files.iter().map(PathBuf::as_path).collect::<Vec<_>>(),
+        &[proto_root.as_path()],
+    ).unwrap();
 }

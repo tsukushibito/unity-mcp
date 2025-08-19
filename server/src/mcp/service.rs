@@ -1,4 +1,5 @@
 use crate::config::ServerConfig;
+#[cfg(feature = "transport-grpc")]
 use crate::grpc::channel::ChannelManager;
 use rmcp::{
     ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_router,
@@ -9,6 +10,7 @@ use rmcp::{
 pub struct McpService {
     #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
+    #[cfg(feature = "transport-grpc")]
     channel_manager: ChannelManager,
     config: ServerConfig,
 }
@@ -17,9 +19,11 @@ pub struct McpService {
 impl McpService {
     pub async fn new() -> anyhow::Result<Self> {
         let config = ServerConfig::load();
+        #[cfg(feature = "transport-grpc")]
         let channel_manager = ChannelManager::connect(&config.grpc).await?;
         Ok(Self {
             tool_router: Self::tool_router(),
+            #[cfg(feature = "transport-grpc")]
             channel_manager,
             config,
         })
@@ -27,9 +31,11 @@ impl McpService {
 
     /// Create McpService with explicit configuration for testing
     pub async fn with_config(config: ServerConfig) -> anyhow::Result<Self> {
+        #[cfg(feature = "transport-grpc")]
         let channel_manager = ChannelManager::connect(&config.grpc).await?;
         Ok(Self {
             tool_router: Self::tool_router(),
+            #[cfg(feature = "transport-grpc")]
             channel_manager,
             config,
         })
@@ -42,6 +48,7 @@ impl McpService {
     }
 
     // 内部アクセサー
+    #[cfg(feature = "transport-grpc")]
     pub(crate) fn channel_manager(&self) -> &ChannelManager {
         &self.channel_manager
     }

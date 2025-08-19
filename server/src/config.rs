@@ -114,6 +114,7 @@ impl GrpcConfig {
     }
 
     /// Convert to `tonic::transport::Endpoint`.
+    #[cfg(feature = "transport-grpc")]
     pub fn endpoint(&self) -> Result<tonic::transport::Endpoint, tonic::transport::Error> {
         tonic::transport::Endpoint::from_shared(self.addr.clone())
     }
@@ -191,6 +192,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "transport-grpc")]
     fn endpoint_parses_with_https() {
         let cfg = GrpcConfig::from_map([(
             GrpcConfig::ENV_ADDR.to_string(),
