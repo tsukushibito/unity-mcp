@@ -10,12 +10,8 @@ pub mod generated {
     }
 }
 
-// Re-export ChannelManager and config so tests can use them as `server::grpc::...`
-#[cfg(feature = "transport-grpc")]
-pub mod grpc {
-    pub mod channel;
-    pub mod config; // re-exports from unified config
-}
+// IPC module for Unity bridge communication
+pub mod ipc;
 
 // MCP-related modules
 pub mod mcp;

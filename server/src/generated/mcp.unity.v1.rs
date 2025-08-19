@@ -96,3 +96,132 @@ pub struct OperationEvent {
     #[prost(string, tag = "3")]
     pub payload: ::prost::alloc::string::String,
 }
+/// Top-level envelope for all IPC messages
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct IpcEnvelope {
+    /// Empty for handshake messages
+    #[prost(string, tag = "1")]
+    pub correlation_id: ::prost::alloc::string::String,
+    #[prost(oneof = "ipc_envelope::Kind", tags = "2, 3, 4")]
+    pub kind: ::core::option::Option<ipc_envelope::Kind>,
+}
+/// Nested message and enum types in `IpcEnvelope`.
+pub mod ipc_envelope {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Kind {
+        #[prost(message, tag = "2")]
+        Request(super::IpcRequest),
+        #[prost(message, tag = "3")]
+        Response(super::IpcResponse),
+        #[prost(message, tag = "4")]
+        Event(super::IpcEvent),
+    }
+}
+/// Handshake messages
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct IpcHello {
+    /// Protocol version (e.g., 1)
+    #[prost(int32, tag = "1")]
+    pub ipc_version: i32,
+    /// Schema compatibility hash
+    #[prost(string, tag = "2")]
+    pub schema_hash: ::prost::alloc::string::String,
+    /// Optional authentication token
+    #[prost(string, tag = "3")]
+    pub token: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct IpcWelcome {
+    /// true if handshake accepted
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    /// Error message if ok=false
+    #[prost(string, tag = "2")]
+    pub error: ::prost::alloc::string::String,
+}
+/// Request message with typed payloads
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct IpcRequest {
+    #[prost(oneof = "ipc_request::Payload", tags = "1, 2, 10, 11, 20, 30, 40, 41")]
+    pub payload: ::core::option::Option<ipc_request::Payload>,
+}
+/// Nested message and enum types in `IpcRequest`.
+pub mod ipc_request {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        /// Handshake
+        #[prost(message, tag = "1")]
+        Hello(super::IpcHello),
+        /// Health check
+        #[prost(message, tag = "2")]
+        Health(super::HealthRequest),
+        /// Editor control
+        #[prost(message, tag = "10")]
+        GetPlayMode(super::Empty),
+        #[prost(message, tag = "11")]
+        SetPlayMode(super::SetPlayModeRequest),
+        /// Assets
+        #[prost(message, tag = "20")]
+        ImportAsset(super::ImportAssetRequest),
+        /// Build
+        #[prost(message, tag = "30")]
+        BuildPlayer(super::BuildPlayerRequest),
+        /// Operations
+        #[prost(message, tag = "40")]
+        OperationGet(super::OperationGetRequest),
+        #[prost(message, tag = "41")]
+        OperationCancel(super::OperationCancelRequest),
+    }
+}
+/// Response message with typed payloads
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct IpcResponse {
+    /// Matches the request correlation_id
+    #[prost(string, tag = "1")]
+    pub correlation_id: ::prost::alloc::string::String,
+    #[prost(oneof = "ipc_response::Payload", tags = "2, 3, 10, 11, 20, 30, 40, 41")]
+    pub payload: ::core::option::Option<ipc_response::Payload>,
+}
+/// Nested message and enum types in `IpcResponse`.
+pub mod ipc_response {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        /// Handshake
+        #[prost(message, tag = "2")]
+        Welcome(super::IpcWelcome),
+        /// Health check
+        #[prost(message, tag = "3")]
+        Health(super::HealthResponse),
+        /// Editor control
+        #[prost(message, tag = "10")]
+        GetPlayMode(super::GetPlayModeResponse),
+        #[prost(message, tag = "11")]
+        SetPlayMode(super::SetPlayModeResponse),
+        /// Assets
+        #[prost(message, tag = "20")]
+        ImportAsset(super::ImportAssetResponse),
+        /// Build
+        #[prost(message, tag = "30")]
+        BuildPlayer(super::BuildPlayerResponse),
+        /// Operations
+        #[prost(message, tag = "40")]
+        OperationGet(super::OperationGetResponse),
+        #[prost(message, tag = "41")]
+        OperationCancel(super::OperationCancelResponse),
+    }
+}
+/// Event message for server-to-client notifications
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct IpcEvent {
+    #[prost(oneof = "ipc_event::Payload", tags = "1")]
+    pub payload: ::core::option::Option<ipc_event::Payload>,
+}
+/// Nested message and enum types in `IpcEvent`.
+pub mod ipc_event {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        /// Operation events
+        #[prost(message, tag = "1")]
+        Operation(super::OperationEvent),
+    }
+}

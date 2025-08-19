@@ -15,6 +15,7 @@ fn main() {
         "mcp/unity/v1/build.proto",
         "mcp/unity/v1/operations.proto",
         "mcp/unity/v1/events.proto",
+        "mcp/unity/v1/ipc.proto",
     ]
     .into_iter()
     .map(|rel| proto_root.join(rel))

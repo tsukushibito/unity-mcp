@@ -7,13 +7,16 @@ edition = "2024"
 anyhow = "1.0.99"
 async-stream = "0.3.6"
 bytes = "1.10.1"
+cfg-if = "1.0.0"
 futures = "0.3.31"
 prost = "0.14.1"
+rand = "0.9.0"
 rmcp = { version = "0.5.0", features = ["server", "transport-io"] }
 schemars = "1.0.4"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.142"
-tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+thiserror = "2.0.9"
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "net"] }
 tokio-stream = { version = "0.1.17", features = ["sync"] }
 tokio-util = { version = "0.7.16", features = ["codec"] }
 tracing = "0.1.41"
@@ -23,10 +26,6 @@ tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 default = ["transport-ipc"]
 # Enable IPC transport (default)
 transport-ipc = []
-# Enable gRPC transport (legacy compatibility, feature-gated)
-transport-grpc = []
-# Enable gRPC server stubs (needed only for tests)
-server-stubs = ["transport-grpc"]
 
 [dev-dependencies]
 tokio-stream = "0.1.17"

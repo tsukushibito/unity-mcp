@@ -1,0 +1,93 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+
+// Import common types
+import "mcp/unity/v1/common.proto";
+import "mcp/unity/v1/editor_control.proto";
+import "mcp/unity/v1/assets.proto";
+import "mcp/unity/v1/build.proto";
+import "mcp/unity/v1/operations.proto";
+import "mcp/unity/v1/events.proto";
+
+// Top-level envelope for all IPC messages
+message IpcEnvelope {
+  string correlation_id = 1; // Empty for handshake messages
+  oneof kind {
+    IpcRequest request = 2;
+    IpcResponse response = 3;
+    IpcEvent event = 4;
+  }
+}
+
+// Handshake messages
+message IpcHello {
+  int32 ipc_version = 1;   // Protocol version (e.g., 1)
+  string schema_hash = 2;  // Schema compatibility hash
+  string token = 3;        // Optional authentication token
+}
+
+message IpcWelcome {
+  bool ok = 1;             // true if handshake accepted
+  string error = 2;        // Error message if ok=false
+}
+
+// Request message with typed payloads
+message IpcRequest {
+  oneof payload {
+    // Handshake
+    IpcHello hello = 1;
+    
+    // Health check
+    HealthRequest health = 2;
+    
+    // Editor control
+    Empty get_play_mode = 10;
+    SetPlayModeRequest set_play_mode = 11;
+    
+    // Assets
+    ImportAssetRequest import_asset = 20;
+    
+    // Build
+    BuildPlayerRequest build_player = 30;
+    
+    // Operations
+    OperationGetRequest operation_get = 40;
+    OperationCancelRequest operation_cancel = 41;
+  }
+}
+
+// Response message with typed payloads
+message IpcResponse {
+  string correlation_id = 1; // Matches the request correlation_id
+  oneof payload {
+    // Handshake
+    IpcWelcome welcome = 2;
+    
+    // Health check
+    HealthResponse health = 3;
+    
+    // Editor control
+    GetPlayModeResponse get_play_mode = 10;
+    SetPlayModeResponse set_play_mode = 11;
+    
+    // Assets
+    ImportAssetResponse import_asset = 20;
+    
+    // Build
+    BuildPlayerResponse build_player = 30;
+    
+    // Operations
+    OperationGetResponse operation_get = 40;
+    OperationCancelResponse operation_cancel = 41;
+  }
+}
+
+// Event message for server-to-client notifications
+message IpcEvent {
+  oneof payload {
+    // Operation events
+    OperationEvent operation = 1;
+  }
+}
