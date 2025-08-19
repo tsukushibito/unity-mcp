@@ -28,8 +28,10 @@ copy_one () { # <pkgid> <ver> <dllname>
 
 copy_one google.protobuf     3.32.0  Google.Protobuf
 copy_one grpc.core.api       2.71.0  Grpc.Core.Api
-copy_one grpc.net.common     2.71.0  Grpc.Net.Common   # ← タイポ注意: 正しくは Grpc.Net.Common
+copy_one grpc.net.common     2.71.0  Grpc.Net.Common
 copy_one grpc.net.client     2.71.0  Grpc.Net.Client
 copy_one grpc.net.client.web 2.71.0  Grpc.Net.Client.Web
+copy_one microsoft.extensions.logging.abstractions 6.0.0 Microsoft.Extensions.Logging.Abstractions
+copy_one system.diagnostics.diagnosticsource       6.0.1 System.Diagnostics.DiagnosticSource
 
 echo "DLLs copied to $DEST"
