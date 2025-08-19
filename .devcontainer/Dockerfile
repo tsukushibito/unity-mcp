@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     git \
+    git-lfs \
     build-essential \
     software-properties-common \
     apt-transport-https \
