@@ -50,7 +50,7 @@ message IpcRequest {
     AssetsRequest assets = 20;
     
     // Build
-    BuildPlayerRequest build_player = 30;
+    BuildRequest build = 30;
     
     // Operations
     OperationGetRequest operation_get = 40;
@@ -76,7 +76,7 @@ message IpcResponse {
     AssetsResponse assets = 20;
     
     // Build
-    BuildPlayerResponse build_player = 30;
+    BuildResponse build = 30;
     
     // Operations
     OperationGetResponse operation_get = 40;

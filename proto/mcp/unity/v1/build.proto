@@ -3,9 +3,79 @@
 syntax = "proto3";
 package mcp.unity.v1;
 
-service Build {
-  rpc BuildPlayer(BuildPlayerRequest) returns (BuildPlayerResponse);
+// Supported platforms (subset; extend as needed)
+enum BuildPlatform {
+  BP_UNSPECIFIED = 0;
+  BP_STANDALONE_WINDOWS64 = 1;
+  BP_STANDALONE_OSX = 2;   // macOS  
+  BP_STANDALONE_LINUX64 = 3;
+  BP_ANDROID = 10;
+  BP_IOS = 11;
 }
 
-message BuildPlayerRequest { string target = 1; /* e.g., "Android" */ }
-message BuildPlayerResponse { bool started = 1; string op_id = 2; }
+// Architecture or variant knobs (optional where relevant)
+message BuildVariants {
+  string architecture = 1;   // e.g., "x86_64", "arm64" (macOS), "universal"
+  repeated string abis = 2;  // e.g., ["arm64-v8a","armeabi-v7a"] (Android)
+  bool development = 3;      // Development build flag
+  bool il2cpp = 4;           // Force IL2CPP if applicable  
+  bool strip_symbols = 5;    // Strip build
+}
+
+// Player build request
+message BuildPlayerRequest {
+  BuildPlatform platform = 1;
+  string output_path = 2;            // absolute or project-relative path
+  repeated string scenes = 3;        // project-relative e.g., "Assets/Scenes/Main.unity"
+  BuildVariants variants = 4;        // arch/abi/dev flags
+  map<string,string> define_symbols = 5; // scripting define symbols per group
+}
+
+// Player build response
+message BuildPlayerResponse {
+  int32 status_code = 1;     // 0 OK; nonzero = failure
+  string message = 2;
+  string output_path = 3;     // final file/dir
+  uint64 build_time_ms = 4;
+  uint64 size_bytes = 5;      // if available from report
+  repeated string warnings = 6;
+}
+
+// AssetBundles build request
+message BuildAssetBundlesRequest {
+  string output_directory = 1; // absolute or project-relative
+  bool deterministic = 2;      // BuildAssetBundleOptions.DeterministicAssetBundle
+  bool chunk_based = 3;        // ChunkBasedCompression
+  bool force_rebuild = 4;      // ForceRebuildAssetBundle
+}
+
+// AssetBundles build response
+message BuildAssetBundlesResponse {
+  int32 status_code = 1;
+  string message = 2;
+  string output_directory = 3;
+  uint64 build_time_ms = 4;
+}
+
+// Unified build request
+message BuildRequest {
+  oneof payload {
+    BuildPlayerRequest        player = 1;
+    BuildAssetBundlesRequest  bundles = 2;
+  }
+}
+
+// Unified build response
+message BuildResponse {
+  oneof payload {
+    BuildPlayerResponse        player = 1;
+    BuildAssetBundlesResponse  bundles = 2;
+  }
+}
+
+// Build service definition
+service Build {
+  rpc BuildPlayer(BuildPlayerRequest) returns (BuildPlayerResponse);
+  rpc BuildAssetBundles(BuildAssetBundlesRequest) returns (BuildAssetBundlesResponse);
+  rpc Build(BuildRequest) returns (BuildResponse);
+}

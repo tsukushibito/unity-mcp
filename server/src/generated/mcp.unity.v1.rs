@@ -179,17 +179,164 @@ pub mod assets_response {
         P2g(super::PathToGuidResponse),
     }
 }
+/// Architecture or variant knobs (optional where relevant)
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct BuildPlayerRequest {
+pub struct BuildVariants {
+    /// e.g., "x86_64", "arm64" (macOS), "universal"
     #[prost(string, tag = "1")]
-    pub target: ::prost::alloc::string::String,
+    pub architecture: ::prost::alloc::string::String,
+    /// e.g., \["arm64-v8a","armeabi-v7a"\] (Android)
+    #[prost(string, repeated, tag = "2")]
+    pub abis: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Development build flag
+    #[prost(bool, tag = "3")]
+    pub development: bool,
+    /// Force IL2CPP if applicable
+    #[prost(bool, tag = "4")]
+    pub il2cpp: bool,
+    /// Strip build
+    #[prost(bool, tag = "5")]
+    pub strip_symbols: bool,
 }
+/// Player build request
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BuildPlayerRequest {
+    #[prost(enumeration = "BuildPlatform", tag = "1")]
+    pub platform: i32,
+    /// absolute or project-relative path
+    #[prost(string, tag = "2")]
+    pub output_path: ::prost::alloc::string::String,
+    /// project-relative e.g., "Assets/Scenes/Main.unity"
+    #[prost(string, repeated, tag = "3")]
+    pub scenes: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// arch/abi/dev flags
+    #[prost(message, optional, tag = "4")]
+    pub variants: ::core::option::Option<BuildVariants>,
+    /// scripting define symbols per group
+    #[prost(map = "string, string", tag = "5")]
+    pub define_symbols: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
+}
+/// Player build response
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct BuildPlayerResponse {
-    #[prost(bool, tag = "1")]
-    pub started: bool,
+    /// 0 OK; nonzero = failure
+    #[prost(int32, tag = "1")]
+    pub status_code: i32,
     #[prost(string, tag = "2")]
-    pub op_id: ::prost::alloc::string::String,
+    pub message: ::prost::alloc::string::String,
+    /// final file/dir
+    #[prost(string, tag = "3")]
+    pub output_path: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "4")]
+    pub build_time_ms: u64,
+    /// if available from report
+    #[prost(uint64, tag = "5")]
+    pub size_bytes: u64,
+    #[prost(string, repeated, tag = "6")]
+    pub warnings: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+/// AssetBundles build request
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct BuildAssetBundlesRequest {
+    /// absolute or project-relative
+    #[prost(string, tag = "1")]
+    pub output_directory: ::prost::alloc::string::String,
+    /// BuildAssetBundleOptions.DeterministicAssetBundle
+    #[prost(bool, tag = "2")]
+    pub deterministic: bool,
+    /// ChunkBasedCompression
+    #[prost(bool, tag = "3")]
+    pub chunk_based: bool,
+    /// ForceRebuildAssetBundle
+    #[prost(bool, tag = "4")]
+    pub force_rebuild: bool,
+}
+/// AssetBundles build response
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct BuildAssetBundlesResponse {
+    #[prost(int32, tag = "1")]
+    pub status_code: i32,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub output_directory: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "4")]
+    pub build_time_ms: u64,
+}
+/// Unified build request
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BuildRequest {
+    #[prost(oneof = "build_request::Payload", tags = "1, 2")]
+    pub payload: ::core::option::Option<build_request::Payload>,
+}
+/// Nested message and enum types in `BuildRequest`.
+pub mod build_request {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "1")]
+        Player(super::BuildPlayerRequest),
+        #[prost(message, tag = "2")]
+        Bundles(super::BuildAssetBundlesRequest),
+    }
+}
+/// Unified build response
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct BuildResponse {
+    #[prost(oneof = "build_response::Payload", tags = "1, 2")]
+    pub payload: ::core::option::Option<build_response::Payload>,
+}
+/// Nested message and enum types in `BuildResponse`.
+pub mod build_response {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "1")]
+        Player(super::BuildPlayerResponse),
+        #[prost(message, tag = "2")]
+        Bundles(super::BuildAssetBundlesResponse),
+    }
+}
+/// Supported platforms (subset; extend as needed)
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum BuildPlatform {
+    BpUnspecified = 0,
+    BpStandaloneWindows64 = 1,
+    /// macOS
+    BpStandaloneOsx = 2,
+    BpStandaloneLinux64 = 3,
+    BpAndroid = 10,
+    BpIos = 11,
+}
+impl BuildPlatform {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::BpUnspecified => "BP_UNSPECIFIED",
+            Self::BpStandaloneWindows64 => "BP_STANDALONE_WINDOWS64",
+            Self::BpStandaloneOsx => "BP_STANDALONE_OSX",
+            Self::BpStandaloneLinux64 => "BP_STANDALONE_LINUX64",
+            Self::BpAndroid => "BP_ANDROID",
+            Self::BpIos => "BP_IOS",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "BP_UNSPECIFIED" => Some(Self::BpUnspecified),
+            "BP_STANDALONE_WINDOWS64" => Some(Self::BpStandaloneWindows64),
+            "BP_STANDALONE_OSX" => Some(Self::BpStandaloneOsx),
+            "BP_STANDALONE_LINUX64" => Some(Self::BpStandaloneLinux64),
+            "BP_ANDROID" => Some(Self::BpAndroid),
+            "BP_IOS" => Some(Self::BpIos),
+            _ => None,
+        }
+    }
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct OperationGetRequest {
@@ -385,14 +532,14 @@ pub struct IpcWelcome {
     pub error: ::prost::alloc::string::String,
 }
 /// Request message with typed payloads
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcRequest {
     #[prost(oneof = "ipc_request::Payload", tags = "1, 2, 10, 11, 20, 30, 40, 41")]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
 /// Nested message and enum types in `IpcRequest`.
 pub mod ipc_request {
-    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Payload {
         /// Handshake
         #[prost(message, tag = "1")]
@@ -410,7 +557,7 @@ pub mod ipc_request {
         Assets(super::AssetsRequest),
         /// Build
         #[prost(message, tag = "30")]
-        BuildPlayer(super::BuildPlayerRequest),
+        Build(super::BuildRequest),
         /// Operations
         #[prost(message, tag = "40")]
         OperationGet(super::OperationGetRequest),
@@ -447,7 +594,7 @@ pub mod ipc_response {
         Assets(super::AssetsResponse),
         /// Build
         #[prost(message, tag = "30")]
-        BuildPlayer(super::BuildPlayerResponse),
+        Build(super::BuildResponse),
         /// Operations
         #[prost(message, tag = "40")]
         OperationGet(super::OperationGetResponse),
