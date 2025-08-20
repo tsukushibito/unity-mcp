@@ -36,7 +36,7 @@ namespace Mcp.Unity.V1.Ipc
         /// Read a frame with 4-byte big-endian length prefix
         /// </summary>
         /// <returns>Frame payload or null if stream closed</returns>
-        public static async Task<byte[]?> ReadFrameAsync(Stream stream)
+        public static async Task<byte[]> ReadFrameAsync(Stream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
 

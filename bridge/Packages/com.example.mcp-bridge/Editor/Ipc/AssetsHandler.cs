@@ -27,8 +27,8 @@ namespace Mcp.Unity.V1.Ipc
                 case Pb.AssetsRequest.PayloadOneofCase.Move:    return Move(req.Move);
                 case Pb.AssetsRequest.PayloadOneofCase.Delete:  return Delete(req.Delete);
                 case Pb.AssetsRequest.PayloadOneofCase.Refresh: return Refresh(req.Refresh);
-                case Pb.AssetsRequest.PayloadOneofCase.G2p:     return G2P(req.G2p);
-                case Pb.AssetsRequest.PayloadOneofCase.P2g:     return P2G(req.P2g);
+                case Pb.AssetsRequest.PayloadOneofCase.G2P:     return G2P(req.G2P);
+                case Pb.AssetsRequest.PayloadOneofCase.P2G:     return P2G(req.P2G);
                 default: return new Pb.AssetsResponse { StatusCode = 2, Message = "invalid request" };
             }
         }
@@ -131,7 +131,7 @@ namespace Mcp.Unity.V1.Ipc
             var map = new Pb.GuidToPathResponse();
             foreach (var g in r.Guids)
                 map.Map[g] = AssetDatabase.GUIDToAssetPath(g);
-            return new Pb.AssetsResponse { StatusCode = 0, G2p = map };
+            return new Pb.AssetsResponse { StatusCode = 0, G2P = map };
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace Mcp.Unity.V1.Ipc
             var map = new Pb.PathToGuidResponse();
             foreach (var p in r.Paths)
                 map.Map[p] = AssetDatabase.AssetPathToGUID(p);
-            return new Pb.AssetsResponse { StatusCode = 0, P2g = map };
+            return new Pb.AssetsResponse { StatusCode = 0, P2G = map };
         }
     }
 }

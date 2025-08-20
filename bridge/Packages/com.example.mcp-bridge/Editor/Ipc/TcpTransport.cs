@@ -12,7 +12,7 @@ namespace Mcp.Unity.V1.Ipc
     internal sealed class TcpTransport : IDisposable
     {
         private readonly IPEndPoint _endpoint;
-        private TcpListener? _listener;
+        private TcpListener _listener;
         private bool _disposed = false;
 
         public TcpTransport(IPEndPoint endpoint)

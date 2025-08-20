@@ -13,8 +13,8 @@ namespace Mcp.Unity.V1.Ipc
     [InitializeOnLoad]
     internal static class EditorIpcServer
     {
-        private static CancellationTokenSource? _cancellationTokenSource;
-        private static TcpTransport? _transport;
+        private static CancellationTokenSource _cancellationTokenSource;
+        private static TcpTransport _transport;
         private static bool _isRunning = false;
         private static readonly List<Stream> _activeStreams = new();
         private static readonly object _streamLock = new();
@@ -54,7 +54,7 @@ namespace Mcp.Unity.V1.Ipc
                 Debug.Log("[EditorIpcServer] IPC server started successfully");
 
                 // Start accepting connections in background
-                _ = Task.Run(() => AcceptConnectionsAsync(_cancellationTokenSource.Token));
+                await Task.Run(() => AcceptConnectionsAsync(_cancellationTokenSource.Token));
             }
             catch (Exception ex)
             {

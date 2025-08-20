@@ -35,39 +35,39 @@ namespace Mcp.Unity.V1 {
             "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQiQwoISXBjSGVsbG8S",
             "EwoLaXBjX3ZlcnNpb24YASABKAUSEwoLc2NoZW1hX2hhc2gYAiABKAkSDQoF",
             "dG9rZW4YAyABKAkiJwoKSXBjV2VsY29tZRIKCgJvaxgBIAEoCBINCgVlcnJv",
-            "chgCIAEoCSLKAwoKSXBjUmVxdWVzdBInCgVoZWxsbxgBIAEoCzIWLm1jcC51",
+            "chgCIAEoCSK/AwoKSXBjUmVxdWVzdBInCgVoZWxsbxgBIAEoCzIWLm1jcC51",
             "bml0eS52MS5JcGNIZWxsb0gAEi0KBmhlYWx0aBgCIAEoCzIbLm1jcC51bml0",
             "eS52MS5IZWFsdGhSZXF1ZXN0SAASLAoNZ2V0X3BsYXlfbW9kZRgKIAEoCzIT",
             "Lm1jcC51bml0eS52MS5FbXB0eUgAEjkKDXNldF9wbGF5X21vZGUYCyABKAsy",
-            "IC5tY3AudW5pdHkudjEuU2V0UGxheU1vZGVSZXF1ZXN0SAASOAoMaW1wb3J0",
-            "X2Fzc2V0GBQgASgLMiAubWNwLnVuaXR5LnYxLkltcG9ydEFzc2V0UmVxdWVz",
-            "dEgAEjgKDGJ1aWxkX3BsYXllchgeIAEoCzIgLm1jcC51bml0eS52MS5CdWls",
-            "ZFBsYXllclJlcXVlc3RIABI6Cg1vcGVyYXRpb25fZ2V0GCggASgLMiEubWNw",
-            "LnVuaXR5LnYxLk9wZXJhdGlvbkdldFJlcXVlc3RIABJAChBvcGVyYXRpb25f",
-            "Y2FuY2VsGCkgASgLMiQubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkNhbmNlbFJl",
-            "cXVlc3RIAEIJCgdwYXlsb2FkIvsDCgtJcGNSZXNwb25zZRIWCg5jb3JyZWxh",
-            "dGlvbl9pZBgBIAEoCRIrCgd3ZWxjb21lGAIgASgLMhgubWNwLnVuaXR5LnYx",
-            "LklwY1dlbGNvbWVIABIuCgZoZWFsdGgYAyABKAsyHC5tY3AudW5pdHkudjEu",
-            "SGVhbHRoUmVzcG9uc2VIABI6Cg1nZXRfcGxheV9tb2RlGAogASgLMiEubWNw",
-            "LnVuaXR5LnYxLkdldFBsYXlNb2RlUmVzcG9uc2VIABI6Cg1zZXRfcGxheV9t",
-            "b2RlGAsgASgLMiEubWNwLnVuaXR5LnYxLlNldFBsYXlNb2RlUmVzcG9uc2VI",
-            "ABI5CgxpbXBvcnRfYXNzZXQYFCABKAsyIS5tY3AudW5pdHkudjEuSW1wb3J0",
-            "QXNzZXRSZXNwb25zZUgAEjkKDGJ1aWxkX3BsYXllchgeIAEoCzIhLm1jcC51",
-            "bml0eS52MS5CdWlsZFBsYXllclJlc3BvbnNlSAASOwoNb3BlcmF0aW9uX2dl",
-            "dBgoIAEoCzIiLm1jcC51bml0eS52MS5PcGVyYXRpb25HZXRSZXNwb25zZUgA",
-            "EkEKEG9wZXJhdGlvbl9jYW5jZWwYKSABKAsyJS5tY3AudW5pdHkudjEuT3Bl",
-            "cmF0aW9uQ2FuY2VsUmVzcG9uc2VIAEIJCgdwYXlsb2FkIoEBCghJcGNFdmVu",
-            "dBIXCg9tb25vdG9uaWNfdHNfbnMYASABKAMSJQoDbG9nGAogASgLMhYubWNw",
-            "LnVuaXR5LnYxLkxvZ0V2ZW50SAASKgoCb3AYCyABKAsyHC5tY3AudW5pdHku",
-            "djEuT3BlcmF0aW9uRXZlbnRIAEIJCgdwYXlsb2FkYgZwcm90bzM="));
+            "IC5tY3AudW5pdHkudjEuU2V0UGxheU1vZGVSZXF1ZXN0SAASLQoGYXNzZXRz",
+            "GBQgASgLMhsubWNwLnVuaXR5LnYxLkFzc2V0c1JlcXVlc3RIABI4CgxidWls",
+            "ZF9wbGF5ZXIYHiABKAsyIC5tY3AudW5pdHkudjEuQnVpbGRQbGF5ZXJSZXF1",
+            "ZXN0SAASOgoNb3BlcmF0aW9uX2dldBgoIAEoCzIhLm1jcC51bml0eS52MS5P",
+            "cGVyYXRpb25HZXRSZXF1ZXN0SAASQAoQb3BlcmF0aW9uX2NhbmNlbBgpIAEo",
+            "CzIkLm1jcC51bml0eS52MS5PcGVyYXRpb25DYW5jZWxSZXF1ZXN0SABCCQoH",
+            "cGF5bG9hZCLwAwoLSXBjUmVzcG9uc2USFgoOY29ycmVsYXRpb25faWQYASAB",
+            "KAkSKwoHd2VsY29tZRgCIAEoCzIYLm1jcC51bml0eS52MS5JcGNXZWxjb21l",
+            "SAASLgoGaGVhbHRoGAMgASgLMhwubWNwLnVuaXR5LnYxLkhlYWx0aFJlc3Bv",
+            "bnNlSAASOgoNZ2V0X3BsYXlfbW9kZRgKIAEoCzIhLm1jcC51bml0eS52MS5H",
+            "ZXRQbGF5TW9kZVJlc3BvbnNlSAASOgoNc2V0X3BsYXlfbW9kZRgLIAEoCzIh",
+            "Lm1jcC51bml0eS52MS5TZXRQbGF5TW9kZVJlc3BvbnNlSAASLgoGYXNzZXRz",
+            "GBQgASgLMhwubWNwLnVuaXR5LnYxLkFzc2V0c1Jlc3BvbnNlSAASOQoMYnVp",
+            "bGRfcGxheWVyGB4gASgLMiEubWNwLnVuaXR5LnYxLkJ1aWxkUGxheWVyUmVz",
+            "cG9uc2VIABI7Cg1vcGVyYXRpb25fZ2V0GCggASgLMiIubWNwLnVuaXR5LnYx",
+            "Lk9wZXJhdGlvbkdldFJlc3BvbnNlSAASQQoQb3BlcmF0aW9uX2NhbmNlbBgp",
+            "IAEoCzIlLm1jcC51bml0eS52MS5PcGVyYXRpb25DYW5jZWxSZXNwb25zZUgA",
+            "QgkKB3BheWxvYWQigQEKCElwY0V2ZW50EhcKD21vbm90b25pY190c19ucxgB",
+            "IAEoAxIlCgNsb2cYCiABKAsyFi5tY3AudW5pdHkudjEuTG9nRXZlbnRIABIq",
+            "CgJvcBgLIAEoCzIcLm1jcC51bml0eS52MS5PcGVyYXRpb25FdmVudEgAQgkK",
+            "B3BheWxvYWRiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEnvelope), global::Mcp.Unity.V1.IpcEnvelope.Parser, new[]{ "CorrelationId", "Request", "Response", "Event" }, new[]{ "Kind" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcHello), global::Mcp.Unity.V1.IpcHello.Parser, new[]{ "IpcVersion", "SchemaHash", "Token" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcWelcome), global::Mcp.Unity.V1.IpcWelcome.Parser, new[]{ "Ok", "Error" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Hello", "Health", "GetPlayMode", "SetPlayMode", "ImportAsset", "BuildPlayer", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Welcome", "Health", "GetPlayMode", "SetPlayMode", "ImportAsset", "BuildPlayer", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Hello", "Health", "GetPlayMode", "SetPlayMode", "Assets", "BuildPlayer", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Welcome", "Health", "GetPlayMode", "SetPlayMode", "Assets", "BuildPlayer", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
@@ -1041,8 +1041,8 @@ namespace Mcp.Unity.V1 {
         case PayloadOneofCase.SetPlayMode:
           SetPlayMode = other.SetPlayMode.Clone();
           break;
-        case PayloadOneofCase.ImportAsset:
-          ImportAsset = other.ImportAsset.Clone();
+        case PayloadOneofCase.Assets:
+          Assets = other.Assets.Clone();
           break;
         case PayloadOneofCase.BuildPlayer:
           BuildPlayer = other.BuildPlayer.Clone();
@@ -1121,18 +1121,18 @@ namespace Mcp.Unity.V1 {
       }
     }
 
-    /// <summary>Field number for the "import_asset" field.</summary>
-    public const int ImportAssetFieldNumber = 20;
+    /// <summary>Field number for the "assets" field.</summary>
+    public const int AssetsFieldNumber = 20;
     /// <summary>
     /// Assets
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Mcp.Unity.V1.ImportAssetRequest ImportAsset {
-      get { return payloadCase_ == PayloadOneofCase.ImportAsset ? (global::Mcp.Unity.V1.ImportAssetRequest) payload_ : null; }
+    public global::Mcp.Unity.V1.AssetsRequest Assets {
+      get { return payloadCase_ == PayloadOneofCase.Assets ? (global::Mcp.Unity.V1.AssetsRequest) payload_ : null; }
       set {
         payload_ = value;
-        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.ImportAsset;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Assets;
       }
     }
 
@@ -1186,7 +1186,7 @@ namespace Mcp.Unity.V1 {
       Health = 2,
       GetPlayMode = 10,
       SetPlayMode = 11,
-      ImportAsset = 20,
+      Assets = 20,
       BuildPlayer = 30,
       OperationGet = 40,
       OperationCancel = 41,
@@ -1224,7 +1224,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(Health, other.Health)) return false;
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
-      if (!object.Equals(ImportAsset, other.ImportAsset)) return false;
+      if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(BuildPlayer, other.BuildPlayer)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
       if (!object.Equals(OperationCancel, other.OperationCancel)) return false;
@@ -1240,7 +1240,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Health) hash ^= Health.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) hash ^= ImportAsset.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) hash ^= BuildPlayer.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationCancel) hash ^= OperationCancel.GetHashCode();
@@ -1279,9 +1279,9 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
       }
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) {
+      if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
-        output.WriteMessage(ImportAsset);
+        output.WriteMessage(Assets);
       }
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) {
         output.WriteRawTag(242, 1);
@@ -1321,9 +1321,9 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
       }
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) {
+      if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
-        output.WriteMessage(ImportAsset);
+        output.WriteMessage(Assets);
       }
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) {
         output.WriteRawTag(242, 1);
@@ -1359,8 +1359,8 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(SetPlayMode);
       }
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) {
-        size += 2 + pb::CodedOutputStream.ComputeMessageSize(ImportAsset);
+      if (payloadCase_ == PayloadOneofCase.Assets) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
       }
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(BuildPlayer);
@@ -1408,11 +1408,11 @@ namespace Mcp.Unity.V1 {
           }
           SetPlayMode.MergeFrom(other.SetPlayMode);
           break;
-        case PayloadOneofCase.ImportAsset:
-          if (ImportAsset == null) {
-            ImportAsset = new global::Mcp.Unity.V1.ImportAssetRequest();
+        case PayloadOneofCase.Assets:
+          if (Assets == null) {
+            Assets = new global::Mcp.Unity.V1.AssetsRequest();
           }
-          ImportAsset.MergeFrom(other.ImportAsset);
+          Assets.MergeFrom(other.Assets);
           break;
         case PayloadOneofCase.BuildPlayer:
           if (BuildPlayer == null) {
@@ -1490,12 +1490,12 @@ namespace Mcp.Unity.V1 {
             break;
           }
           case 162: {
-            global::Mcp.Unity.V1.ImportAssetRequest subBuilder = new global::Mcp.Unity.V1.ImportAssetRequest();
-            if (payloadCase_ == PayloadOneofCase.ImportAsset) {
-              subBuilder.MergeFrom(ImportAsset);
+            global::Mcp.Unity.V1.AssetsRequest subBuilder = new global::Mcp.Unity.V1.AssetsRequest();
+            if (payloadCase_ == PayloadOneofCase.Assets) {
+              subBuilder.MergeFrom(Assets);
             }
             input.ReadMessage(subBuilder);
-            ImportAsset = subBuilder;
+            Assets = subBuilder;
             break;
           }
           case 242: {
@@ -1581,12 +1581,12 @@ namespace Mcp.Unity.V1 {
             break;
           }
           case 162: {
-            global::Mcp.Unity.V1.ImportAssetRequest subBuilder = new global::Mcp.Unity.V1.ImportAssetRequest();
-            if (payloadCase_ == PayloadOneofCase.ImportAsset) {
-              subBuilder.MergeFrom(ImportAsset);
+            global::Mcp.Unity.V1.AssetsRequest subBuilder = new global::Mcp.Unity.V1.AssetsRequest();
+            if (payloadCase_ == PayloadOneofCase.Assets) {
+              subBuilder.MergeFrom(Assets);
             }
             input.ReadMessage(subBuilder);
-            ImportAsset = subBuilder;
+            Assets = subBuilder;
             break;
           }
           case 242: {
@@ -1675,8 +1675,8 @@ namespace Mcp.Unity.V1 {
         case PayloadOneofCase.SetPlayMode:
           SetPlayMode = other.SetPlayMode.Clone();
           break;
-        case PayloadOneofCase.ImportAsset:
-          ImportAsset = other.ImportAsset.Clone();
+        case PayloadOneofCase.Assets:
+          Assets = other.Assets.Clone();
           break;
         case PayloadOneofCase.BuildPlayer:
           BuildPlayer = other.BuildPlayer.Clone();
@@ -1770,18 +1770,18 @@ namespace Mcp.Unity.V1 {
       }
     }
 
-    /// <summary>Field number for the "import_asset" field.</summary>
-    public const int ImportAssetFieldNumber = 20;
+    /// <summary>Field number for the "assets" field.</summary>
+    public const int AssetsFieldNumber = 20;
     /// <summary>
     /// Assets
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Mcp.Unity.V1.ImportAssetResponse ImportAsset {
-      get { return payloadCase_ == PayloadOneofCase.ImportAsset ? (global::Mcp.Unity.V1.ImportAssetResponse) payload_ : null; }
+    public global::Mcp.Unity.V1.AssetsResponse Assets {
+      get { return payloadCase_ == PayloadOneofCase.Assets ? (global::Mcp.Unity.V1.AssetsResponse) payload_ : null; }
       set {
         payload_ = value;
-        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.ImportAsset;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Assets;
       }
     }
 
@@ -1835,7 +1835,7 @@ namespace Mcp.Unity.V1 {
       Health = 3,
       GetPlayMode = 10,
       SetPlayMode = 11,
-      ImportAsset = 20,
+      Assets = 20,
       BuildPlayer = 30,
       OperationGet = 40,
       OperationCancel = 41,
@@ -1874,7 +1874,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(Health, other.Health)) return false;
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
-      if (!object.Equals(ImportAsset, other.ImportAsset)) return false;
+      if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(BuildPlayer, other.BuildPlayer)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
       if (!object.Equals(OperationCancel, other.OperationCancel)) return false;
@@ -1891,7 +1891,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Health) hash ^= Health.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) hash ^= ImportAsset.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) hash ^= BuildPlayer.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationCancel) hash ^= OperationCancel.GetHashCode();
@@ -1934,9 +1934,9 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
       }
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) {
+      if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
-        output.WriteMessage(ImportAsset);
+        output.WriteMessage(Assets);
       }
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) {
         output.WriteRawTag(242, 1);
@@ -1980,9 +1980,9 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
       }
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) {
+      if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
-        output.WriteMessage(ImportAsset);
+        output.WriteMessage(Assets);
       }
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) {
         output.WriteRawTag(242, 1);
@@ -2021,8 +2021,8 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(SetPlayMode);
       }
-      if (payloadCase_ == PayloadOneofCase.ImportAsset) {
-        size += 2 + pb::CodedOutputStream.ComputeMessageSize(ImportAsset);
+      if (payloadCase_ == PayloadOneofCase.Assets) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
       }
       if (payloadCase_ == PayloadOneofCase.BuildPlayer) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(BuildPlayer);
@@ -2073,11 +2073,11 @@ namespace Mcp.Unity.V1 {
           }
           SetPlayMode.MergeFrom(other.SetPlayMode);
           break;
-        case PayloadOneofCase.ImportAsset:
-          if (ImportAsset == null) {
-            ImportAsset = new global::Mcp.Unity.V1.ImportAssetResponse();
+        case PayloadOneofCase.Assets:
+          if (Assets == null) {
+            Assets = new global::Mcp.Unity.V1.AssetsResponse();
           }
-          ImportAsset.MergeFrom(other.ImportAsset);
+          Assets.MergeFrom(other.Assets);
           break;
         case PayloadOneofCase.BuildPlayer:
           if (BuildPlayer == null) {
@@ -2159,12 +2159,12 @@ namespace Mcp.Unity.V1 {
             break;
           }
           case 162: {
-            global::Mcp.Unity.V1.ImportAssetResponse subBuilder = new global::Mcp.Unity.V1.ImportAssetResponse();
-            if (payloadCase_ == PayloadOneofCase.ImportAsset) {
-              subBuilder.MergeFrom(ImportAsset);
+            global::Mcp.Unity.V1.AssetsResponse subBuilder = new global::Mcp.Unity.V1.AssetsResponse();
+            if (payloadCase_ == PayloadOneofCase.Assets) {
+              subBuilder.MergeFrom(Assets);
             }
             input.ReadMessage(subBuilder);
-            ImportAsset = subBuilder;
+            Assets = subBuilder;
             break;
           }
           case 242: {
@@ -2254,12 +2254,12 @@ namespace Mcp.Unity.V1 {
             break;
           }
           case 162: {
-            global::Mcp.Unity.V1.ImportAssetResponse subBuilder = new global::Mcp.Unity.V1.ImportAssetResponse();
-            if (payloadCase_ == PayloadOneofCase.ImportAsset) {
-              subBuilder.MergeFrom(ImportAsset);
+            global::Mcp.Unity.V1.AssetsResponse subBuilder = new global::Mcp.Unity.V1.AssetsResponse();
+            if (payloadCase_ == PayloadOneofCase.Assets) {
+              subBuilder.MergeFrom(Assets);
             }
             input.ReadMessage(subBuilder);
-            ImportAsset = subBuilder;
+            Assets = subBuilder;
             break;
           }
           case 242: {
