@@ -1,5 +1,6 @@
 // prost-build compilation for message-only Protocol Buffer generation
-// This build script generates Rust structs for protobuf messages without gRPC services.
+// This build script generates Rust structs for protobuf messages for direct IPC communication.
+// No gRPC services are generated - we use direct IPC transport only.
 // Output is placed in src/generated/ for stable imports.
 
 use std::{env, fs, path::PathBuf};
@@ -29,8 +30,8 @@ fn main() {
     let mut config = prost_build::Config::new();
     config.out_dir(&out_dir);
 
-    // IMPORTANT: We are NOT generating any gRPC services here.
-    // This generates only the message types.
+    // IMPORTANT: Message-only generation for direct IPC transport.
+    // No gRPC services are generated as we use direct IPC communication only.
     config.compile_protos(
         &files.iter().map(PathBuf::as_path).collect::<Vec<_>>(),
         &[proto_root.as_path()],

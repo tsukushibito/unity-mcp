@@ -187,11 +187,7 @@ impl McpService {
             // Clean up completed operations older than 5 minutes
             let cutoff = std::time::Instant::now() - std::time::Duration::from_secs(300);
             ops.retain(|_, state| {
-                if state.kind == "Complete" && state.last_updated < cutoff {
-                    false
-                } else {
-                    true
-                }
+                !(state.kind == "Complete" && state.last_updated < cutoff)
             });
         }
         

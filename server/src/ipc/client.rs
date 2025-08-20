@@ -442,11 +442,10 @@ impl IpcClient {
             while let Some(frame) = framed.next().await {
                 let bytes = frame.map_err(IpcError::Io)?;
                 let env = codec::decode_envelope(bytes.freeze())?;
-                if let Some(pb::ipc_envelope::Kind::Response(resp)) = env.kind {
-                    if let Some(pb::ipc_response::Payload::Welcome(w)) = resp.payload {
+                if let Some(pb::ipc_envelope::Kind::Response(resp)) = env.kind
+                    && let Some(pb::ipc_response::Payload::Welcome(w)) = resp.payload {
                         return Ok::<_, IpcError>(w);
                     }
-                }
             }
             Err(IpcError::Handshake("no welcome".into()))
         })

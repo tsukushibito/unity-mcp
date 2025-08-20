@@ -53,7 +53,7 @@ async fn test_assets_operations_end_to_end() {
                     assert!(g2p_response.map.contains_key(assets_guid));
                     let path = g2p_response.map.get(assets_guid).unwrap();
                     assert_eq!(path, "Assets");
-                    println!("Round trip test passed: {} -> {} -> {}", "Assets", assets_guid, path);
+                    println!("Round trip test passed: Assets -> {} -> {}", assets_guid, path);
                 }
                 Err(e) => {
                     panic!("GUID to Path conversion failed: {}", e);

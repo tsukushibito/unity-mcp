@@ -32,7 +32,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_unity_health_stub_output() {
-        // スタブ実装のロジックをテスト（gRPC接続は不要）
+        // スタブ実装のロジックをテスト（IPC接続のみ）
         let health = HealthOut {
             ready: true,
             version: "stub-0.1.0".to_string(),
