@@ -3,11 +3,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PKGS="$ROOT/Tools/packages"
-DEST="$ROOT/Packages/com.example.mcp-bridge/Editor/Plugins/Grpc"
+DEST="$ROOT/Packages/com.example.mcp-bridge/Editor/Plugins/Protobuf"
 mkdir -p "$DEST"
 
 pushd "$ROOT/tools" >/dev/null
-dotnet restore grpc-client-runtime.csproj
+dotnet restore protobuf-runtime.csproj
 popd >/dev/null
 
 copy_one () { # <pkgid> <ver> <dllname>
@@ -27,11 +27,6 @@ copy_one () { # <pkgid> <ver> <dllname>
 }
 
 copy_one google.protobuf     3.32.0  Google.Protobuf
-copy_one grpc.core.api       2.71.0  Grpc.Core.Api
-copy_one grpc.net.common     2.71.0  Grpc.Net.Common
-copy_one grpc.net.client     2.71.0  Grpc.Net.Client
-copy_one grpc.net.client.web 2.71.0  Grpc.Net.Client.Web
-copy_one microsoft.extensions.logging.abstractions 6.0.0 Microsoft.Extensions.Logging.Abstractions
-copy_one system.diagnostics.diagnosticsource       6.0.1 System.Diagnostics.DiagnosticSource
+copy_one system.runtime.compilerservices.unsafe       4.5.3 System.Runtime.CompilerServices.Unsafe
 
 echo "DLLs copied to $DEST"

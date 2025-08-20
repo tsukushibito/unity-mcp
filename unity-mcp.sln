@@ -4,7 +4,7 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bridge", "bridge", "{68BF4094-9419-05A7-776B-98D5B493D877}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "grpc-client-runtime", "bridge\Tools\grpc-client-runtime.csproj", "{090D6D2C-2AE3-250F-171F-F6AEB0CFF1B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-runtime", "bridge\Tools\protobuf-runtime.csproj", "{090D6D2C-2AE3-250F-171F-F6AEB0CFF1B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
