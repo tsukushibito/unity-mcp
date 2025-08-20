@@ -239,6 +239,10 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleAssetsRequest(stream, correlationId, request.Assets);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.Build:
+                        await HandleBuildRequest(stream, correlationId, request.Build);
+                        break;
+
                     case IpcRequest.PayloadOneofCase.Hello:
                         Debug.LogWarning("[EditorIpcServer] Received hello after handshake, ignoring");
                         break;
@@ -321,6 +325,44 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent assets response: status={assetsResponse.StatusCode}");
+        }
+
+        /// <summary>
+        /// Handle Build request
+        /// </summary>
+        private static async Task HandleBuildRequest(Stream stream, string correlationId, BuildRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing build request: {request.PayloadCase}");
+
+            // Build operations must run on the main thread
+            BuildResponse buildResponse = null;
+            await Task.Run(() =>
+            {
+                // Use EditorApplication.delayCall to marshal to main thread
+                var tcs = new TaskCompletionSource<BuildResponse>();
+                EditorApplication.delayCall += () =>
+                {
+                    try
+                    {
+                        buildResponse = BuildHandler.Handle(request);
+                        tcs.SetResult(buildResponse);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                };
+                return tcs.Task;
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                Build = buildResponse
+            };
+
+            await SendResponseAsync(stream, response);
+            Debug.Log($"[EditorIpcServer] Sent build response: status={buildResponse.Player?.StatusCode ?? buildResponse.Bundles?.StatusCode}");
         }
 
         /// <summary>
