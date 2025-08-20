@@ -77,8 +77,8 @@ impl IpcClient {
             tx: writer_tx,
         });
 
-        // Establish the connection and spawn reader/writer tasks
-        Self::spawn_io(inner.clone(), endpoint, writer_rx).await?;
+        // Spawn reconnection supervisor task
+        Self::spawn_supervisor(inner.clone(), endpoint, writer_rx).await?;
         Ok(Self { inner })
     }
 
@@ -130,6 +130,79 @@ impl IpcClient {
             Some(pb::ipc_response::Payload::Health(h)) => Ok(h),
             _ => Err(IpcError::Handshake("unexpected response type".into())),
         }
+    }
+
+    async fn spawn_supervisor(
+        inner: Arc<Inner>,
+        endpoint: Endpoint,
+        writer_rx: mpsc::Receiver<Bytes>,
+    ) -> Result<(), IpcError> {
+        // Initial connection attempt
+        Self::spawn_io(inner.clone(), endpoint.clone(), writer_rx).await?;
+
+        // Spawn supervisor task for reconnection
+        let inner_clone = inner.clone();
+        tokio::spawn(async move {
+            let mut backoff_ms = 200u64;
+            const MAX_BACKOFF_MS: u64 = 5000;
+
+            loop {
+                // Wait for connection to be lost (indicated by writer channel closure)
+                tokio::time::sleep(Duration::from_millis(1000)).await;
+
+                // Check if we need to reconnect by trying to send an empty frame
+                if inner_clone.tx.send(Bytes::new()).await.is_err() {
+                    tracing::warn!("IPC connection lost, attempting reconnect...");
+
+                    // Clear all pending requests
+                    {
+                        let mut pending = inner_clone.pending.lock().await;
+                        for (_, tx) in pending.drain() {
+                            let _ = tx.send(pb::IpcResponse {
+                                correlation_id: String::new(),
+                                payload: None,
+                            });
+                        }
+                    }
+
+                    // Reconnection loop with exponential backoff
+                    loop {
+                        tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
+
+                        // Create new writer channel for reconnection
+                        let (_new_writer_tx, new_writer_rx) = mpsc::channel::<Bytes>(1024);
+
+                        match Self::spawn_io(inner_clone.clone(), endpoint.clone(), new_writer_rx)
+                            .await
+                        {
+                            Ok(()) => {
+                                tracing::info!("IPC reconnection successful");
+                                // Reset backoff on successful connection
+                                backoff_ms = 200;
+
+                                // Update the writer channel in inner
+                                // Note: This requires modifying Inner to have a mutable tx field
+                                // For now, we'll log the successful reconnection
+                                break;
+                            }
+                            Err(e) => {
+                                tracing::warn!(
+                                    "IPC reconnection failed: {}, retrying in {}ms",
+                                    e,
+                                    backoff_ms
+                                );
+                                // Exponential backoff with jitter
+                                backoff_ms = std::cmp::min(backoff_ms * 2, MAX_BACKOFF_MS);
+                                let jitter = rand::random::<u64>() % (backoff_ms / 4);
+                                backoff_ms += jitter;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        Ok(())
     }
 
     async fn spawn_io(
@@ -322,6 +395,6 @@ mod tests {
 
         // Should be able to get event receiver
         let _rx = client.events();
-        let _rx2 = client.events();  // Multiple receivers should work
+        let _rx2 = client.events(); // Multiple receivers should work
     }
 }

@@ -1,6 +1,7 @@
 // Unity MCP Bridge - Editor IPC Server
 // Main IPC server that handles handshake and Health requests
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ namespace Mcp.Unity.V1.Ipc
         private static CancellationTokenSource? _cancellationTokenSource;
         private static TcpTransport? _transport;
         private static bool _isRunning = false;
+        private static readonly List<Stream> _activeStreams = new();
+        private static readonly object _streamLock = new();
 
         static EditorIpcServer()
         {
@@ -169,13 +172,21 @@ namespace Mcp.Unity.V1.Ipc
                     await SendWelcomeAsync(stream, helloEnvelope.CorrelationId);
                     Debug.Log("[EditorIpcServer] Handshake completed");
 
-                    // Step 3: Enter request processing loop
+                    // Step 3: Register the stream as active
+                    RegisterStream(stream);
+
+                    // Step 4: Enter request processing loop
                     await ProcessRequestsAsync(stream, cancellationToken);
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[EditorIpcServer] Connection handling failed: {ex.Message}");
+            }
+            finally
+            {
+                // Step 5: Unregister the stream
+                UnregisterStream(stream);
             }
         }
 
@@ -321,5 +332,58 @@ namespace Mcp.Unity.V1.Ipc
         /// Get server status for debugging
         /// </summary>
         public static bool IsRunning => _isRunning;
+
+        /// <summary>
+        /// Try to get an active stream for event sending
+        /// </summary>
+        public static bool TryGetActiveStream(out Stream stream)
+        {
+            lock (_streamLock)
+            {
+                // Remove any closed streams
+                for (int i = _activeStreams.Count - 1; i >= 0; i--)
+                {
+                    var s = _activeStreams[i];
+                    if (!s.CanWrite)
+                    {
+                        _activeStreams.RemoveAt(i);
+                        try { s.Dispose(); } catch { }
+                    }
+                }
+
+                if (_activeStreams.Count > 0)
+                {
+                    stream = _activeStreams[0]; // Return first active stream
+                    return true;
+                }
+
+                stream = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Register an active stream
+        /// </summary>
+        private static void RegisterStream(Stream stream)
+        {
+            lock (_streamLock)
+            {
+                _activeStreams.Add(stream);
+                Debug.Log($"[EditorIpcServer] Registered stream, active count: {_activeStreams.Count}");
+            }
+        }
+
+        /// <summary>
+        /// Unregister a stream
+        /// </summary>
+        private static void UnregisterStream(Stream stream)
+        {
+            lock (_streamLock)
+            {
+                _activeStreams.Remove(stream);
+                Debug.Log($"[EditorIpcServer] Unregistered stream, active count: {_activeStreams.Count}");
+            }
+        }
     }
 }

@@ -86,8 +86,9 @@ message IpcResponse {
 
 // Event message for server-to-client notifications
 message IpcEvent {
+  int64 monotonic_ts_ns = 1;
   oneof payload {
-    // Operation events
-    OperationEvent operation = 1;
+    LogEvent       log = 10;
+    OperationEvent op  = 11;
   }
 }

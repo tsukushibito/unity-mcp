@@ -9,8 +9,21 @@ service Events {
   rpc SubscribeOperation(OperationRef) returns (stream OperationEvent);
 }
 
+message LogEvent {
+  enum Level { TRACE=0; DEBUG=1; INFO=2; WARN=3; ERROR=4; }
+  int64  monotonic_ts_ns = 1;    // sender clock
+  Level  level           = 2;
+  string message         = 3;
+  string category        = 4;    // e.g., "Unity", "Build", "Assets"
+  string stack_trace     = 5;    // optional, compacted
+}
+
 message OperationEvent {
-  string id = 1;     // operation id
-  string kind = 2;   // e.g., "progress", "completed", "error"
-  string payload = 3;// free-form JSON string at L0
+  enum Kind { START=0; PROGRESS=1; COMPLETE=2; }
+  string op_id       = 1;        // unique per operation
+  Kind   kind        = 2;
+  int32  progress    = 3;        // 0..100, for PROGRESS/COMPLETE
+  int32  code        = 4;        // 0=OK; nonzero=error codes on COMPLETE
+  string message     = 5;        // short human message
+  string payload_json= 6;        // optional structured data
 }

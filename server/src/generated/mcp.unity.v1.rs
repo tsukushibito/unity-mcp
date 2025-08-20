@@ -85,16 +85,130 @@ pub struct OperationCancelResponse {
     pub accepted: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct OperationEvent {
-    /// operation id
-    #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
-    /// e.g., "progress", "completed", "error"
-    #[prost(string, tag = "2")]
-    pub kind: ::prost::alloc::string::String,
-    /// free-form JSON string at L0
+pub struct LogEvent {
+    /// sender clock
+    #[prost(int64, tag = "1")]
+    pub monotonic_ts_ns: i64,
+    #[prost(enumeration = "log_event::Level", tag = "2")]
+    pub level: i32,
     #[prost(string, tag = "3")]
-    pub payload: ::prost::alloc::string::String,
+    pub message: ::prost::alloc::string::String,
+    /// e.g., "Unity", "Build", "Assets"
+    #[prost(string, tag = "4")]
+    pub category: ::prost::alloc::string::String,
+    /// optional, compacted
+    #[prost(string, tag = "5")]
+    pub stack_trace: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `LogEvent`.
+pub mod log_event {
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Level {
+        Trace = 0,
+        Debug = 1,
+        Info = 2,
+        Warn = 3,
+        Error = 4,
+    }
+    impl Level {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Trace => "TRACE",
+                Self::Debug => "DEBUG",
+                Self::Info => "INFO",
+                Self::Warn => "WARN",
+                Self::Error => "ERROR",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "TRACE" => Some(Self::Trace),
+                "DEBUG" => Some(Self::Debug),
+                "INFO" => Some(Self::Info),
+                "WARN" => Some(Self::Warn),
+                "ERROR" => Some(Self::Error),
+                _ => None,
+            }
+        }
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct OperationEvent {
+    /// unique per operation
+    #[prost(string, tag = "1")]
+    pub op_id: ::prost::alloc::string::String,
+    #[prost(enumeration = "operation_event::Kind", tag = "2")]
+    pub kind: i32,
+    /// 0..100, for PROGRESS/COMPLETE
+    #[prost(int32, tag = "3")]
+    pub progress: i32,
+    /// 0=OK; nonzero=error codes on COMPLETE
+    #[prost(int32, tag = "4")]
+    pub code: i32,
+    /// short human message
+    #[prost(string, tag = "5")]
+    pub message: ::prost::alloc::string::String,
+    /// optional structured data
+    #[prost(string, tag = "6")]
+    pub payload_json: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `OperationEvent`.
+pub mod operation_event {
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Kind {
+        Start = 0,
+        Progress = 1,
+        Complete = 2,
+    }
+    impl Kind {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Start => "START",
+                Self::Progress => "PROGRESS",
+                Self::Complete => "COMPLETE",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "START" => Some(Self::Start),
+                "PROGRESS" => Some(Self::Progress),
+                "COMPLETE" => Some(Self::Complete),
+                _ => None,
+            }
+        }
+    }
 }
 /// Top-level envelope for all IPC messages
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
@@ -213,15 +327,18 @@ pub mod ipc_response {
 /// Event message for server-to-client notifications
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct IpcEvent {
-    #[prost(oneof = "ipc_event::Payload", tags = "1")]
+    #[prost(int64, tag = "1")]
+    pub monotonic_ts_ns: i64,
+    #[prost(oneof = "ipc_event::Payload", tags = "10, 11")]
     pub payload: ::core::option::Option<ipc_event::Payload>,
 }
 /// Nested message and enum types in `IpcEvent`.
 pub mod ipc_event {
     #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
     pub enum Payload {
-        /// Operation events
-        #[prost(message, tag = "1")]
-        Operation(super::OperationEvent),
+        #[prost(message, tag = "10")]
+        Log(super::LogEvent),
+        #[prost(message, tag = "11")]
+        Op(super::OperationEvent),
     }
 }

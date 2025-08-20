@@ -56,9 +56,10 @@ namespace Mcp.Unity.V1 {
             "bml0eS52MS5CdWlsZFBsYXllclJlc3BvbnNlSAASOwoNb3BlcmF0aW9uX2dl",
             "dBgoIAEoCzIiLm1jcC51bml0eS52MS5PcGVyYXRpb25HZXRSZXNwb25zZUgA",
             "EkEKEG9wZXJhdGlvbl9jYW5jZWwYKSABKAsyJS5tY3AudW5pdHkudjEuT3Bl",
-            "cmF0aW9uQ2FuY2VsUmVzcG9uc2VIAEIJCgdwYXlsb2FkIkgKCElwY0V2ZW50",
-            "EjEKCW9wZXJhdGlvbhgBIAEoCzIcLm1jcC51bml0eS52MS5PcGVyYXRpb25F",
-            "dmVudEgAQgkKB3BheWxvYWRiBnByb3RvMw=="));
+            "cmF0aW9uQ2FuY2VsUmVzcG9uc2VIAEIJCgdwYXlsb2FkIoEBCghJcGNFdmVu",
+            "dBIXCg9tb25vdG9uaWNfdHNfbnMYASABKAMSJQoDbG9nGAogASgLMhYubWNw",
+            "LnVuaXR5LnYxLkxvZ0V2ZW50SAASKgoCb3AYCyABKAsyHC5tY3AudW5pdHku",
+            "djEuT3BlcmF0aW9uRXZlbnRIAEIJCgdwYXlsb2FkYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
@@ -67,7 +68,7 @@ namespace Mcp.Unity.V1 {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcWelcome), global::Mcp.Unity.V1.IpcWelcome.Parser, new[]{ "Ok", "Error" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Hello", "Health", "GetPlayMode", "SetPlayMode", "ImportAsset", "BuildPlayer", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Welcome", "Health", "GetPlayMode", "SetPlayMode", "ImportAsset", "BuildPlayer", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "Operation" }, new[]{ "Payload" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
     #endregion
@@ -2333,9 +2334,13 @@ namespace Mcp.Unity.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public IpcEvent(IpcEvent other) : this() {
+      monotonicTsNs_ = other.monotonicTsNs_;
       switch (other.PayloadCase) {
-        case PayloadOneofCase.Operation:
-          Operation = other.Operation.Clone();
+        case PayloadOneofCase.Log:
+          Log = other.Log.Clone();
+          break;
+        case PayloadOneofCase.Op:
+          Op = other.Op.Clone();
           break;
       }
 
@@ -2348,18 +2353,39 @@ namespace Mcp.Unity.V1 {
       return new IpcEvent(this);
     }
 
-    /// <summary>Field number for the "operation" field.</summary>
-    public const int OperationFieldNumber = 1;
-    /// <summary>
-    /// Operation events
-    /// </summary>
+    /// <summary>Field number for the "monotonic_ts_ns" field.</summary>
+    public const int MonotonicTsNsFieldNumber = 1;
+    private long monotonicTsNs_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Mcp.Unity.V1.OperationEvent Operation {
-      get { return payloadCase_ == PayloadOneofCase.Operation ? (global::Mcp.Unity.V1.OperationEvent) payload_ : null; }
+    public long MonotonicTsNs {
+      get { return monotonicTsNs_; }
+      set {
+        monotonicTsNs_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "log" field.</summary>
+    public const int LogFieldNumber = 10;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.LogEvent Log {
+      get { return payloadCase_ == PayloadOneofCase.Log ? (global::Mcp.Unity.V1.LogEvent) payload_ : null; }
       set {
         payload_ = value;
-        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Operation;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Log;
+      }
+    }
+
+    /// <summary>Field number for the "op" field.</summary>
+    public const int OpFieldNumber = 11;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.OperationEvent Op {
+      get { return payloadCase_ == PayloadOneofCase.Op ? (global::Mcp.Unity.V1.OperationEvent) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Op;
       }
     }
 
@@ -2367,7 +2393,8 @@ namespace Mcp.Unity.V1 {
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
       None = 0,
-      Operation = 1,
+      Log = 10,
+      Op = 11,
     }
     private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2398,7 +2425,9 @@ namespace Mcp.Unity.V1 {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(Operation, other.Operation)) return false;
+      if (MonotonicTsNs != other.MonotonicTsNs) return false;
+      if (!object.Equals(Log, other.Log)) return false;
+      if (!object.Equals(Op, other.Op)) return false;
       if (PayloadCase != other.PayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -2407,7 +2436,9 @@ namespace Mcp.Unity.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (payloadCase_ == PayloadOneofCase.Operation) hash ^= Operation.GetHashCode();
+      if (MonotonicTsNs != 0L) hash ^= MonotonicTsNs.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Log) hash ^= Log.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Op) hash ^= Op.GetHashCode();
       hash ^= (int) payloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -2427,9 +2458,17 @@ namespace Mcp.Unity.V1 {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (payloadCase_ == PayloadOneofCase.Operation) {
-        output.WriteRawTag(10);
-        output.WriteMessage(Operation);
+      if (MonotonicTsNs != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(MonotonicTsNs);
+      }
+      if (payloadCase_ == PayloadOneofCase.Log) {
+        output.WriteRawTag(82);
+        output.WriteMessage(Log);
+      }
+      if (payloadCase_ == PayloadOneofCase.Op) {
+        output.WriteRawTag(90);
+        output.WriteMessage(Op);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -2441,9 +2480,17 @@ namespace Mcp.Unity.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (payloadCase_ == PayloadOneofCase.Operation) {
-        output.WriteRawTag(10);
-        output.WriteMessage(Operation);
+      if (MonotonicTsNs != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(MonotonicTsNs);
+      }
+      if (payloadCase_ == PayloadOneofCase.Log) {
+        output.WriteRawTag(82);
+        output.WriteMessage(Log);
+      }
+      if (payloadCase_ == PayloadOneofCase.Op) {
+        output.WriteRawTag(90);
+        output.WriteMessage(Op);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -2455,8 +2502,14 @@ namespace Mcp.Unity.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (payloadCase_ == PayloadOneofCase.Operation) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Operation);
+      if (MonotonicTsNs != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(MonotonicTsNs);
+      }
+      if (payloadCase_ == PayloadOneofCase.Log) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Log);
+      }
+      if (payloadCase_ == PayloadOneofCase.Op) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Op);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -2470,12 +2523,21 @@ namespace Mcp.Unity.V1 {
       if (other == null) {
         return;
       }
+      if (other.MonotonicTsNs != 0L) {
+        MonotonicTsNs = other.MonotonicTsNs;
+      }
       switch (other.PayloadCase) {
-        case PayloadOneofCase.Operation:
-          if (Operation == null) {
-            Operation = new global::Mcp.Unity.V1.OperationEvent();
+        case PayloadOneofCase.Log:
+          if (Log == null) {
+            Log = new global::Mcp.Unity.V1.LogEvent();
           }
-          Operation.MergeFrom(other.Operation);
+          Log.MergeFrom(other.Log);
+          break;
+        case PayloadOneofCase.Op:
+          if (Op == null) {
+            Op = new global::Mcp.Unity.V1.OperationEvent();
+          }
+          Op.MergeFrom(other.Op);
           break;
       }
 
@@ -2498,13 +2560,26 @@ namespace Mcp.Unity.V1 {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
-            global::Mcp.Unity.V1.OperationEvent subBuilder = new global::Mcp.Unity.V1.OperationEvent();
-            if (payloadCase_ == PayloadOneofCase.Operation) {
-              subBuilder.MergeFrom(Operation);
+          case 8: {
+            MonotonicTsNs = input.ReadInt64();
+            break;
+          }
+          case 82: {
+            global::Mcp.Unity.V1.LogEvent subBuilder = new global::Mcp.Unity.V1.LogEvent();
+            if (payloadCase_ == PayloadOneofCase.Log) {
+              subBuilder.MergeFrom(Log);
             }
             input.ReadMessage(subBuilder);
-            Operation = subBuilder;
+            Log = subBuilder;
+            break;
+          }
+          case 90: {
+            global::Mcp.Unity.V1.OperationEvent subBuilder = new global::Mcp.Unity.V1.OperationEvent();
+            if (payloadCase_ == PayloadOneofCase.Op) {
+              subBuilder.MergeFrom(Op);
+            }
+            input.ReadMessage(subBuilder);
+            Op = subBuilder;
             break;
           }
         }
@@ -2526,13 +2601,26 @@ namespace Mcp.Unity.V1 {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 10: {
-            global::Mcp.Unity.V1.OperationEvent subBuilder = new global::Mcp.Unity.V1.OperationEvent();
-            if (payloadCase_ == PayloadOneofCase.Operation) {
-              subBuilder.MergeFrom(Operation);
+          case 8: {
+            MonotonicTsNs = input.ReadInt64();
+            break;
+          }
+          case 82: {
+            global::Mcp.Unity.V1.LogEvent subBuilder = new global::Mcp.Unity.V1.LogEvent();
+            if (payloadCase_ == PayloadOneofCase.Log) {
+              subBuilder.MergeFrom(Log);
             }
             input.ReadMessage(subBuilder);
-            Operation = subBuilder;
+            Log = subBuilder;
+            break;
+          }
+          case 90: {
+            global::Mcp.Unity.V1.OperationEvent subBuilder = new global::Mcp.Unity.V1.OperationEvent();
+            if (payloadCase_ == PayloadOneofCase.Op) {
+              subBuilder.MergeFrom(Op);
+            }
+            input.ReadMessage(subBuilder);
+            Op = subBuilder;
             break;
           }
         }
