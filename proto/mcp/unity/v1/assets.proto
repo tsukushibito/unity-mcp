@@ -3,9 +3,89 @@
 syntax = "proto3";
 package mcp.unity.v1;
 
-service Assets {
-  rpc ImportAsset(ImportAssetRequest) returns (ImportAssetResponse);
+// Import/Export operations for Unity assets
+message ImportAssetRequest { 
+  repeated string paths = 1; 
+  bool recursive = 2; 
+  bool auto_refresh = 3; 
 }
 
-message ImportAssetRequest { string path = 1; }
-message ImportAssetResponse { bool queued = 1; string op_id = 2; }
+message ImportAssetResult { 
+  string path = 1; 
+  string guid = 2; 
+  bool ok = 3; 
+  string message = 4; 
+}
+
+message ImportAssetResponse { 
+  repeated ImportAssetResult results = 1; 
+}
+
+message MoveAssetRequest { 
+  string from_path = 1; 
+  string to_path = 2; 
+}
+
+message MoveAssetResponse { 
+  bool ok = 1; 
+  string message = 2; 
+  string new_guid = 3; 
+}
+
+message DeleteAssetRequest { 
+  repeated string paths = 1; 
+  bool soft = 2; 
+}
+
+message DeleteAssetResponse { 
+  repeated string deleted = 1; 
+  repeated string failed = 2; 
+}
+
+message RefreshRequest { 
+  bool force = 1; 
+}
+
+message RefreshResponse { 
+  bool ok = 1; 
+}
+
+message GuidToPathRequest { 
+  repeated string guids = 1; 
+}
+
+message GuidToPathResponse { 
+  map<string,string> map = 1; 
+}
+
+message PathToGuidRequest { 
+  repeated string paths = 1; 
+}
+
+message PathToGuidResponse { 
+  map<string,string> map = 1; 
+}
+
+message AssetsRequest {
+  oneof payload {
+    ImportAssetRequest  import  = 1;
+    MoveAssetRequest    move    = 2;
+    DeleteAssetRequest  delete  = 3;
+    RefreshRequest      refresh = 4;
+    GuidToPathRequest   g2p     = 5;
+    PathToGuidRequest   p2g     = 6;
+  }
+}
+
+message AssetsResponse {
+  int32 status_code = 1; // 0=OK, 2=INVALID_ARGUMENT, 5=NOT_FOUND, 13=INTERNAL
+  string message     = 2;
+  oneof payload {
+    ImportAssetResponse import  = 10;
+    MoveAssetResponse   move    = 11;
+    DeleteAssetResponse delete  = 12;
+    RefreshResponse     refresh = 13;
+    GuidToPathResponse  g2p     = 14;
+    PathToGuidResponse  p2g     = 15;
+  }
+}

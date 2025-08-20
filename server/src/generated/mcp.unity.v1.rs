@@ -36,17 +36,148 @@ pub struct SetPlayModeResponse {
     #[prost(bool, tag = "1")]
     pub applied: bool,
 }
+/// Import/Export operations for Unity assets
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ImportAssetRequest {
-    #[prost(string, tag = "1")]
-    pub path: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "1")]
+    pub paths: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(bool, tag = "2")]
+    pub recursive: bool,
+    #[prost(bool, tag = "3")]
+    pub auto_refresh: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct ImportAssetResponse {
-    #[prost(bool, tag = "1")]
-    pub queued: bool,
+pub struct ImportAssetResult {
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
-    pub op_id: ::prost::alloc::string::String,
+    pub guid: ::prost::alloc::string::String,
+    #[prost(bool, tag = "3")]
+    pub ok: bool,
+    #[prost(string, tag = "4")]
+    pub message: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ImportAssetResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub results: ::prost::alloc::vec::Vec<ImportAssetResult>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct MoveAssetRequest {
+    #[prost(string, tag = "1")]
+    pub from_path: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub to_path: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct MoveAssetResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub new_guid: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteAssetRequest {
+    #[prost(string, repeated, tag = "1")]
+    pub paths: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(bool, tag = "2")]
+    pub soft: bool,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteAssetResponse {
+    #[prost(string, repeated, tag = "1")]
+    pub deleted: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, repeated, tag = "2")]
+    pub failed: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RefreshRequest {
+    #[prost(bool, tag = "1")]
+    pub force: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RefreshResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GuidToPathRequest {
+    #[prost(string, repeated, tag = "1")]
+    pub guids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GuidToPathResponse {
+    #[prost(map = "string, string", tag = "1")]
+    pub map: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PathToGuidRequest {
+    #[prost(string, repeated, tag = "1")]
+    pub paths: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PathToGuidResponse {
+    #[prost(map = "string, string", tag = "1")]
+    pub map: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AssetsRequest {
+    #[prost(oneof = "assets_request::Payload", tags = "1, 2, 3, 4, 5, 6")]
+    pub payload: ::core::option::Option<assets_request::Payload>,
+}
+/// Nested message and enum types in `AssetsRequest`.
+pub mod assets_request {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "1")]
+        Import(super::ImportAssetRequest),
+        #[prost(message, tag = "2")]
+        Move(super::MoveAssetRequest),
+        #[prost(message, tag = "3")]
+        Delete(super::DeleteAssetRequest),
+        #[prost(message, tag = "4")]
+        Refresh(super::RefreshRequest),
+        #[prost(message, tag = "5")]
+        G2p(super::GuidToPathRequest),
+        #[prost(message, tag = "6")]
+        P2g(super::PathToGuidRequest),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AssetsResponse {
+    /// 0=OK, 2=INVALID_ARGUMENT, 5=NOT_FOUND, 13=INTERNAL
+    #[prost(int32, tag = "1")]
+    pub status_code: i32,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(oneof = "assets_response::Payload", tags = "10, 11, 12, 13, 14, 15")]
+    pub payload: ::core::option::Option<assets_response::Payload>,
+}
+/// Nested message and enum types in `AssetsResponse`.
+pub mod assets_response {
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "10")]
+        Import(super::ImportAssetResponse),
+        #[prost(message, tag = "11")]
+        Move(super::MoveAssetResponse),
+        #[prost(message, tag = "12")]
+        Delete(super::DeleteAssetResponse),
+        #[prost(message, tag = "13")]
+        Refresh(super::RefreshResponse),
+        #[prost(message, tag = "14")]
+        G2p(super::GuidToPathResponse),
+        #[prost(message, tag = "15")]
+        P2g(super::PathToGuidResponse),
+    }
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct BuildPlayerRequest {
@@ -211,7 +342,7 @@ pub mod operation_event {
     }
 }
 /// Top-level envelope for all IPC messages
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcEnvelope {
     /// Empty for handshake messages
     #[prost(string, tag = "1")]
@@ -221,7 +352,7 @@ pub struct IpcEnvelope {
 }
 /// Nested message and enum types in `IpcEnvelope`.
 pub mod ipc_envelope {
-    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Kind {
         #[prost(message, tag = "2")]
         Request(super::IpcRequest),
@@ -276,7 +407,7 @@ pub mod ipc_request {
         SetPlayMode(super::SetPlayModeRequest),
         /// Assets
         #[prost(message, tag = "20")]
-        ImportAsset(super::ImportAssetRequest),
+        Assets(super::AssetsRequest),
         /// Build
         #[prost(message, tag = "30")]
         BuildPlayer(super::BuildPlayerRequest),
@@ -288,7 +419,7 @@ pub mod ipc_request {
     }
 }
 /// Response message with typed payloads
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcResponse {
     /// Matches the request correlation_id
     #[prost(string, tag = "1")]
@@ -298,7 +429,7 @@ pub struct IpcResponse {
 }
 /// Nested message and enum types in `IpcResponse`.
 pub mod ipc_response {
-    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Payload {
         /// Handshake
         #[prost(message, tag = "2")]
@@ -313,7 +444,7 @@ pub mod ipc_response {
         SetPlayMode(super::SetPlayModeResponse),
         /// Assets
         #[prost(message, tag = "20")]
-        ImportAsset(super::ImportAssetResponse),
+        Assets(super::AssetsResponse),
         /// Build
         #[prost(message, tag = "30")]
         BuildPlayer(super::BuildPlayerResponse),

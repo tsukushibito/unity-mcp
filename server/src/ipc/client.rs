@@ -132,6 +132,170 @@ impl IpcClient {
         }
     }
 
+    pub async fn assets_import(
+        &self,
+        paths: Vec<String>,
+        recursive: bool,
+        auto_refresh: bool,
+        timeout: Duration,
+    ) -> Result<pb::ImportAssetResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
+                payload: Some(pb::assets_request::Payload::Import(pb::ImportAssetRequest {
+                    paths,
+                    recursive,
+                    auto_refresh,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Assets(pb::AssetsResponse {
+                status_code: 0,
+                payload: Some(pb::assets_response::Payload::Import(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Assets(res)) => {
+                Err(IpcError::Handshake(format!("assets import failed: {}", res.message)))
+            }
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn assets_move(
+        &self,
+        from_path: String,
+        to_path: String,
+        timeout: Duration,
+    ) -> Result<pb::MoveAssetResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
+                payload: Some(pb::assets_request::Payload::Move(pb::MoveAssetRequest {
+                    from_path,
+                    to_path,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Assets(pb::AssetsResponse {
+                status_code: 0,
+                payload: Some(pb::assets_response::Payload::Move(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Assets(res)) => {
+                Err(IpcError::Handshake(format!("assets move failed: {}", res.message)))
+            }
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn assets_delete(
+        &self,
+        paths: Vec<String>,
+        soft: bool,
+        timeout: Duration,
+    ) -> Result<pb::DeleteAssetResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
+                payload: Some(pb::assets_request::Payload::Delete(pb::DeleteAssetRequest {
+                    paths,
+                    soft,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Assets(pb::AssetsResponse {
+                status_code: 0,
+                payload: Some(pb::assets_response::Payload::Delete(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Assets(res)) => {
+                Err(IpcError::Handshake(format!("assets delete failed: {}", res.message)))
+            }
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn assets_refresh(
+        &self,
+        force: bool,
+        timeout: Duration,
+    ) -> Result<pb::RefreshResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
+                payload: Some(pb::assets_request::Payload::Refresh(pb::RefreshRequest {
+                    force,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Assets(pb::AssetsResponse {
+                status_code: 0,
+                payload: Some(pb::assets_response::Payload::Refresh(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Assets(res)) => {
+                Err(IpcError::Handshake(format!("assets refresh failed: {}", res.message)))
+            }
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn assets_guid_to_path(
+        &self,
+        guids: Vec<String>,
+        timeout: Duration,
+    ) -> Result<pb::GuidToPathResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
+                payload: Some(pb::assets_request::Payload::G2p(pb::GuidToPathRequest {
+                    guids,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Assets(pb::AssetsResponse {
+                status_code: 0,
+                payload: Some(pb::assets_response::Payload::G2p(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Assets(res)) => {
+                Err(IpcError::Handshake(format!("assets g2p failed: {}", res.message)))
+            }
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn assets_path_to_guid(
+        &self,
+        paths: Vec<String>,
+        timeout: Duration,
+    ) -> Result<pb::PathToGuidResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
+                payload: Some(pb::assets_request::Payload::P2g(pb::PathToGuidRequest {
+                    paths,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Assets(pb::AssetsResponse {
+                status_code: 0,
+                payload: Some(pb::assets_response::Payload::P2g(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Assets(res)) => {
+                Err(IpcError::Handshake(format!("assets p2g failed: {}", res.message)))
+            }
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
     async fn spawn_supervisor(
         inner: Arc<Inner>,
         endpoint: Endpoint,

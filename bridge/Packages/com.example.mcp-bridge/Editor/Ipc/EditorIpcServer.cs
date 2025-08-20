@@ -235,6 +235,10 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleHealthRequest(stream, correlationId, request.Health);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.Assets:
+                        await HandleAssetsRequest(stream, correlationId, request.Assets);
+                        break;
+
                     case IpcRequest.PayloadOneofCase.Hello:
                         Debug.LogWarning("[EditorIpcServer] Received hello after handshake, ignoring");
                         break;
@@ -279,6 +283,44 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent health response: ready={ready}, version={version}");
+        }
+
+        /// <summary>
+        /// Handle Assets request
+        /// </summary>
+        private static async Task HandleAssetsRequest(Stream stream, string correlationId, AssetsRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing assets request: {request.PayloadCase}");
+
+            // Assets operations must run on the main thread
+            AssetsResponse assetsResponse = null;
+            await Task.Run(() =>
+            {
+                // Use EditorApplication.delayCall to marshal to main thread
+                var tcs = new TaskCompletionSource<AssetsResponse>();
+                EditorApplication.delayCall += () =>
+                {
+                    try
+                    {
+                        assetsResponse = AssetsHandler.Handle(request);
+                        tcs.SetResult(assetsResponse);
+                    }
+                    catch (Exception ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                };
+                return tcs.Task;
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                Assets = assetsResponse
+            };
+
+            await SendResponseAsync(stream, response);
+            Debug.Log($"[EditorIpcServer] Sent assets response: status={assetsResponse.StatusCode}");
         }
 
         /// <summary>

@@ -47,7 +47,7 @@ message IpcRequest {
     SetPlayModeRequest set_play_mode = 11;
     
     // Assets
-    ImportAssetRequest import_asset = 20;
+    AssetsRequest assets = 20;
     
     // Build
     BuildPlayerRequest build_player = 30;
@@ -73,7 +73,7 @@ message IpcResponse {
     SetPlayModeResponse set_play_mode = 11;
     
     // Assets
-    ImportAssetResponse import_asset = 20;
+    AssetsResponse assets = 20;
     
     // Build
     BuildPlayerResponse build_player = 30;
