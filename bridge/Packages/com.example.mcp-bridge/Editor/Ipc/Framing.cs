@@ -20,14 +20,14 @@ namespace Mcp.Unity.V1.Ipc
             if (payload.Length > MaxFrameSize) throw new ArgumentException($"Frame too large: {payload.Length} > {MaxFrameSize}");
 
             // Write 4-byte big-endian length header
-            Span<byte> lengthHeader = stackalloc byte[4];
+            byte[] lengthHeader = new byte[4];
             var length = payload.Length;
             lengthHeader[0] = (byte)((length >> 24) & 0xFF);
             lengthHeader[1] = (byte)((length >> 16) & 0xFF);
             lengthHeader[2] = (byte)((length >> 8) & 0xFF);
             lengthHeader[3] = (byte)(length & 0xFF);
 
-            await stream.WriteAsync(lengthHeader);
+            await stream.WriteAsync(lengthHeader, 0, 4);
             await stream.WriteAsync(payload);
             await stream.FlushAsync();
         }

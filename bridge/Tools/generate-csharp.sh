@@ -6,15 +6,21 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 PROTO_ROOT="$REPO_ROOT/proto"
-OUT="$REPO_ROOT/bridge/Packages/com.example.mcp-bridge/Editor/Generated/Proto"
+OUT="$REPO_ROOT/bridge/Packages/com.example.mcp-bridge/Editor/Generated"
 
 mkdir -p "$OUT"
 
-protoc-grpctools \
-  -I"$PROTO_ROOT" \
+# Generate C# protobuf messages only (no gRPC stubs) for Direct IPC
+protoc \
+  -I="$PROTO_ROOT" \
   --csharp_out="$OUT" \
-  --grpc_out="$OUT" \
-  --plugin=protoc-gen-grpc=grpc_csharp_plugin \
-  $(find "$PROTO_ROOT/mcp/unity/v1" -name '*.proto')
+  --csharp_opt=base_namespace=Mcp.Unity.V1 \
+  "$PROTO_ROOT"/mcp/unity/v1/common.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/editor_control.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/assets.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/build.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/operations.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/events.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/ipc.proto
 
-echo "[generate-csharp.sh] C# gRPC stubs generated into $OUT"
+echo "[generate-csharp.sh] C# Protobuf messages generated into $OUT"
