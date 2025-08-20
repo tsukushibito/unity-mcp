@@ -86,6 +86,11 @@ impl FeatureFlag {
             Self::OpsProgress,
         ]
     }
+    
+    /// Normalize feature string (lowercase, trim)
+    pub fn normalize_string(s: &str) -> String {
+        s.trim().to_lowercase()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -103,7 +108,8 @@ impl FeatureSet {
     pub fn from_strings(strings: &[String]) -> Self {
         let features = strings
             .iter()
-            .map(|s| FeatureFlag::from_string(s))
+            .map(|s| FeatureFlag::from_string(&FeatureFlag::normalize_string(s)))
+            .filter(|f| !matches!(f, FeatureFlag::Unknown(_))) // Filter unknown features during negotiation
             .collect();
         Self { features }
     }
@@ -310,8 +316,8 @@ impl IpcClient {
     ) -> Result<pb::ImportAssetResponse, IpcError> {
         // Check if assets.basic feature is negotiated
         if !self.has_feature(FeatureFlag::AssetsBasic).await {
-            return Err(IpcError::Handshake(
-                "assets.basic feature not available".into()
+            return Err(IpcError::UnsupportedFeature(
+                "assets.basic feature not negotiated".into()
             ));
         }
         
@@ -335,8 +341,8 @@ impl IpcClient {
         timeout: Duration
     ) -> Result<pb::BuildPlayerResponse, IpcError> {
         if !self.has_feature(FeatureFlag::BuildMin).await {
-            return Err(IpcError::Handshake(
-                "build.min feature not available".into()
+            return Err(IpcError::UnsupportedFeature(
+                "build.min feature not negotiated".into()
             ));
         }
         
@@ -462,7 +468,26 @@ async fn test_feature_dependent_operation_rejection() {
     let client = IpcClient::connect(test_config(&server)).await.unwrap();
     
     let result = client.assets_import(vec![], false, false, Duration::from_secs(1)).await;
-    assert!(matches!(result, Err(IpcError::Handshake(_))));
+    assert!(matches!(result, Err(IpcError::UnsupportedFeature(_))));
+}
+
+#[tokio::test]
+async fn test_unknown_features_filtered_during_negotiation() {
+    let client_features = vec!["assets.basic".to_string(), "unknown.feature".to_string()];
+    let feature_set = FeatureSet::from_strings(&client_features);
+    
+    // Unknown features should be filtered out during negotiation
+    assert!(!feature_set.to_strings().contains(&"unknown.feature".to_string()));
+    assert!(feature_set.contains(&FeatureFlag::AssetsBasic));
+}
+
+#[tokio::test]
+async fn test_feature_string_normalization() {
+    let normalized = FeatureFlag::normalize_string(" Assets.Basic ");
+    assert_eq!(normalized, "assets.basic");
+    
+    let feature = FeatureFlag::from_string(&normalized);
+    assert_eq!(feature, FeatureFlag::AssetsBasic);
 }
 ```
 
@@ -488,11 +513,31 @@ async fn test_feature_dependent_operation_rejection() {
 
 Phase 5で必要となる要素：
 - Schema hash calculation infrastructure
-- Feature set impact on schema compatibility
+- Feature setは実行可否のみに影響し、スキーマ互換性はschema_hashで保証する
 - Performance considerations for feature checking
+
+## Feature Flag正規化ルール
+
+**文字列正規化：**
+- 小文字化 + trim処理
+- ドット区切りはそのまま保持
+- Unknown featuresは握手時に黙ってフィルタ
+- 実行時はUnsupportedFeatureエラー
+
+**列挙↔文字列対応：**
+```rust
+// 正規化された文字列から列挙へ
+"assets.basic" -> FeatureFlag::AssetsBasic
+" Assets.Basic " -> FeatureFlag::AssetsBasic (trim + lowercase)
+"unknown.feature" -> FeatureFlag::Unknown("unknown.feature")
+
+// 握手時: Unknownは黙ってフィルタ
+// 実行時: UnknownはUnsupportedFeatureエラー
+```
 
 ## パフォーマンス考慮事項
 
 - Feature checkingはhot pathで実行されるため効率的な実装が必要
 - Negotiated featuresのcachingとthread safety
 - Feature flag lookupの最適化（HashMap vs HashSet vs bitflags）
+- 正規化処理のオーバーヘッド最小化

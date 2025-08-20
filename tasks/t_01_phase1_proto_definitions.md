@@ -86,19 +86,56 @@ message IpcReject {
 
 ### Step 2: Rust build script更新
 
-`server/build.rs`を更新してipc_control.protoを含める：
+`server/build.rs`を更新してipc_control.protoを含める。Schema hash生成も同時に実装：
 
 ```rust
-let files = [
-    "mcp/unity/v1/common.proto",
-    "mcp/unity/v1/editor_control.proto", 
-    "mcp/unity/v1/assets.proto",
-    "mcp/unity/v1/build.proto",
-    "mcp/unity/v1/operations.proto",
-    "mcp/unity/v1/events.proto",
-    "mcp/unity/v1/ipc.proto",
-    "mcp/unity/v1/ipc_control.proto",  // 新規追加
-]
+use std::{env, fs, path::PathBuf};
+use prost_build::Config;
+use sha2::{Sha256, Digest};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let manifest = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
+    let proto_root = manifest.join("..").join("proto");
+    let out_dir = manifest.join("src").join("generated");
+    fs::create_dir_all(&out_dir)?;
+
+    // 1) Gather & sort proto files for deterministic generation
+    let mut files = vec![
+        "mcp/unity/v1/common.proto",
+        "mcp/unity/v1/editor_control.proto",
+        "mcp/unity/v1/assets.proto",
+        "mcp/unity/v1/build.proto",
+        "mcp/unity/v1/operations.proto",
+        "mcp/unity/v1/events.proto",
+        "mcp/unity/v1/ipc.proto",
+        "mcp/unity/v1/ipc_control.proto",  // 新規追加
+    ].into_iter().map(|p| proto_root.join(p)).collect::<Vec<_>>();
+    files.sort(); // Deterministic ordering
+
+    // 2) Generate Rust code + FileDescriptorSet
+    let descriptor_path = out_dir.join("schema.pb");
+    let mut cfg = Config::new();
+    cfg.out_dir(&out_dir);
+    cfg.file_descriptor_set_path(&descriptor_path);
+    cfg.protoc_arg("--include_imports");
+    cfg.protoc_arg("--include_source_info=false");
+    cfg.compile_protos(&files, &[proto_root.clone()])?;
+
+    for f in &files {
+        println!("cargo:rerun-if-changed={}", f.display());
+    }
+
+    // 3) Generate schema hash as byte array (not hex string)
+    let bytes = fs::read(&descriptor_path)?;
+    let hash = Sha256::digest(&bytes);
+    let hash_array: [u8; 32] = hash.into();
+    
+    fs::write(out_dir.join("schema_hash.rs"),
+        format!("pub const SCHEMA_HASH: [u8; 32] = {:?};\n", hash_array)
+    )?;
+    
+    Ok(())
+}
 ```
 
 ### Step 3: 既存ipc.protoの調整
@@ -152,8 +189,22 @@ Phase 2で必要となる要素：
 - handshakeフローでの`IpcHello`/`IpcWelcome`/`IpcReject`の使い分け
 - 既存の`client.rs`での統合ポイント
 
+## Schema Hash生成の重要事項
+
+**決定性の確保：**
+- Proto filesは必ずソート済みで処理
+- `protoc`バージョンは3.21.12以上で固定（CI/local共通）
+- `--include_imports=true`、`--include_source_info=false`で統一
+- 生成されるschema hashは32バイトの生バイト配列
+
+**データ型統一：**
+- Proto定義：`bytes schema_hash`（32バイト生データ）
+- Rust：`[u8; 32]`として保持、送信時は`.to_vec()`
+- Unity：`byte[]`として保持、ログ表示時のみhex変換
+- 比較は常に生バイト同士で実行
+
 ## 注意事項
 
 - Breaking changeとなるため、既存のhandshake実装は一時的に動作しなくなる可能性がある
 - Phase 1完了後、Phase 2で実際のhandshake logicを実装するまでは統合テストが失敗する可能性がある
-- Proto schemaの変更は両側（RustとUnity）で同期が必要
+- Schema hash生成の決定性確保が必須（OS/CI差分によるhash揺れ防止）

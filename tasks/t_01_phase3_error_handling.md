@@ -262,6 +262,10 @@ pub enum IpcError {
     ServerUnavailable(String),
     #[error("permission denied: {0}")]
     PermissionDenied(String),
+    #[error("unsupported feature: {0}")]
+    UnsupportedFeature(String),           // 交渉されていない機能の使用時
+    #[error("failed precondition: {0}")]
+    FailedPrecondition(String),           // 一般的な前提条件不満
     #[error("io: {0}")]
     Io(#[from] std::io::Error),
     #[error("codec: {0}")]
@@ -324,6 +328,8 @@ impl IpcClient {
                         IpcError::Io(_) => true,
                         IpcError::Authentication(_) => false, // Don't retry auth errors
                         IpcError::VersionIncompatible(_) => false, // Don't retry version errors
+                        IpcError::SchemaMismatch(_) => false, // Don't retry schema errors
+                        IpcError::UnsupportedFeature(_) => false, // Don't retry feature errors
                         _ => false,
                     };
                     
@@ -407,13 +413,11 @@ async fn test_handshake_version_incompatible() {
     let server = MockUnityServer::new()
         .with_supported_version("1.0");
     
-    // Try to connect with incompatible major version
     let cfg = IpcConfig {
         // Force client to send version 2.0
         ..test_config(&server)
     };
     
-    // Mock client to send wrong version
     let result = IpcClient::connect(cfg).await;
     assert!(matches!(result, Err(IpcError::VersionIncompatible(_))));
 }
@@ -425,6 +429,18 @@ async fn test_handshake_server_unavailable() {
     
     let result = IpcClient::connect(test_config(&server)).await;
     assert!(matches!(result, Err(IpcError::ServerUnavailable(_))));
+}
+
+#[tokio::test]
+async fn test_post_handshake_unsupported_feature() {
+    let server = MockUnityServer::new()
+        .with_supported_features(vec!["events.log"]); // No assets.basic
+    
+    let client = IpcClient::connect(test_config(&server)).await.unwrap();
+    
+    // Try to use unsupported feature after successful handshake
+    let result = client.assets_import(vec![], false, false, Duration::from_secs(1)).await;
+    assert!(matches!(result, Err(IpcError::UnsupportedFeature(_))));
 }
 ```
 
@@ -452,9 +468,28 @@ Phase 4で必要となる要素：
 - Configuration systemの拡張
 - Logging framework integration
 
+## Error Messageガイドライン
+
+**一文・端的ルール：**
+- 全てのRejectメッセージは1文で終える
+- 最大100文字以内で簡潔に
+- 機密情報（token値、内部パスなど）を含めない
+- アクション可能な場合は具体的な改善方法を示す
+
+**例：**
+- 良い：`"missing token"`
+- 悪い：`"authentication failed because the provided token 'abc123' does not match the expected value"`
+- 良い：`"project_root mismatch"`
+- 悪い：`"project_root '/home/user/wrong/path' does not match server project '/home/user/correct/path'"`
+
+**未交渉機能エラーの例：**
+- クライアント側：`UnsupportedFeature("assets.basic feature not negotiated")`
+- サーバー応答：`FAILED_PRECONDITION: "feature 'build.min' not negotiated"`
+- Unity guard例外：`InvalidOperationException("Feature build.min not negotiated")`
+
 ## セキュリティ考慮事項
 
-- Tokenをログに出力しない
-- Error messageで機密情報を漏らさない
-- Path traversal防止のvalidation
+- Tokenをログに出力しない（デバッグレベルでも禁止）
+- Error messageで機密情報や内部構造を漏らさない
+- Path traversal防止のvalidation（正規化済みパスで比較）
 - Rate limiting考慮（将来実装）

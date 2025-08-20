@@ -47,7 +47,7 @@ async fn spawn_io(
             "build.min".to_string(),
             "ops.progress".to_string(),
         ],
-        schema_hash: codec::schema_hash().into_bytes(),
+        schema_hash: codec::schema_hash().to_vec(),
         project_root: inner.cfg.project_root.clone().unwrap_or_default(),
         client_name: "unity-mcp-rs".to_string(),
         client_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -96,6 +96,25 @@ fn create_default_meta() -> std::collections::HashMap<String, String> {
     meta.insert("os".to_string(), std::env::consts::OS.to_string());
     meta.insert("arch".to_string(), std::env::consts::ARCH.to_string());
     meta
+}
+
+fn normalize_project_root(path: &str) -> Result<String, std::io::Error> {
+    let canonical = std::fs::canonicalize(path)?;
+    let normalized = canonical.to_string_lossy();
+    
+    #[cfg(windows)]
+    {
+        let normalized = normalized.to_uppercase().chars().take(1)
+            .chain(normalized.chars().skip(1))
+            .collect::<String>()
+            .replace('/', "\\");
+        Ok(normalized.trim_end_matches('\\').to_string())
+    }
+    
+    #[cfg(unix)]
+    {
+        Ok(normalized.trim_end_matches('/').to_string())
+    }
 }
 ```
 
@@ -262,10 +281,111 @@ Phase 3で必要となる要素：
 - Error scenario handling
 - Proper connection cleanup on handshake failure
 
+## タイムアウト設定
+
+T01仕様に準拠したタイムアウト設定：
+
+```rust
+// IpcConfig default values
+pub struct IpcConfig {
+    pub connect_timeout: Duration,     // 2s (dev) / 5s (CI)
+    pub handshake_timeout: Duration,   // 2s (hello送信後の応答待ち)
+    pub total_handshake_timeout: Duration, // 3s (dev) / 8s (CI) 全体制限
+}
+
+impl Default for IpcConfig {
+    fn default() -> Self {
+        let is_ci = std::env::var("CI").is_ok();
+        Self {
+            connect_timeout: if is_ci { Duration::from_secs(5) } else { Duration::from_secs(2) },
+            handshake_timeout: Duration::from_secs(2),
+            total_handshake_timeout: if is_ci { Duration::from_secs(8) } else { Duration::from_secs(3) },
+        }
+    }
+}
+```
+
+## 再接続ポリシーとバックオフ
+
+**T01仕様準拠のバックオフ設定：**
+
+```rust
+// Reconnection constants
+const INITIAL_BACKOFF_MS: u64 = 250;  // 起点250ms
+const MAX_BACKOFF_MS: u64 = 5000;      // 上限5s
+const JITTER_PERCENT: u64 = 25;        // ±25%ジッタ
+
+// Exponential backoff with jitter
+fn calculate_next_backoff(current_ms: u64) -> u64 {
+    let base_next = std::cmp::min(current_ms * 2, MAX_BACKOFF_MS);
+    let jitter_range = base_next * JITTER_PERCENT / 100;
+    let jitter = rand::random::<u64>() % (jitter_range * 2);
+    base_next.saturating_sub(jitter_range).saturating_add(jitter)
+}
+```
+
+**実装での使用例：**
+- 初回: 250ms
+- 2回目: 500ms ± 125ms (375ms-625ms)
+- 3回目: 1000ms ± 250ms (750ms-1250ms) 
+- 4回目: 2000ms ± 500ms (1500ms-2500ms)
+- 5回目以降: 5000ms ± 1250ms (3750ms-5000ms)
+```
+
+## Project Root正規化
+
+**正規化ルール（Phase3でも参照）：**
+
+```rust
+fn normalize_project_root(path: &str) -> Result<String, std::io::Error> {
+    let canonical = std::fs::canonicalize(path)?;
+    let normalized = canonical.to_string_lossy();
+    
+    #[cfg(windows)]
+    {
+        // Windows: ドライブレター大文字化、区切り \\ 正規化
+        let normalized = normalized.to_uppercase().chars().take(1)
+            .chain(normalized.chars().skip(1))
+            .collect::<String>()
+            .replace('/', "\\");
+        Ok(normalized.trim_end_matches('\\').to_string())
+    }
+    
+    #[cfg(unix)]
+    {
+        // POSIX: シンボリックリンク解決済み、余分な / 圧縮
+        Ok(normalized.trim_end_matches('/').to_string())
+    }
+}
+```
+
+**Unity側比較：**
+```csharp
+private bool ValidateProjectRoot(string clientRoot) {
+    var normalizedClient = Path.GetFullPath(clientRoot).TrimEnd(Path.DirectorySeparatorChar);
+    var actualProject = Path.GetFullPath(Directory.GetCurrentDirectory()).TrimEnd(Path.DirectorySeparatorChar);
+    
+    return string.Equals(normalizedClient, actualProject, 
+        StringComparison.OrdinalIgnoreCase); // Windows case-insensitive
+}
+```
+
+## 具体的なタイムアウト値（T01準拠）
+
+| フェーズ | 開発環境 | CI環境 | 説明 |
+|---------|---------|--------|-------|
+| 接続タイムアウト | 2秒 | 5秒 | TCP/UDS接続確立まで |
+| Hello応答待ち | 2秒 | 2秒 | hello送信後のwelcome/reject待ち |
+| 全体制限 | 3秒 | 8秒 | ハンドシェイク全体の制限時間 |
+| バックオフ起点 | 250ms | 250ms | 再接続時の初期待機時間 |
+| バックオフ上限 | 5秒 | 5秒 | 再接続待機の最大時間 |
+
 ## トラブルシューティング
 
 よくある問題：
-- Transport layer与existing envelope交互运用
+- Transport layerと既存envelope処理の相互運用
 - Control frameとregular envelopeの区別
 - Unity C# Protocol Bufferコンパイル問題
-- Timeoutとdeadlock回避
+- Handshakeタイムアウトとdeadlock回避
+- Project root正規化の不一致（パス区切り文字、大文字小文字）
+- バックオフ中の過度な再接続試行（exponential backoff遵守）

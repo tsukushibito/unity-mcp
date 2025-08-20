@@ -275,4 +275,5 @@ SwitchToEnvelopeMode();
 
 - `ipc_version`: `1.0`
 - `features` (Rust): `assets.basic`, `events.log`, `build.min`, `ops.progress`
-- Env vars (Rust): `MCP_IPC_TOKEN`, \`M
+- Env vars (Rust): `MCP_IPC_TOKEN`, `MCP_ENDPOINT` (e.g., `tcp://127.0.0.1:7777`), `MCP_PROJECT_ROOT`
+- Env vars (Unity, optional dev): `MCP_IPC_TOKEN`

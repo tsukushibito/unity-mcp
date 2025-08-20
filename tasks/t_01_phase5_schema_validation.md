@@ -51,8 +51,8 @@ fn main() {
     let proto_root = manifest_dir.join("..").join("proto");
     let out_dir = manifest_dir.join("src").join("generated");
     
-    // Existing proto files
-    let files = [
+    // Gather proto files for deterministic generation
+    let mut files = [
         "mcp/unity/v1/common.proto",
         "mcp/unity/v1/editor_control.proto", 
         "mcp/unity/v1/assets.proto",
@@ -65,6 +65,7 @@ fn main() {
     .into_iter()
     .map(|rel| proto_root.join(rel))
     .collect::<Vec<_>>();
+    files.sort(); // ★ 決定性確保のため必須（パス文字列昇順）
 
     fs::create_dir_all(&out_dir).unwrap();
     println!("cargo:rerun-if-changed={}", proto_root.display());
@@ -407,6 +408,35 @@ private ValidationResult ValidateSchemaHash(byte[] clientSchemaHash)
     return ValidationResult.Success();
 }
 
+## Schema Hash表現ルール
+
+**データ型と処理方針:**
+- 比較は `bytes(32)` の **生バイトで実施**
+- ログやエラーメッセージでは **先頭8桁のHex** を表示する
+- protobuf送受信は生バイト、デバッグ表示のみhex変換
+
+**実装例:**
+```rust
+// Rust: 比較は生バイト、ログは短縮hex
+if welcome.schema_hash.as_slice() != codec::schema_hash() {
+    return Err(IpcError::SchemaMismatch(format!(
+        "schema hash mismatch: client={}, server={}",
+        hex::encode(codec::schema_hash())[..8].to_string(), // 8桁のみ
+        hex::encode(&welcome.schema_hash)[..8].to_string()
+    )));
+}
+```
+
+```csharp
+// Unity: 比較は生バイト、ログは短縮hex
+if (!SchemaHash.Matches(clientSchemaHash)) {
+    return ValidationResult.Error(
+        IpcReject.Types.Code.FailedPrecondition,
+        $"schema_hash mismatch; client={SchemaHash.ToShortHex(clientSchemaHash)} server={SchemaHash.HexHash[..8]}"
+    );
+}
+```
+
 private IpcWelcome CreateWelcome(IpcHello hello)
 {
     // ... existing feature negotiation ...
@@ -567,7 +597,7 @@ async fn test_schema_validation_success() {
 
 - Schema hash自体は機密情報ではないが、詳細なerror messageでinternal structureを漏らさない
 - Hash collision攻撃への対策（SHA-256使用）
-- Development modeでのschema validation bypass option
+- MVPでは schema_hash 不一致は FAILED_PRECONDITION で必ず拒否し、接続をクローズする
 
 ## Performance考慮事項
 
