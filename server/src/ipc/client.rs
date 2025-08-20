@@ -296,6 +296,48 @@ impl IpcClient {
         }
     }
 
+    pub async fn build_player(
+        &self, 
+        req: pb::BuildPlayerRequest, 
+        timeout: Duration
+    ) -> Result<pb::BuildPlayerResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
+                payload: Some(pb::build_request::Payload::Player(req))
+            }))
+        };
+        
+        let resp = self.request(req, timeout).await?;
+        
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Build(pb::BuildResponse {
+                payload: Some(pb::build_response::Payload::Player(r))
+            })) => Ok(r),
+            _ => Err(IpcError::Handshake("unexpected build response".into()))
+        }
+    }
+
+    pub async fn build_bundles(
+        &self, 
+        req: pb::BuildAssetBundlesRequest, 
+        timeout: Duration
+    ) -> Result<pb::BuildAssetBundlesResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
+                payload: Some(pb::build_request::Payload::Bundles(req))
+            }))
+        };
+        
+        let resp = self.request(req, timeout).await?;
+        
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Build(pb::BuildResponse {
+                payload: Some(pb::build_response::Payload::Bundles(r))
+            })) => Ok(r),
+            _ => Err(IpcError::Handshake("unexpected build response".into()))
+        }
+    }
+
     async fn spawn_supervisor(
         inner: Arc<Inner>,
         endpoint: Endpoint,
