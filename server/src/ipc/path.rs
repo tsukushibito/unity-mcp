@@ -13,6 +13,7 @@ pub enum Endpoint {
 pub struct IpcConfig {
     pub endpoint: Option<String>, // raw string like "unix:///...", "pipe://...", "tcp://host:port"
     pub token: Option<String>,
+    pub project_root: Option<String>,
     pub connect_timeout: Duration,
     pub call_timeout: Duration,
 }
@@ -22,6 +23,7 @@ impl Default for IpcConfig {
         Self {
             endpoint: env::var("MCP_IPC_ENDPOINT").ok(),
             token: env::var("MCP_IPC_TOKEN").ok(),
+            project_root: env::var("MCP_PROJECT_ROOT").ok(),
             connect_timeout: Duration::from_millis(
                 env::var("MCP_IPC_CONNECT_TIMEOUT_MS")
                     .ok()

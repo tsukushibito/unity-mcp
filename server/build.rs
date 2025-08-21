@@ -3,37 +3,52 @@
 // No gRPC services are generated - we use direct IPC transport only.
 // Output is placed in src/generated/ for stable imports.
 
+use prost_build::Config;
+use sha2::{Digest, Sha256};
 use std::{env, fs, path::PathBuf};
 
-fn main() {
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let proto_root = manifest_dir.join("..").join("proto");
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let manifest = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
+    let proto_root = manifest.join("..").join("proto");
+    let out_dir = manifest.join("src").join("generated");
+    fs::create_dir_all(&out_dir)?;
 
-    let files = [
+    // 1) Gather & sort proto files for deterministic generation
+    let mut files = vec![
         "mcp/unity/v1/common.proto",
-        "mcp/unity/v1/editor_control.proto", 
+        "mcp/unity/v1/editor_control.proto",
         "mcp/unity/v1/assets.proto",
         "mcp/unity/v1/build.proto",
         "mcp/unity/v1/operations.proto",
         "mcp/unity/v1/events.proto",
         "mcp/unity/v1/ipc.proto",
+        "mcp/unity/v1/ipc_control.proto", // New addition
     ]
     .into_iter()
-    .map(|rel| proto_root.join(rel))
+    .map(|p| proto_root.join(p))
     .collect::<Vec<_>>();
+    files.sort(); // Deterministic ordering
 
-    let out_dir = manifest_dir.join("src").join("generated");
-    fs::create_dir_all(&out_dir).unwrap();
+    // 2) Generate Rust code + FileDescriptorSet
+    let descriptor_path = out_dir.join("schema.pb");
+    let mut cfg = Config::new();
+    cfg.out_dir(&out_dir);
+    cfg.file_descriptor_set_path(&descriptor_path);
+    cfg.compile_protos(&files, &[proto_root.clone()])?;
 
-    println!("cargo:rerun-if-changed={}", proto_root.display());
+    for f in &files {
+        println!("cargo:rerun-if-changed={}", f.display());
+    }
 
-    let mut config = prost_build::Config::new();
-    config.out_dir(&out_dir);
+    // 3) Generate schema hash as byte array (not hex string)
+    let bytes = fs::read(&descriptor_path)?;
+    let hash = Sha256::digest(&bytes);
+    let hash_array: [u8; 32] = hash.into();
 
-    // IMPORTANT: Message-only generation for direct IPC transport.
-    // No gRPC services are generated as we use direct IPC communication only.
-    config.compile_protos(
-        &files.iter().map(PathBuf::as_path).collect::<Vec<_>>(),
-        &[proto_root.as_path()],
-    ).unwrap();
+    fs::write(
+        out_dir.join("schema_hash.rs"),
+        format!("pub const SCHEMA_HASH: [u8; 32] = {:?};\n", hash_array),
+    )?;
+
+    Ok(())
 }

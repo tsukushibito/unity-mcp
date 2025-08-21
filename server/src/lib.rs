@@ -8,6 +8,9 @@ pub mod generated {
             }
         }
     }
+    pub mod schema_hash {
+        include!("generated/schema_hash.rs");
+    }
 }
 
 // IPC module for Unity bridge communication

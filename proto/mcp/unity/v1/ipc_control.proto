@@ -1,0 +1,55 @@
+syntax = "proto3";
+package mcp.unity.v1;
+
+message IpcControl {
+  oneof kind {
+    IpcHello hello = 1;
+    IpcWelcome welcome = 2;
+    IpcReject reject = 3;
+  }
+}
+
+message IpcHello {
+  // Security
+  string token = 1;                    // required
+
+  // Protocol compatibility
+  string ipc_version = 2;              // e.g. "1.0"; major must match
+  repeated string features = 3;        // requested feature flags (see §6)
+
+  // Schema & environment
+  bytes schema_hash = 4;               // SHA-256 of FileDescriptorSet (see §4)
+  string project_root = 5;             // absolute path; normalized
+  string client_name = 6;              // e.g. "unity-mcp-rs"
+  string client_version = 7;           // semver of Rust server
+
+  map<string,string> meta = 8;         // optional free-form (OS, arch, etc.)
+}
+
+message IpcWelcome {
+  // Echoed/negotiated
+  string ipc_version = 1;              // server-supported for this session
+  repeated string accepted_features = 2;
+  bytes schema_hash = 3;               // server view of schema
+
+  // Server info
+  string server_name = 4;              // e.g. "unity-editor-bridge"
+  string server_version = 5;           // plugin/package version
+  string editor_version = 6;           // e.g. "Unity 6000.0.x"
+  string session_id = 7;               // UUID for logs and tracing
+
+  map<string,string> meta = 8;         // optional (platform, license, etc.)
+}
+
+message IpcReject {
+  enum Code {
+    UNAUTHENTICATED = 0;
+    FAILED_PRECONDITION = 1;  // schema mismatch, editor state invalid
+    PERMISSION_DENIED = 2;    // token valid but insufficient rights
+    OUT_OF_RANGE = 3;         // unsupported major version
+    INTERNAL = 4;             // unexpected error
+    UNAVAILABLE = 5;          // editor busy starting up, try later
+  }
+  Code code = 1;
+  string message = 2;         // single-sentence reason
+}

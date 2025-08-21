@@ -422,18 +422,24 @@ impl IpcClient {
 
         // 2) handshake
         let hello = pb::IpcHello {
-            ipc_version: 1,
-            schema_hash: codec::schema_hash(),
             token: inner.cfg.token.clone().unwrap_or_default(),
+            ipc_version: "1.0".to_string(),
+            features: vec![
+                "assets.basic".to_string(),
+                "events.log".to_string(),
+                "build.min".to_string(),
+                "ops.progress".to_string(),
+            ],
+            schema_hash: codec::schema_hash(),
+            project_root: inner.cfg.project_root.clone().unwrap_or_default(),
+            client_name: "unity-mcp-rs".to_string(),
+            client_version: env!("CARGO_PKG_VERSION").to_string(),
+            meta: std::collections::HashMap::new(),
         };
-        let mut env = pb::IpcEnvelope {
-            correlation_id: String::new(),
-            kind: None,
+        let control = pb::IpcControl {
+            kind: Some(pb::ipc_control::Kind::Hello(hello)),
         };
-        env.kind = Some(pb::ipc_envelope::Kind::Request(pb::IpcRequest {
-            payload: Some(pb::ipc_request::Payload::Hello(hello)),
-        }));
-        let hello_bytes = codec::encode_envelope(&env)?;
+        let hello_bytes = codec::encode_control(&control)?;
         use futures::{SinkExt, StreamExt};
         framed.send(hello_bytes).await.map_err(IpcError::Io)?;
 
@@ -441,19 +447,28 @@ impl IpcClient {
         let welcome = time::timeout(inner.cfg.connect_timeout, async {
             while let Some(frame) = framed.next().await {
                 let bytes = frame.map_err(IpcError::Io)?;
-                let env = codec::decode_envelope(bytes.freeze())?;
-                if let Some(pb::ipc_envelope::Kind::Response(resp)) = env.kind
-                    && let Some(pb::ipc_response::Payload::Welcome(w)) = resp.payload {
+                let control = codec::decode_control(bytes.freeze())?;
+                match control.kind {
+                    Some(pb::ipc_control::Kind::Welcome(w)) => {
                         return Ok::<_, IpcError>(w);
                     }
+                    Some(pb::ipc_control::Kind::Reject(r)) => {
+                        return Err(IpcError::Handshake(format!("{:?}: {}", r.code, r.message)));
+                    }
+                    _ => continue,
+                }
             }
             Err(IpcError::Handshake("no welcome".into()))
         })
         .await
         .map_err(|_| IpcError::ConnectTimeout)??;
-        if !welcome.ok {
-            return Err(IpcError::Handshake(welcome.error));
-        }
+        // Welcome received successfully, log session info
+        tracing::info!(
+            "Handshake OK: version={}, features={:?}, session={}",
+            welcome.ipc_version,
+            welcome.accepted_features,
+            welcome.session_id
+        );
 
         // 3) spawn writer and reader
         let (writer, reader) = framed.split();

@@ -21,26 +21,12 @@ message IpcEnvelope {
   }
 }
 
-// Handshake messages
-message IpcHello {
-  int32 ipc_version = 1;   // Protocol version (e.g., 1)
-  string schema_hash = 2;  // Schema compatibility hash
-  string token = 3;        // Optional authentication token
-}
-
-message IpcWelcome {
-  bool ok = 1;             // true if handshake accepted
-  string error = 2;        // Error message if ok=false
-}
 
 // Request message with typed payloads
 message IpcRequest {
   oneof payload {
-    // Handshake
-    IpcHello hello = 1;
-    
     // Health check
-    HealthRequest health = 2;
+    HealthRequest health = 1;
     
     // Editor control
     Empty get_play_mode = 10;
@@ -62,11 +48,8 @@ message IpcRequest {
 message IpcResponse {
   string correlation_id = 1; // Matches the request correlation_id
   oneof payload {
-    // Handshake
-    IpcWelcome welcome = 2;
-    
     // Health check
-    HealthResponse health = 3;
+    HealthResponse health = 2;
     
     // Editor control
     GetPlayModeResponse get_play_mode = 10;

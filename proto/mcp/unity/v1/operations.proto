@@ -2,7 +2,6 @@
 // PACKAGE: mcp.unity.v1
 syntax = "proto3";
 package mcp.unity.v1;
-import "mcp/unity/v1/common.proto";
 
 service Operations {
   rpc GetOperation(OperationGetRequest) returns (OperationGetResponse);

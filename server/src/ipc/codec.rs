@@ -3,6 +3,7 @@ use prost::Message;
 use thiserror::Error;
 
 use crate::generated::mcp::unity::v1 as pb;
+use crate::generated::schema_hash::SCHEMA_HASH;
 
 #[derive(Debug, Error)]
 pub enum CodecError {
@@ -22,10 +23,19 @@ pub fn decode_envelope(b: Bytes) -> Result<pb::IpcEnvelope, CodecError> {
     pb::IpcEnvelope::decode(b).map_err(CodecError::Decode)
 }
 
-// Optional: calculate a schema hash (TODO: wire to handshake)
-pub fn schema_hash() -> String {
-    // For now, a constant or build-time string. Replace with descriptor-set hash if desired.
-    "schema-v1".to_string()
+pub fn encode_control(control: &pb::IpcControl) -> Result<Bytes, CodecError> {
+    let mut buf = bytes::BytesMut::with_capacity(control.encoded_len());
+    control.encode(&mut buf)?;
+    Ok(buf.freeze())
+}
+
+pub fn decode_control(b: Bytes) -> Result<pb::IpcControl, CodecError> {
+    pb::IpcControl::decode(b).map_err(CodecError::Decode)
+}
+
+// Schema hash from build-time generated constant
+pub fn schema_hash() -> Vec<u8> {
+    SCHEMA_HASH.to_vec()
 }
 
 #[cfg(test)]
@@ -65,6 +75,40 @@ mod tests {
     #[test]
     fn test_schema_hash() {
         let hash = schema_hash();
-        assert_eq!(hash, "schema-v1");
+        assert_eq!(hash.len(), 32); // SHA-256 produces 32 bytes
+    }
+
+    #[test]
+    fn test_ipc_control_roundtrip() {
+        let hello = pb::IpcHello {
+            token: "test-token".to_string(),
+            ipc_version: "1.0".to_string(),
+            features: vec!["assets.basic".to_string()],
+            schema_hash: vec![1, 2, 3, 4],
+            project_root: "/test/path".to_string(),
+            client_name: "test-client".to_string(),
+            client_version: "0.1.0".to_string(),
+            meta: std::collections::HashMap::new(),
+        };
+        
+        let control = pb::IpcControl {
+            kind: Some(pb::ipc_control::Kind::Hello(hello.clone())),
+        };
+
+        let encoded = encode_control(&control).expect("encoding should succeed");
+        let decoded = decode_control(encoded).expect("decoding should succeed");
+
+        match decoded.kind {
+            Some(pb::ipc_control::Kind::Hello(decoded_hello)) => {
+                assert_eq!(hello.token, decoded_hello.token);
+                assert_eq!(hello.ipc_version, decoded_hello.ipc_version);
+                assert_eq!(hello.features, decoded_hello.features);
+                assert_eq!(hello.schema_hash, decoded_hello.schema_hash);
+                assert_eq!(hello.project_root, decoded_hello.project_root);
+                assert_eq!(hello.client_name, decoded_hello.client_name);
+                assert_eq!(hello.client_version, decoded_hello.client_version);
+            }
+            _ => panic!("Expected Hello variant"),
+        }
     }
 }
