@@ -24,16 +24,26 @@ impl McpService {
                 timeout,
             )
             .await
-            .map_err(|e| McpError::internal_error(format!("Assets import IPC error: {}", e), None))?;
+            .map_err(|e| {
+                McpError::internal_error(format!("Assets import IPC error: {}", e), None)
+            })?;
 
         let results: Vec<ImportResult> = response
             .results
             .into_iter()
             .map(|r| ImportResult {
                 path: r.path,
-                guid: if r.guid.is_empty() { None } else { Some(r.guid) },
+                guid: if r.guid.is_empty() {
+                    None
+                } else {
+                    Some(r.guid)
+                },
                 ok: r.ok,
-                message: if r.message.is_empty() { None } else { Some(r.message) },
+                message: if r.message.is_empty() {
+                    None
+                } else {
+                    Some(r.message)
+                },
             })
             .collect();
 
@@ -60,8 +70,16 @@ impl McpService {
 
         let output = MoveAssetOutput {
             ok: response.ok,
-            message: if response.message.is_empty() { None } else { Some(response.message) },
-            new_guid: if response.new_guid.is_empty() { None } else { Some(response.new_guid) },
+            message: if response.message.is_empty() {
+                None
+            } else {
+                Some(response.message)
+            },
+            new_guid: if response.new_guid.is_empty() {
+                None
+            } else {
+                Some(response.new_guid)
+            },
         };
 
         let content = serde_json::to_string(&output)
@@ -82,7 +100,9 @@ impl McpService {
             .ipc()
             .assets_delete(paths, soft.unwrap_or(true), timeout)
             .await
-            .map_err(|e| McpError::internal_error(format!("Assets delete IPC error: {}", e), None))?;
+            .map_err(|e| {
+                McpError::internal_error(format!("Assets delete IPC error: {}", e), None)
+            })?;
 
         let output = DeleteAssetsOutput {
             deleted: response.deleted,
@@ -106,7 +126,9 @@ impl McpService {
             .ipc()
             .assets_refresh(force.unwrap_or(false), timeout)
             .await
-            .map_err(|e| McpError::internal_error(format!("Assets refresh IPC error: {}", e), None))?;
+            .map_err(|e| {
+                McpError::internal_error(format!("Assets refresh IPC error: {}", e), None)
+            })?;
 
         let output = RefreshAssetsOutput { ok: response.ok };
 
@@ -127,9 +149,13 @@ impl McpService {
             .ipc()
             .assets_guid_to_path(guids, timeout)
             .await
-            .map_err(|e| McpError::internal_error(format!("Assets GUID to path IPC error: {}", e), None))?;
+            .map_err(|e| {
+                McpError::internal_error(format!("Assets GUID to path IPC error: {}", e), None)
+            })?;
 
-        let output = GuidToPathOutput { mapping: response.map };
+        let output = GuidToPathOutput {
+            mapping: response.map,
+        };
 
         let content = serde_json::to_string(&output)
             .map_err(|e| McpError::internal_error(format!("Serialization error: {}", e), None))?;
@@ -148,9 +174,13 @@ impl McpService {
             .ipc()
             .assets_path_to_guid(paths, timeout)
             .await
-            .map_err(|e| McpError::internal_error(format!("Assets path to GUID IPC error: {}", e), None))?;
+            .map_err(|e| {
+                McpError::internal_error(format!("Assets path to GUID IPC error: {}", e), None)
+            })?;
 
-        let output = PathToGuidOutput { mapping: response.map };
+        let output = PathToGuidOutput {
+            mapping: response.map,
+        };
 
         let content = serde_json::to_string(&output)
             .map_err(|e| McpError::internal_error(format!("Serialization error: {}", e), None))?;

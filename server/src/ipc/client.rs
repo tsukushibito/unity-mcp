@@ -141,11 +141,13 @@ impl IpcClient {
     ) -> Result<pb::ImportAssetResponse, IpcError> {
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
-                payload: Some(pb::assets_request::Payload::Import(pb::ImportAssetRequest {
-                    paths,
-                    recursive,
-                    auto_refresh,
-                })),
+                payload: Some(pb::assets_request::Payload::Import(
+                    pb::ImportAssetRequest {
+                        paths,
+                        recursive,
+                        auto_refresh,
+                    },
+                )),
             })),
         };
         let resp = self.request(req, timeout).await?;
@@ -155,9 +157,10 @@ impl IpcClient {
                 payload: Some(pb::assets_response::Payload::Import(r)),
                 ..
             })) => Ok(r),
-            Some(pb::ipc_response::Payload::Assets(res)) => {
-                Err(IpcError::Handshake(format!("assets import failed: {}", res.message)))
-            }
+            Some(pb::ipc_response::Payload::Assets(res)) => Err(IpcError::Handshake(format!(
+                "assets import failed: {}",
+                res.message
+            ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
         }
     }
@@ -183,9 +186,10 @@ impl IpcClient {
                 payload: Some(pb::assets_response::Payload::Move(r)),
                 ..
             })) => Ok(r),
-            Some(pb::ipc_response::Payload::Assets(res)) => {
-                Err(IpcError::Handshake(format!("assets move failed: {}", res.message)))
-            }
+            Some(pb::ipc_response::Payload::Assets(res)) => Err(IpcError::Handshake(format!(
+                "assets move failed: {}",
+                res.message
+            ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
         }
     }
@@ -198,10 +202,9 @@ impl IpcClient {
     ) -> Result<pb::DeleteAssetResponse, IpcError> {
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
-                payload: Some(pb::assets_request::Payload::Delete(pb::DeleteAssetRequest {
-                    paths,
-                    soft,
-                })),
+                payload: Some(pb::assets_request::Payload::Delete(
+                    pb::DeleteAssetRequest { paths, soft },
+                )),
             })),
         };
         let resp = self.request(req, timeout).await?;
@@ -211,9 +214,10 @@ impl IpcClient {
                 payload: Some(pb::assets_response::Payload::Delete(r)),
                 ..
             })) => Ok(r),
-            Some(pb::ipc_response::Payload::Assets(res)) => {
-                Err(IpcError::Handshake(format!("assets delete failed: {}", res.message)))
-            }
+            Some(pb::ipc_response::Payload::Assets(res)) => Err(IpcError::Handshake(format!(
+                "assets delete failed: {}",
+                res.message
+            ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
         }
     }
@@ -237,9 +241,10 @@ impl IpcClient {
                 payload: Some(pb::assets_response::Payload::Refresh(r)),
                 ..
             })) => Ok(r),
-            Some(pb::ipc_response::Payload::Assets(res)) => {
-                Err(IpcError::Handshake(format!("assets refresh failed: {}", res.message)))
-            }
+            Some(pb::ipc_response::Payload::Assets(res)) => Err(IpcError::Handshake(format!(
+                "assets refresh failed: {}",
+                res.message
+            ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
         }
     }
@@ -263,9 +268,10 @@ impl IpcClient {
                 payload: Some(pb::assets_response::Payload::G2p(r)),
                 ..
             })) => Ok(r),
-            Some(pb::ipc_response::Payload::Assets(res)) => {
-                Err(IpcError::Handshake(format!("assets g2p failed: {}", res.message)))
-            }
+            Some(pb::ipc_response::Payload::Assets(res)) => Err(IpcError::Handshake(format!(
+                "assets g2p failed: {}",
+                res.message
+            ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
         }
     }
@@ -289,52 +295,53 @@ impl IpcClient {
                 payload: Some(pb::assets_response::Payload::P2g(r)),
                 ..
             })) => Ok(r),
-            Some(pb::ipc_response::Payload::Assets(res)) => {
-                Err(IpcError::Handshake(format!("assets p2g failed: {}", res.message)))
-            }
+            Some(pb::ipc_response::Payload::Assets(res)) => Err(IpcError::Handshake(format!(
+                "assets p2g failed: {}",
+                res.message
+            ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
         }
     }
 
     pub async fn build_player(
-        &self, 
-        req: pb::BuildPlayerRequest, 
-        timeout: Duration
+        &self,
+        req: pb::BuildPlayerRequest,
+        timeout: Duration,
     ) -> Result<pb::BuildPlayerResponse, IpcError> {
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
-                payload: Some(pb::build_request::Payload::Player(req))
-            }))
+                payload: Some(pb::build_request::Payload::Player(req)),
+            })),
         };
-        
+
         let resp = self.request(req, timeout).await?;
-        
+
         match resp.payload {
             Some(pb::ipc_response::Payload::Build(pb::BuildResponse {
-                payload: Some(pb::build_response::Payload::Player(r))
+                payload: Some(pb::build_response::Payload::Player(r)),
             })) => Ok(r),
-            _ => Err(IpcError::Handshake("unexpected build response".into()))
+            _ => Err(IpcError::Handshake("unexpected build response".into())),
         }
     }
 
     pub async fn build_bundles(
-        &self, 
-        req: pb::BuildAssetBundlesRequest, 
-        timeout: Duration
+        &self,
+        req: pb::BuildAssetBundlesRequest,
+        timeout: Duration,
     ) -> Result<pb::BuildAssetBundlesResponse, IpcError> {
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
-                payload: Some(pb::build_request::Payload::Bundles(req))
-            }))
+                payload: Some(pb::build_request::Payload::Bundles(req)),
+            })),
         };
-        
+
         let resp = self.request(req, timeout).await?;
-        
+
         match resp.payload {
             Some(pb::ipc_response::Payload::Build(pb::BuildResponse {
-                payload: Some(pb::build_response::Payload::Bundles(r))
+                payload: Some(pb::build_response::Payload::Bundles(r)),
             })) => Ok(r),
-            _ => Err(IpcError::Handshake("unexpected build response".into()))
+            _ => Err(IpcError::Handshake("unexpected build response".into())),
         }
     }
 
@@ -420,7 +427,7 @@ impl IpcClient {
         let io = connect_endpoint(&endpoint, inner.cfg.connect_timeout).await?;
         let mut framed = framing::into_framed(io);
 
-        // 2) handshake
+        // 2) T01 handshake
         let hello = pb::IpcHello {
             token: inner.cfg.token.clone().unwrap_or_default(),
             ipc_version: "1.0".to_string(),
@@ -431,10 +438,17 @@ impl IpcClient {
                 "ops.progress".to_string(),
             ],
             schema_hash: codec::schema_hash(),
-            project_root: inner.cfg.project_root.clone().unwrap_or_default(),
+            project_root: normalize_project_root(
+                &inner
+                    .cfg
+                    .project_root
+                    .clone()
+                    .unwrap_or_else(|| ".".to_string()),
+            )
+            .unwrap_or_else(|_| inner.cfg.project_root.clone().unwrap_or_default()),
             client_name: "unity-mcp-rs".to_string(),
             client_version: env!("CARGO_PKG_VERSION").to_string(),
-            meta: std::collections::HashMap::new(),
+            meta: create_default_meta(),
         };
         let control = pb::IpcControl {
             kind: Some(pb::ipc_control::Kind::Hello(hello)),
@@ -443,8 +457,8 @@ impl IpcClient {
         use futures::{SinkExt, StreamExt};
         framed.send(hello_bytes).await.map_err(IpcError::Io)?;
 
-        // Get handshake response first
-        let welcome = time::timeout(inner.cfg.connect_timeout, async {
+        // 3) Read welcome/reject response with timeout
+        let welcome = time::timeout(Duration::from_secs(2), async {
             while let Some(frame) = framed.next().await {
                 let bytes = frame.map_err(IpcError::Io)?;
                 let control = codec::decode_control(bytes.freeze())?;
@@ -458,19 +472,21 @@ impl IpcClient {
                     _ => continue,
                 }
             }
-            Err(IpcError::Handshake("no welcome".into()))
+            Err(IpcError::Handshake("no welcome response".into()))
         })
         .await
         .map_err(|_| IpcError::ConnectTimeout)??;
-        // Welcome received successfully, log session info
+        // 4) Log successful handshake
         tracing::info!(
-            "Handshake OK: version={}, features={:?}, session={}",
+            "T01 Handshake OK: version={}, features={:?}, session={}, server={} {}",
             welcome.ipc_version,
             welcome.accepted_features,
-            welcome.session_id
+            welcome.session_id,
+            welcome.server_name,
+            welcome.server_version
         );
 
-        // 3) spawn writer and reader
+        // 5) spawn writer and reader
         let (writer, reader) = framed.split();
         tokio::spawn(async move {
             let mut writer = writer;
@@ -481,7 +497,7 @@ impl IpcClient {
             }
         });
 
-        // 4) spawn reader (responses/events)
+        // 6) spawn reader (responses/events)
         tokio::spawn(async move {
             let mut reader = reader;
             while let Some(frame) = reader.next().await {
@@ -508,6 +524,35 @@ impl IpcClient {
         });
 
         Ok(())
+    }
+}
+
+fn create_default_meta() -> std::collections::HashMap<String, String> {
+    let mut meta = std::collections::HashMap::new();
+    meta.insert("os".to_string(), std::env::consts::OS.to_string());
+    meta.insert("arch".to_string(), std::env::consts::ARCH.to_string());
+    meta
+}
+
+fn normalize_project_root(path: &str) -> Result<String, std::io::Error> {
+    let canonical = std::fs::canonicalize(path)?;
+    let normalized = canonical.to_string_lossy();
+
+    #[cfg(windows)]
+    {
+        let normalized = normalized
+            .to_uppercase()
+            .chars()
+            .take(1)
+            .chain(normalized.chars().skip(1))
+            .collect::<String>()
+            .replace('/', "\\");
+        Ok(normalized.trim_end_matches('\\').to_string())
+    }
+
+    #[cfg(unix)]
+    {
+        Ok(normalized.trim_end_matches('/').to_string())
     }
 }
 

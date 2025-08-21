@@ -1,7 +1,7 @@
+use server::generated::mcp::unity::v1 as pb;
 use server::ipc::{client::IpcClient, path::IpcConfig};
 use server::mcp::tools::build::BuildTool;
-use server::generated::mcp::unity::v1 as pb;
-use std::{time::Duration, collections::HashMap};
+use std::{collections::HashMap, time::Duration};
 
 /// IpcClient build_player() メソッドの統合テスト
 #[tokio::test]
@@ -32,24 +32,36 @@ async fn test_ipc_client_build_player() -> anyhow::Result<()> {
     println!("Starting build...");
     let response = client.build_player(req, Duration::from_secs(300)).await?;
 
-    println!("Build completed: status={}, message={}", response.status_code, response.message);
-    
+    println!(
+        "Build completed: status={}, message={}",
+        response.status_code, response.message
+    );
+
     if response.status_code == 0 {
         println!("Success! Output: {}", response.output_path);
-        println!("Build time: {}ms, Size: {} bytes", response.build_time_ms, response.size_bytes);
-        
+        println!(
+            "Build time: {}ms, Size: {} bytes",
+            response.build_time_ms, response.size_bytes
+        );
+
         // ファイル存在確認
-        assert!(std::path::Path::new(&response.output_path).exists(), "Output file should exist");
-        
+        assert!(
+            std::path::Path::new(&response.output_path).exists(),
+            "Output file should exist"
+        );
+
         // ビルド時間の妥当性確認
         assert!(response.build_time_ms > 0, "Build time should be positive");
-        
+
         // サイズの妥当性確認
         assert!(response.size_bytes > 0, "Build size should be positive");
     } else {
         println!("Build failed: {}", response.message);
         // ビルド失敗の場合も出力パスは空であるべき
-        assert!(response.output_path.is_empty() || !std::path::Path::new(&response.output_path).exists());
+        assert!(
+            response.output_path.is_empty()
+                || !std::path::Path::new(&response.output_path).exists()
+        );
     }
 
     Ok(())
@@ -72,15 +84,21 @@ async fn test_ipc_client_build_bundles() -> anyhow::Result<()> {
     println!("Starting AssetBundles build...");
     let response = client.build_bundles(req, Duration::from_secs(120)).await?;
 
-    println!("AssetBundles build completed: status={}, message={}", response.status_code, response.message);
-    
+    println!(
+        "AssetBundles build completed: status={}, message={}",
+        response.status_code, response.message
+    );
+
     if response.status_code == 0 {
         println!("Success! Output: {}", response.output_directory);
         println!("Build time: {}ms", response.build_time_ms);
-        
+
         // ディレクトリ存在確認
-        assert!(std::path::Path::new(&response.output_directory).exists(), "Output directory should exist");
-        
+        assert!(
+            std::path::Path::new(&response.output_directory).exists(),
+            "Output directory should exist"
+        );
+
         // ビルド時間の妥当性確認
         assert!(response.build_time_ms > 0, "Build time should be positive");
     } else {
@@ -98,19 +116,27 @@ async fn test_build_tool_windows_standalone() -> anyhow::Result<()> {
     let client = IpcClient::connect(config).await?;
     let build_tool = BuildTool::new(client);
 
-    let result = build_tool.build_windows_standalone(
-        "Builds/BuildTool/TestApp.exe".to_string(),
-        vec![],
-        true, // development
-    ).await?;
+    let result = build_tool
+        .build_windows_standalone(
+            "Builds/BuildTool/TestApp.exe".to_string(),
+            vec![],
+            true, // development
+        )
+        .await?;
 
-    println!("BuildTool result: status={}, message={}", result.status_code, result.message);
-    
+    println!(
+        "BuildTool result: status={}, message={}",
+        result.status_code, result.message
+    );
+
     if result.status_code == 0 {
         assert_eq!(result.status_code, 0, "Build should succeed");
-        assert!(std::path::Path::new(&result.output_path).exists(), "Output file should exist");
+        assert!(
+            std::path::Path::new(&result.output_path).exists(),
+            "Output file should exist"
+        );
     }
-    
+
     Ok(())
 }
 
@@ -122,18 +148,26 @@ async fn test_build_tool_macos_standalone() -> anyhow::Result<()> {
     let client = IpcClient::connect(config).await?;
     let build_tool = BuildTool::new(client);
 
-    let result = build_tool.build_macos_standalone(
-        "Builds/BuildTool/TestApp.app".to_string(),
-        vec![],
-        false, // release
-    ).await?;
+    let result = build_tool
+        .build_macos_standalone(
+            "Builds/BuildTool/TestApp.app".to_string(),
+            vec![],
+            false, // release
+        )
+        .await?;
 
-    println!("macOS BuildTool result: status={}, message={}", result.status_code, result.message);
-    
+    println!(
+        "macOS BuildTool result: status={}, message={}",
+        result.status_code, result.message
+    );
+
     // macOS ビルドは環境によって失敗する可能性があるが、レスポンス形式は確認
-    assert!(result.status_code >= 0, "Status code should be non-negative");
+    assert!(
+        result.status_code >= 0,
+        "Status code should be non-negative"
+    );
     assert!(!result.message.is_empty(), "Message should not be empty");
-    
+
     Ok(())
 }
 
@@ -145,19 +179,27 @@ async fn test_build_tool_android() -> anyhow::Result<()> {
     let client = IpcClient::connect(config).await?;
     let build_tool = BuildTool::new(client);
 
-    let result = build_tool.build_android(
-        "Builds/BuildTool/TestApp.apk".to_string(),
-        vec![],
-        vec!["arm64-v8a".to_string()],
-        true, // development
-    ).await?;
+    let result = build_tool
+        .build_android(
+            "Builds/BuildTool/TestApp.apk".to_string(),
+            vec![],
+            vec!["arm64-v8a".to_string()],
+            true, // development
+        )
+        .await?;
 
-    println!("Android BuildTool result: status={}, message={}", result.status_code, result.message);
-    
+    println!(
+        "Android BuildTool result: status={}, message={}",
+        result.status_code, result.message
+    );
+
     // Android ビルドは SDK 設定に依存するため、レスポンス形式のみ確認
-    assert!(result.status_code >= 0, "Status code should be non-negative");
+    assert!(
+        result.status_code >= 0,
+        "Status code should be non-negative"
+    );
     assert!(!result.message.is_empty(), "Message should not be empty");
-    
+
     Ok(())
 }
 
@@ -169,17 +211,23 @@ async fn test_build_tool_asset_bundles_default() -> anyhow::Result<()> {
     let client = IpcClient::connect(config).await?;
     let build_tool = BuildTool::new(client);
 
-    let result = build_tool.build_asset_bundles_default(
-        "AssetBundles/BuildTool".to_string(),
-    ).await?;
+    let result = build_tool
+        .build_asset_bundles_default("AssetBundles/BuildTool".to_string())
+        .await?;
 
-    println!("AssetBundles BuildTool result: status={}, message={}", result.status_code, result.message);
-    
+    println!(
+        "AssetBundles BuildTool result: status={}, message={}",
+        result.status_code, result.message
+    );
+
     if result.status_code == 0 {
-        assert!(std::path::Path::new(&result.output_directory).exists(), "Output directory should exist");
+        assert!(
+            std::path::Path::new(&result.output_directory).exists(),
+            "Output directory should exist"
+        );
         assert!(result.build_time_ms > 0, "Build time should be positive");
     }
-    
+
     Ok(())
 }
 
@@ -192,27 +240,33 @@ async fn test_build_tool_multiple_platforms() -> anyhow::Result<()> {
     let build_tool = BuildTool::new(client);
 
     // Windows ビルド
-    let windows_result = build_tool.build_windows_standalone(
-        "Builds/MultiPlatform/Windows/TestApp.exe".to_string(),
-        vec![],
-        true,
-    ).await?;
+    let windows_result = build_tool
+        .build_windows_standalone(
+            "Builds/MultiPlatform/Windows/TestApp.exe".to_string(),
+            vec![],
+            true,
+        )
+        .await?;
 
     println!("Windows build: status={}", windows_result.status_code);
 
     // Linux ビルド
-    let linux_result = build_tool.build_linux_standalone(
-        "Builds/MultiPlatform/Linux/TestApp".to_string(),
-        vec![],
-        true,
-    ).await?;
+    let linux_result = build_tool
+        .build_linux_standalone(
+            "Builds/MultiPlatform/Linux/TestApp".to_string(),
+            vec![],
+            true,
+        )
+        .await?;
 
     println!("Linux build: status={}", linux_result.status_code);
 
     // 少なくとも1つは成功することを期待
-    assert!(windows_result.status_code == 0 || linux_result.status_code == 0, 
-           "At least one platform build should succeed");
-    
+    assert!(
+        windows_result.status_code == 0 || linux_result.status_code == 0,
+        "At least one platform build should succeed"
+    );
+
     Ok(())
 }
 
@@ -248,17 +302,25 @@ async fn test_invalid_platform() -> anyhow::Result<()> {
     };
 
     let response = client.build_player(req, Duration::from_secs(30)).await?;
-    
+
     // エラーが適切に返されることを確認
-    assert_ne!(response.status_code, 0, "Should return error for invalid platform");
-    assert!(response.message.to_lowercase().contains("unsupported") || 
-            response.message.to_lowercase().contains("invalid") ||
-            response.message.to_lowercase().contains("unknown"), 
-            "Should mention unsupported/invalid platform: {}", response.message);
-    
+    assert_ne!(
+        response.status_code, 0,
+        "Should return error for invalid platform"
+    );
+    assert!(
+        response.message.to_lowercase().contains("unsupported")
+            || response.message.to_lowercase().contains("invalid")
+            || response.message.to_lowercase().contains("unknown"),
+        "Should mention unsupported/invalid platform: {}",
+        response.message
+    );
+
     // ビルド失敗時は出力パスが空または存在しない
-    assert!(response.output_path.is_empty() || !std::path::Path::new(&response.output_path).exists());
-    
+    assert!(
+        response.output_path.is_empty() || !std::path::Path::new(&response.output_path).exists()
+    );
+
     Ok(())
 }
 
@@ -278,14 +340,20 @@ async fn test_invalid_output_path() -> anyhow::Result<()> {
     };
 
     let response = client.build_player(req, Duration::from_secs(30)).await?;
-    
+
     // パスポリシー違反エラーが返されることを確認
-    assert_eq!(response.status_code, 7, "Should return PERMISSION_DENIED for invalid path");
-    assert!(response.message.to_lowercase().contains("forbidden") || 
-            response.message.to_lowercase().contains("permission") ||
-            response.message.to_lowercase().contains("policy"), 
-            "Should mention path policy violation: {}", response.message);
-    
+    assert_eq!(
+        response.status_code, 7,
+        "Should return PERMISSION_DENIED for invalid path"
+    );
+    assert!(
+        response.message.to_lowercase().contains("forbidden")
+            || response.message.to_lowercase().contains("permission")
+            || response.message.to_lowercase().contains("policy"),
+        "Should mention path policy violation: {}",
+        response.message
+    );
+
     Ok(())
 }
 
@@ -305,10 +373,13 @@ async fn test_library_output_path_forbidden() -> anyhow::Result<()> {
     };
 
     let response = client.build_player(req, Duration::from_secs(30)).await?;
-    
+
     // Library ディレクトリへの出力は禁止されている
-    assert_eq!(response.status_code, 7, "Should return PERMISSION_DENIED for Library path");
-    
+    assert_eq!(
+        response.status_code, 7,
+        "Should return PERMISSION_DENIED for Library path"
+    );
+
     Ok(())
 }
 
@@ -327,10 +398,13 @@ async fn test_asset_bundles_invalid_path() -> anyhow::Result<()> {
     };
 
     let response = client.build_bundles(req, Duration::from_secs(30)).await?;
-    
+
     // Assets ディレクトリへの出力は禁止されている
-    assert_eq!(response.status_code, 7, "Should return PERMISSION_DENIED for Assets path");
-    
+    assert_eq!(
+        response.status_code, 7,
+        "Should return PERMISSION_DENIED for Assets path"
+    );
+
     Ok(())
 }
 
@@ -353,17 +427,23 @@ async fn test_empty_scenes_list() -> anyhow::Result<()> {
     };
 
     let response = client.build_player(req, Duration::from_secs(120)).await?;
-    
+
     // 空のシーンリストでもビルドは成功するべき（デフォルトシーンを使用）
-    println!("Empty scenes build result: status={}, message={}", response.status_code, response.message);
-    
+    println!(
+        "Empty scenes build result: status={}, message={}",
+        response.status_code, response.message
+    );
+
     // エラーでない場合は成功、エラーの場合は適切なメッセージが含まれている
     if response.status_code != 0 {
-        assert!(response.message.to_lowercase().contains("scene") || 
-                response.message.to_lowercase().contains("empty"),
-                "Error message should mention scenes: {}", response.message);
+        assert!(
+            response.message.to_lowercase().contains("scene")
+                || response.message.to_lowercase().contains("empty"),
+            "Error message should mention scenes: {}",
+            response.message
+        );
     }
-    
+
     Ok(())
 }
 
@@ -402,7 +482,7 @@ async fn test_build_timeout() -> anyhow::Result<()> {
             assert!(elapsed < Duration::from_secs(5), "Should timeout quickly");
         }
     }
-    
+
     Ok(())
 }
 
@@ -412,10 +492,10 @@ async fn test_build_timeout() -> anyhow::Result<()> {
 async fn test_build_progress_events() -> anyhow::Result<()> {
     let config = IpcConfig::default();
     let client = IpcClient::connect(config).await?;
-    
+
     // イベント受信開始
     let mut events = client.events();
-    
+
     // ビルドタスクを非同期で開始
     let client_clone = client.clone();
     let build_task = tokio::spawn(async move {
@@ -423,21 +503,23 @@ async fn test_build_progress_events() -> anyhow::Result<()> {
             platform: pb::BuildPlatform::BpStandaloneWindows64 as i32,
             output_path: "Builds/ProgressTest/TestApp.exe".to_string(),
             scenes: vec![],
-            variants: Some(pb::BuildVariants { 
-                development: true, 
-                ..Default::default() 
+            variants: Some(pb::BuildVariants {
+                development: true,
+                ..Default::default()
             }),
             define_symbols: HashMap::new(),
         };
 
-        client_clone.build_player(req, Duration::from_secs(300)).await
+        client_clone
+            .build_player(req, Duration::from_secs(300))
+            .await
     });
 
     // イベント受信ループ
     let mut start_received = false;
     let mut complete_received = false;
     let mut progress_count = 0;
-    
+
     let timeout = tokio::time::sleep(Duration::from_secs(60));
     tokio::pin!(timeout);
 
@@ -486,14 +568,16 @@ async fn test_build_progress_events() -> anyhow::Result<()> {
 
     // ビルド完了待ち
     let result = build_task.await??;
-    
-    println!("Event summary: start={}, complete={}, progress_count={}", 
-             start_received, complete_received, progress_count);
-    
+
+    println!(
+        "Event summary: start={}, complete={}, progress_count={}",
+        start_received, complete_received, progress_count
+    );
+
     // 最低限のイベントが受信されることを確認
     // すべてのイベントが期待通りに来るとは限らないので、レスポンスが成功していることを主に確認
     assert_eq!(result.status_code, 0, "Build should succeed");
-    
+
     Ok(())
 }
 
@@ -503,9 +587,9 @@ async fn test_build_progress_events() -> anyhow::Result<()> {
 async fn test_multiple_build_progress() -> anyhow::Result<()> {
     let config = IpcConfig::default();
     let client = IpcClient::connect(config).await?;
-    
+
     let mut events = client.events();
-    
+
     // 複数のビルドを順次実行
     let client1 = client.clone();
     let build1 = tokio::spawn(async move {
@@ -513,7 +597,10 @@ async fn test_multiple_build_progress() -> anyhow::Result<()> {
             platform: pb::BuildPlatform::BpStandaloneWindows64 as i32,
             output_path: "Builds/Multi1/TestApp.exe".to_string(),
             scenes: vec![],
-            variants: Some(pb::BuildVariants { development: true, ..Default::default() }),
+            variants: Some(pb::BuildVariants {
+                development: true,
+                ..Default::default()
+            }),
             define_symbols: HashMap::new(),
         };
         client1.build_player(req, Duration::from_secs(120)).await
@@ -562,8 +649,11 @@ async fn test_multiple_build_progress() -> anyhow::Result<()> {
     println!("Tracked {} build operations", build_operations.len());
 
     // 少なくとも1つの操作が追跡されていることを確認
-    assert!(!build_operations.is_empty(), "Should track at least one build operation");
-    
+    assert!(
+        !build_operations.is_empty(),
+        "Should track at least one build operation"
+    );
+
     Ok(())
 }
 
@@ -573,47 +663,58 @@ async fn test_multiple_build_progress() -> anyhow::Result<()> {
 async fn test_build_performance() -> anyhow::Result<()> {
     let config = IpcConfig::default();
     let client = IpcClient::connect(config).await?;
-    
+
     let start = std::time::Instant::now();
-    
+
     let req = pb::BuildPlayerRequest {
         platform: pb::BuildPlatform::BpStandaloneWindows64 as i32,
         output_path: "Builds/PerfTest/TestApp.exe".to_string(),
         scenes: vec![],
-        variants: Some(pb::BuildVariants { 
-            development: true, 
-            ..Default::default() 
+        variants: Some(pb::BuildVariants {
+            development: true,
+            ..Default::default()
         }),
         define_symbols: HashMap::new(),
     };
 
     let response = client.build_player(req, Duration::from_secs(300)).await?;
     let elapsed = start.elapsed();
-    
+
     println!("=== Build Performance Results ===");
     println!("Total time (IPC + Build): {:?}", elapsed);
     println!("Unity reported build time: {}ms", response.build_time_ms);
-    
+
     if response.build_time_ms > 0 {
         let unity_duration = Duration::from_millis(response.build_time_ms);
         let ipc_overhead = elapsed.saturating_sub(unity_duration);
         println!("IPC overhead: {:?}", ipc_overhead);
-        println!("IPC overhead percentage: {:.2}%", 
-                 (ipc_overhead.as_millis() as f64 / elapsed.as_millis() as f64) * 100.0);
+        println!(
+            "IPC overhead percentage: {:.2}%",
+            (ipc_overhead.as_millis() as f64 / elapsed.as_millis() as f64) * 100.0
+        );
     }
-    
+
     if response.status_code == 0 {
-        println!("Build size: {} bytes ({:.2} MB)", response.size_bytes, 
-                 response.size_bytes as f64 / (1024.0 * 1024.0));
-        println!("Build speed: {:.2} MB/s", 
-                 (response.size_bytes as f64 / (1024.0 * 1024.0)) / (response.build_time_ms as f64 / 1000.0));
+        println!(
+            "Build size: {} bytes ({:.2} MB)",
+            response.size_bytes,
+            response.size_bytes as f64 / (1024.0 * 1024.0)
+        );
+        println!(
+            "Build speed: {:.2} MB/s",
+            (response.size_bytes as f64 / (1024.0 * 1024.0))
+                / (response.build_time_ms as f64 / 1000.0)
+        );
     }
-    
+
     assert_eq!(response.status_code, 0, "Build should succeed");
-    
+
     // パフォーマンス基準の確認
-    assert!(elapsed < Duration::from_secs(600), "Total build time should be under 10 minutes");
-    
+    assert!(
+        elapsed < Duration::from_secs(600),
+        "Total build time should be under 10 minutes"
+    );
+
     Ok(())
 }
 
@@ -623,9 +724,9 @@ async fn test_build_performance() -> anyhow::Result<()> {
 async fn test_asset_bundles_performance() -> anyhow::Result<()> {
     let config = IpcConfig::default();
     let client = IpcClient::connect(config).await?;
-    
+
     let start = std::time::Instant::now();
-    
+
     let req = pb::BuildAssetBundlesRequest {
         output_directory: "AssetBundles/PerfTest".to_string(),
         deterministic: true,
@@ -635,18 +736,21 @@ async fn test_asset_bundles_performance() -> anyhow::Result<()> {
 
     let response = client.build_bundles(req, Duration::from_secs(180)).await?;
     let elapsed = start.elapsed();
-    
+
     println!("=== AssetBundles Performance Results ===");
     println!("Total time: {:?}", elapsed);
     println!("Unity reported time: {}ms", response.build_time_ms);
-    
+
     if response.status_code == 0 {
         println!("AssetBundles build succeeded");
     }
-    
+
     // パフォーマンス基準（AssetBundles は通常高速）
-    assert!(elapsed < Duration::from_secs(300), "AssetBundles build should be under 5 minutes");
-    
+    assert!(
+        elapsed < Duration::from_secs(300),
+        "AssetBundles build should be under 5 minutes"
+    );
+
     Ok(())
 }
 
@@ -656,20 +760,23 @@ async fn test_asset_bundles_performance() -> anyhow::Result<()> {
 async fn test_concurrent_build_performance() -> anyhow::Result<()> {
     let config = IpcConfig::default();
     let client = IpcClient::connect(config).await?;
-    
+
     // 順次ビルド時間測定
     let start_sequential = std::time::Instant::now();
-    
+
     // Player ビルド
     let req1 = pb::BuildPlayerRequest {
         platform: pb::BuildPlatform::BpStandaloneWindows64 as i32,
         output_path: "Builds/Concurrent1/TestApp.exe".to_string(),
         scenes: vec![],
-        variants: Some(pb::BuildVariants { development: true, ..Default::default() }),
+        variants: Some(pb::BuildVariants {
+            development: true,
+            ..Default::default()
+        }),
         define_symbols: HashMap::new(),
     };
     let _result1 = client.build_player(req1, Duration::from_secs(180)).await?;
-    
+
     // AssetBundles ビルド
     let req2 = pb::BuildAssetBundlesRequest {
         output_directory: "AssetBundles/Concurrent".to_string(),
@@ -678,15 +785,15 @@ async fn test_concurrent_build_performance() -> anyhow::Result<()> {
         force_rebuild: false,
     };
     let _result2 = client.build_bundles(req2, Duration::from_secs(120)).await?;
-    
+
     let sequential_time = start_sequential.elapsed();
-    
+
     println!("=== Concurrent Build Performance ===");
     println!("Sequential total time: {:?}", sequential_time);
-    
+
     // 注意: 現在の実装では並行ビルドは Unity Editor の制限により期待通りに動作しない可能性
     // このテストは主にIPC層の動作確認のため
-    
+
     Ok(())
 }
 
@@ -696,12 +803,12 @@ async fn test_concurrent_build_performance() -> anyhow::Result<()> {
 async fn test_memory_usage_during_build() -> anyhow::Result<()> {
     let config = IpcConfig::default();
     let client = IpcClient::connect(config).await?;
-    
+
     // ベースライン メモリ使用量
     let process = std::process::Command::new("ps")
         .args(&["-o", "rss=", "-p", &std::process::id().to_string()])
         .output();
-    
+
     let baseline_memory = if let Ok(output) = process {
         String::from_utf8_lossy(&output.stdout)
             .trim()
@@ -710,24 +817,27 @@ async fn test_memory_usage_during_build() -> anyhow::Result<()> {
     } else {
         0
     };
-    
+
     println!("Baseline memory: {} KB", baseline_memory);
-    
+
     let req = pb::BuildPlayerRequest {
         platform: pb::BuildPlatform::BpStandaloneWindows64 as i32,
         output_path: "Builds/MemoryTest/TestApp.exe".to_string(),
         scenes: vec![],
-        variants: Some(pb::BuildVariants { development: true, ..Default::default() }),
+        variants: Some(pb::BuildVariants {
+            development: true,
+            ..Default::default()
+        }),
         define_symbols: HashMap::new(),
     };
 
     let _response = client.build_player(req, Duration::from_secs(300)).await?;
-    
+
     // ビルド後のメモリ使用量
     let process = std::process::Command::new("ps")
         .args(&["-o", "rss=", "-p", &std::process::id().to_string()])
         .output();
-    
+
     let post_build_memory = if let Ok(output) = process {
         String::from_utf8_lossy(&output.stdout)
             .trim()
@@ -736,17 +846,20 @@ async fn test_memory_usage_during_build() -> anyhow::Result<()> {
     } else {
         0
     };
-    
+
     println!("Post-build memory: {} KB", post_build_memory);
-    
+
     if baseline_memory > 0 && post_build_memory > baseline_memory {
         let memory_increase = post_build_memory - baseline_memory;
         println!("Memory increase: {} KB", memory_increase);
-        
+
         // メモリリークチェック（簡易）
-        assert!(memory_increase < 100_000, "Memory increase should be reasonable (< 100MB)");
+        assert!(
+            memory_increase < 100_000,
+            "Memory increase should be reasonable (< 100MB)"
+        );
     }
-    
+
     Ok(())
 }
 
@@ -754,7 +867,7 @@ async fn test_memory_usage_during_build() -> anyhow::Result<()> {
 #[tokio::test]
 async fn test_build_tool_creation_without_unity() {
     let config = IpcConfig::default();
-    
+
     // Unity Editor が動いていない場合の接続テスト
     match IpcClient::connect(config).await {
         Ok(client) => {

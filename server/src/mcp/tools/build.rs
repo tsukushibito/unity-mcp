@@ -1,4 +1,4 @@
-use crate::{ipc::client::IpcClient, generated::mcp::unity::v1 as pb};
+use crate::{generated::mcp::unity::v1 as pb, ipc::client::IpcClient};
 use anyhow::Result;
 use std::{collections::HashMap, time::Duration};
 
@@ -32,7 +32,10 @@ impl BuildTool {
             define_symbols: HashMap::new(),
         };
 
-        let response = self.ipc.build_player(req, Duration::from_secs(1800)).await?;
+        let response = self
+            .ipc
+            .build_player(req, Duration::from_secs(1800))
+            .await?;
         Ok(response)
     }
 
@@ -59,7 +62,10 @@ impl BuildTool {
             define_symbols,
         };
 
-        let response = self.ipc.build_player(req, Duration::from_secs(1800)).await?;
+        let response = self
+            .ipc
+            .build_player(req, Duration::from_secs(1800))
+            .await?;
         Ok(response)
     }
 
@@ -78,7 +84,10 @@ impl BuildTool {
             force_rebuild,
         };
 
-        let response = self.ipc.build_bundles(req, Duration::from_secs(1800)).await?;
+        let response = self
+            .ipc
+            .build_bundles(req, Duration::from_secs(1800))
+            .await?;
         Ok(response)
     }
 
@@ -87,7 +96,8 @@ impl BuildTool {
         &self,
         output_dir: String,
     ) -> Result<pb::BuildAssetBundlesResponse> {
-        self.build_asset_bundles(output_dir, true, false, false).await
+        self.build_asset_bundles(output_dir, true, false, false)
+            .await
     }
 
     /// Create BuildVariants for development build
@@ -131,7 +141,8 @@ impl BuildTool {
             scenes,
             Some(variants),
             HashMap::new(),
-        ).await
+        )
+        .await
     }
 
     /// Helper to build Android APK
@@ -155,7 +166,8 @@ impl BuildTool {
             scenes,
             Some(variants),
             HashMap::new(),
-        ).await
+        )
+        .await
     }
 
     /// Helper to build macOS standalone
@@ -177,7 +189,8 @@ impl BuildTool {
             scenes,
             Some(variants),
             HashMap::new(),
-        ).await
+        )
+        .await
     }
 
     /// Helper to build Linux standalone
@@ -199,7 +212,8 @@ impl BuildTool {
             scenes,
             Some(variants),
             HashMap::new(),
-        ).await
+        )
+        .await
     }
 
     /// Helper to build iOS
@@ -221,6 +235,7 @@ impl BuildTool {
             scenes,
             Some(variants),
             HashMap::new(),
-        ).await
+        )
+        .await
     }
 }

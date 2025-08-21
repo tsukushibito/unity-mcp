@@ -19,7 +19,10 @@ async fn test_assets_operations_end_to_end() {
     let health_result = timeout(health_timeout, client.health(Duration::from_millis(500))).await;
     match health_result {
         Ok(Ok(health)) => {
-            println!("Unity Health: ready={}, version={}", health.ready, health.version);
+            println!(
+                "Unity Health: ready={}, version={}",
+                health.ready, health.version
+            );
         }
         _ => {
             println!("Skipping test: Unity health check failed");
@@ -53,7 +56,10 @@ async fn test_assets_operations_end_to_end() {
                     assert!(g2p_response.map.contains_key(assets_guid));
                     let path = g2p_response.map.get(assets_guid).unwrap();
                     assert_eq!(path, "Assets");
-                    println!("Round trip test passed: Assets -> {} -> {}", assets_guid, path);
+                    println!(
+                        "Round trip test passed: Assets -> {} -> {}",
+                        assets_guid, path
+                    );
                 }
                 Err(e) => {
                     panic!("GUID to Path conversion failed: {}", e);
@@ -66,9 +72,7 @@ async fn test_assets_operations_end_to_end() {
     }
 
     // Test 4: AssetDatabase refresh
-    let refresh_result = client
-        .assets_refresh(false, Duration::from_secs(10))
-        .await;
+    let refresh_result = client.assets_refresh(false, Duration::from_secs(10)).await;
 
     match refresh_result {
         Ok(response) => {
@@ -88,12 +92,17 @@ async fn test_assets_operations_end_to_end() {
 
     match import_result {
         Ok(response) => {
-            println!("Import test completed with {} results", response.results.len());
+            println!(
+                "Import test completed with {} results",
+                response.results.len()
+            );
             // Should have one result for the non-existent file
             assert_eq!(response.results.len(), 1);
             let result = &response.results[0];
-            println!("Import result: path={}, ok={}, message={:?}", 
-                result.path, result.ok, result.message);
+            println!(
+                "Import result: path={}, ok={}, message={:?}",
+                result.path, result.ok, result.message
+            );
         }
         Err(e) => {
             println!("Import test completed with expected error: {}", e);
@@ -124,7 +133,12 @@ async fn test_assets_path_validation() {
 
     for invalid_path in invalid_paths {
         let result = client
-            .assets_import(vec![invalid_path.clone()], false, false, Duration::from_secs(2))
+            .assets_import(
+                vec![invalid_path.clone()],
+                false,
+                false,
+                Duration::from_secs(2),
+            )
             .await;
 
         match result {
@@ -137,7 +151,10 @@ async fn test_assets_path_validation() {
                 println!("Path validation correctly rejected: {}", invalid_path);
             }
             Err(_) => {
-                println!("Path validation test for '{}' failed at IPC level (acceptable)", invalid_path);
+                println!(
+                    "Path validation test for '{}' failed at IPC level (acceptable)",
+                    invalid_path
+                );
             }
         }
     }

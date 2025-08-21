@@ -30,10 +30,10 @@ impl McpService {
     pub async fn new() -> anyhow::Result<Self> {
         let ipc = IpcClient::connect(IpcConfig::default()).await?;
         let operations = Arc::new(Mutex::new(HashMap::new()));
-        
+
         // Spawn event processing task
         Self::spawn_event_processor(ipc.clone(), operations.clone()).await;
-        
+
         Ok(Self {
             tool_router: Self::tool_router(),
             ipc,
@@ -41,36 +41,42 @@ impl McpService {
         })
     }
 
-    async fn spawn_event_processor(ipc: IpcClient, operations: Arc<Mutex<HashMap<String, OperationState>>>) {
-        use tokio_stream::{StreamExt, wrappers::BroadcastStream};
-        use std::time::{Duration, Instant};
+    async fn spawn_event_processor(
+        ipc: IpcClient,
+        operations: Arc<Mutex<HashMap<String, OperationState>>>,
+    ) {
         use std::collections::HashMap;
-        
+        use std::time::{Duration, Instant};
+        use tokio_stream::{StreamExt, wrappers::BroadcastStream};
+
         let ipc_clone = ipc.clone();
-        
+
         tokio::spawn(async move {
             tracing::info!("Starting Unity event processor");
-            
+
             let mut rx = ipc_clone.events();
             let mut stream = BroadcastStream::new(rx);
             let mut last_info_log: HashMap<String, Instant> = HashMap::new();
             const INFO_THROTTLE_INTERVAL: Duration = Duration::from_millis(500);
-            
+
             while let Some(result) = stream.next().await {
                 match result {
-                    Ok(event) => {
-                        match event.payload {
-                            Some(crate::generated::mcp::unity::v1::ipc_event::Payload::Log(log)) => {
-                                Self::process_log_event(log, &mut last_info_log, INFO_THROTTLE_INTERVAL).await;
-                            }
-                            Some(crate::generated::mcp::unity::v1::ipc_event::Payload::Op(op)) => {
-                                Self::process_operation_event(op, operations.clone()).await;
-                            }
-                            None => {
-                                tracing::warn!("Received empty event payload");
-                            }
+                    Ok(event) => match event.payload {
+                        Some(crate::generated::mcp::unity::v1::ipc_event::Payload::Log(log)) => {
+                            Self::process_log_event(
+                                log,
+                                &mut last_info_log,
+                                INFO_THROTTLE_INTERVAL,
+                            )
+                            .await;
                         }
-                    }
+                        Some(crate::generated::mcp::unity::v1::ipc_event::Payload::Op(op)) => {
+                            Self::process_operation_event(op, operations.clone()).await;
+                        }
+                        None => {
+                            tracing::warn!("Received empty event payload");
+                        }
+                    },
                     Err(e) => {
                         tracing::error!("Event stream error: {}", e);
                         // On broadcast lag, create new receiver
@@ -79,7 +85,7 @@ impl McpService {
                     }
                 }
             }
-            
+
             tracing::warn!("Unity event processor stopped");
         });
     }
@@ -91,7 +97,7 @@ impl McpService {
         throttle_interval: std::time::Duration,
     ) {
         use crate::generated::mcp::unity::v1::log_event::Level;
-        
+
         let now = std::time::Instant::now();
         let should_log = match log.level() {
             Level::Error => {
@@ -120,7 +126,7 @@ impl McpService {
                     .get(&key)
                     .map(|last| now.duration_since(*last) > throttle_interval)
                     .unwrap_or(true);
-                
+
                 if should_emit {
                     last_info_log.insert(key, now);
                     match log.level() {
@@ -159,7 +165,11 @@ impl McpService {
 
         if !should_log {
             // Optionally count dropped messages
-            tracing::trace!(target = "unity", "Throttled log message from category: {}", log.category);
+            tracing::trace!(
+                target = "unity",
+                "Throttled log message from category: {}",
+                log.category
+            );
         }
     }
 
@@ -168,7 +178,7 @@ impl McpService {
         operations: Arc<Mutex<HashMap<String, OperationState>>>,
     ) {
         use crate::generated::mcp::unity::v1::operation_event::Kind;
-        
+
         let op_state = OperationState {
             op_id: op.op_id.clone(),
             kind: format!("{:?}", op.kind()),
@@ -178,19 +188,17 @@ impl McpService {
             payload_json: op.payload_json.clone(),
             last_updated: std::time::Instant::now(),
         };
-        
+
         // Update operation state
         {
             let mut ops = operations.lock().await;
             ops.insert(op.op_id.clone(), op_state);
-            
+
             // Clean up completed operations older than 5 minutes
             let cutoff = std::time::Instant::now() - std::time::Duration::from_secs(300);
-            ops.retain(|_, state| {
-                !(state.kind == "Complete" && state.last_updated < cutoff)
-            });
+            ops.retain(|_, state| !(state.kind == "Complete" && state.last_updated < cutoff));
         }
-        
+
         match op.kind() {
             Kind::Start => {
                 tracing::info!(
@@ -238,13 +246,12 @@ impl McpService {
         let ops = self.operations.lock().await;
         ops.clone()
     }
-    
+
     /// Get specific operation by ID
     pub async fn get_operation(&self, op_id: &str) -> Option<OperationState> {
         let ops = self.operations.lock().await;
         ops.get(op_id).cloned()
     }
-
 
     pub async fn serve_stdio(self) -> anyhow::Result<()> {
         let service = self.serve(stdio()).await?;
@@ -256,7 +263,6 @@ impl McpService {
     pub(crate) fn ipc(&self) -> &IpcClient {
         &self.ipc
     }
-
 }
 
 impl ServerHandler for McpService {

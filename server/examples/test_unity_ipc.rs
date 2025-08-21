@@ -11,7 +11,10 @@ async fn main() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some("tcp://127.0.0.1:7777".to_string()),
         token: Some("test-token".to_string()),
+        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_secs(10),
+        handshake_timeout: Duration::from_secs(5),
+        total_handshake_timeout: Duration::from_secs(15),
         call_timeout: Duration::from_secs(10),
     };
 
@@ -31,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
                     println!("  - Ready: {}", health.ready);
                     println!("  - Version: {}", health.version);
                     println!("  - Status: {}", health.status);
-                },
+                }
                 Err(e) => {
                     println!("✗ Health request failed: {}", e);
                     return Err(e.into());
@@ -39,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
             }
 
             println!("\n🎉 All tests passed! Unity IPC server is working correctly.");
-        },
+        }
         Err(e) => {
             println!("✗ Failed to connect to Unity IPC server: {}", e);
             println!("\nMake sure Unity Editor is running with the MCP bridge package loaded.");

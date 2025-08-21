@@ -90,7 +90,7 @@ mod tests {
             client_version: "0.1.0".to_string(),
             meta: std::collections::HashMap::new(),
         };
-        
+
         let control = pb::IpcControl {
             kind: Some(pb::ipc_control::Kind::Hello(hello.clone())),
         };

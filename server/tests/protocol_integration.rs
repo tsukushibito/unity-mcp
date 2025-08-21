@@ -29,11 +29,17 @@ fn test_build_request_creation() {
     };
 
     // Serialization 確認
-    assert!(matches!(ipc_req.payload, Some(pb::ipc_request::Payload::Build(_))));
-    
+    assert!(matches!(
+        ipc_req.payload,
+        Some(pb::ipc_request::Payload::Build(_))
+    ));
+
     // oneof 包装の確認
     if let Some(pb::ipc_request::Payload::Build(build)) = ipc_req.payload {
-        assert!(matches!(build.payload, Some(pb::build_request::Payload::Player(_))));
+        assert!(matches!(
+            build.payload,
+            Some(pb::build_request::Payload::Player(_))
+        ));
     } else {
         panic!("Expected Build request payload");
     }
@@ -203,8 +209,14 @@ fn test_build_platform_enum() {
     assert_eq!(pb::BuildPlatform::BpIos as i32, 11);
 
     // From i32 conversion 確認
-    assert_eq!(pb::BuildPlatform::try_from(1).unwrap(), pb::BuildPlatform::BpStandaloneWindows64);
-    assert_eq!(pb::BuildPlatform::try_from(10).unwrap(), pb::BuildPlatform::BpAndroid);
+    assert_eq!(
+        pb::BuildPlatform::try_from(1).unwrap(),
+        pb::BuildPlatform::BpStandaloneWindows64
+    );
+    assert_eq!(
+        pb::BuildPlatform::try_from(10).unwrap(),
+        pb::BuildPlatform::BpAndroid
+    );
     assert!(pb::BuildPlatform::try_from(999).is_err());
 }
 
@@ -240,6 +252,12 @@ fn test_define_symbols_handling() {
     };
 
     assert_eq!(req.define_symbols.len(), 2);
-    assert_eq!(req.define_symbols.get("DEVELOPMENT_BUILD"), Some(&"1".to_string()));
-    assert_eq!(req.define_symbols.get("ENABLE_LOGGING"), Some(&"true".to_string()));
+    assert_eq!(
+        req.define_symbols.get("DEVELOPMENT_BUILD"),
+        Some(&"1".to_string())
+    );
+    assert_eq!(
+        req.define_symbols.get("ENABLE_LOGGING"),
+        Some(&"true".to_string())
+    );
 }

@@ -146,31 +146,40 @@ namespace Mcp.Unity.V1.Ipc
             {
                 using (stream)
                 {
-                    // Step 1: Wait for handshake (IpcHello wrapped in IpcRequest)
-                    var helloFrame = await Framing.ReadFrameAsync(stream);
-                    if (helloFrame == null)
+                    // Step 1: Wait for handshake (T01: IpcControl with Hello)
+                    var controlFrame = await Framing.ReadFrameAsync(stream);
+                    if (controlFrame == null)
                     {
                         Debug.LogWarning("[EditorIpcServer] Connection closed before handshake");
                         return;
                     }
 
-                    var helloEnvelope = EnvelopeCodec.Decode(helloFrame);
-                    if (helloEnvelope.Request?.Hello == null)
+                    // T01: Decode as IpcControl directly
+                    var control = IpcControl.Parser.ParseFrom(controlFrame);
+                    if (control.Hello == null)
                     {
-                        Debug.LogWarning("[EditorIpcServer] Invalid handshake: expected IpcHello");
-                        await SendErrorAsync(stream, helloEnvelope.CorrelationId, 400, "Expected hello message");
+                        Debug.LogWarning("[EditorIpcServer] Invalid handshake: expected IpcControl.Hello");
+                        await SendRejectAsync(stream, IpcReject.Types.Code.Internal, "Expected hello control message");
                         return;
                     }
 
-                    var hello = helloEnvelope.Request.Hello;
-                    Debug.Log($"[EditorIpcServer] Received handshake: version={hello.IpcVersion}, schema={hello.SchemaHash}");
+                    var hello = control.Hello;
+                    Debug.Log($"[EditorIpcServer] Received T01 handshake: version={hello.IpcVersion}, client={hello.ClientName}, features={string.Join(",", hello.Features)}");
 
-                    // TODO: Validate token and schema_hash if needed
-                    // For now, accept all connections
+                    // Basic validation (Phase 2 - minimal checks only)
+                    if (string.IsNullOrEmpty(hello.Token))
+                    {
+                        await SendRejectAsync(stream, IpcReject.Types.Code.Unauthenticated, "missing token");
+                        return;
+                    }
 
-                    // Step 2: Send welcome response
-                    await SendWelcomeAsync(stream, helloEnvelope.CorrelationId);
-                    Debug.Log("[EditorIpcServer] Handshake completed");
+                    // TODO: Token validation (Phase 3)
+                    // TODO: Version validation (Phase 4)
+                    // TODO: Schema validation (Phase 5)
+
+                    // Step 2: Send T01 welcome response
+                    await SendWelcomeAsync(stream, hello);
+                    Debug.Log("[EditorIpcServer] T01 Handshake completed");
 
                     // Step 3: Register the stream as active
                     RegisterStream(stream);
@@ -366,27 +375,39 @@ namespace Mcp.Unity.V1.Ipc
         }
 
         /// <summary>
-        /// Send welcome response
+        /// Send T01 welcome response
         /// </summary>
-        private static async Task SendWelcomeAsync(Stream stream, string correlationId)
+        private static async Task SendWelcomeAsync(Stream stream, IpcHello hello)
         {
             var welcome = new IpcWelcome
             {
-                Ok = true,
-                Error = string.Empty
+                IpcVersion = hello.IpcVersion, // Echo back for now
+                AcceptedFeatures = { hello.Features }, // Accept all for now
+                SchemaHash = hello.SchemaHash, // Echo back for now  
+                ServerName = "unity-editor-bridge",
+                ServerVersion = "0.1.0", // TODO: Get from package
+                EditorVersion = Application.unityVersion,
+                SessionId = Guid.NewGuid().ToString(),
+                Meta = { { "platform", Application.platform.ToString() } }
             };
 
-            var response = new IpcResponse
-            {
-                CorrelationId = correlationId,
-                Welcome = welcome
-            };
-
-            await SendResponseAsync(stream, response);
+            var welcomeControl = new IpcControl { Welcome = welcome };
+            await SendControlFrameAsync(stream, welcomeControl);
         }
 
         /// <summary>
-        /// Send error response
+        /// Send T01 reject response
+        /// </summary>
+        private static async Task SendRejectAsync(Stream stream, IpcReject.Types.Code code, string message)
+        {
+            var reject = new IpcReject { Code = code, Message = message };
+            var rejectControl = new IpcControl { Reject = reject };
+            await SendControlFrameAsync(stream, rejectControl);
+            Debug.LogWarning($"[EditorIpcServer] Sent reject response: {code} - {message}");
+        }
+
+        /// <summary>
+        /// Send error response (for regular requests)
         /// </summary>
         private static async Task SendErrorAsync(Stream stream, string correlationId, int code, string message)
         {
@@ -400,6 +421,15 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.LogWarning($"[EditorIpcServer] Sent error response: {code} - {message}");
+        }
+
+        /// <summary>
+        /// Send T01 control frame
+        /// </summary>
+        private static async Task SendControlFrameAsync(Stream stream, IpcControl control)
+        {
+            var bytes = control.ToByteArray();
+            await Framing.WriteFrameAsync(stream, bytes);
         }
 
         /// <summary>

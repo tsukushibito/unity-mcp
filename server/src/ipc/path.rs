@@ -15,20 +15,36 @@ pub struct IpcConfig {
     pub token: Option<String>,
     pub project_root: Option<String>,
     pub connect_timeout: Duration,
+    pub handshake_timeout: Duration, // T01: hello送信後の応答待ち
+    pub total_handshake_timeout: Duration, // T01: 全体制限時間
     pub call_timeout: Duration,
 }
 
 impl Default for IpcConfig {
     fn default() -> Self {
+        let is_ci = env::var("CI").is_ok();
         Self {
             endpoint: env::var("MCP_IPC_ENDPOINT").ok(),
             token: env::var("MCP_IPC_TOKEN").ok(),
             project_root: env::var("MCP_PROJECT_ROOT").ok(),
+            // T01 準拠のタイムアウト設定
             connect_timeout: Duration::from_millis(
                 env::var("MCP_IPC_CONNECT_TIMEOUT_MS")
                     .ok()
                     .and_then(|v| v.parse().ok())
+                    .unwrap_or(if is_ci { 5000 } else { 2000 }),
+            ),
+            handshake_timeout: Duration::from_millis(
+                env::var("MCP_IPC_HANDSHAKE_TIMEOUT_MS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
                     .unwrap_or(2000),
+            ),
+            total_handshake_timeout: Duration::from_millis(
+                env::var("MCP_IPC_TOTAL_HANDSHAKE_TIMEOUT_MS")
+                    .ok()
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(if is_ci { 8000 } else { 3000 }),
             ),
             call_timeout: Duration::from_millis(
                 env::var("MCP_IPC_CALL_TIMEOUT_MS")
@@ -105,7 +121,12 @@ mod tests {
     #[test]
     fn test_ipc_config_default() {
         let config = IpcConfig::default();
-        assert_eq!(config.connect_timeout, Duration::from_millis(2000));
+        // CI環境でない場合のデフォルト値をテスト
+        if std::env::var("CI").is_err() {
+            assert_eq!(config.connect_timeout, Duration::from_millis(2000));
+            assert_eq!(config.total_handshake_timeout, Duration::from_millis(3000));
+        }
+        assert_eq!(config.handshake_timeout, Duration::from_millis(2000));
         assert_eq!(config.call_timeout, Duration::from_millis(4000));
     }
 
@@ -114,10 +135,10 @@ mod tests {
         let endpoint = default_endpoint();
         match endpoint {
             #[cfg(unix)]
-            Endpoint::Unix(_) => {}, // Expected on Unix
+            Endpoint::Unix(_) => {} // Expected on Unix
             #[cfg(windows)]
-            Endpoint::Pipe(_) => {}, // Expected on Windows
-            Endpoint::Tcp(_) => {}, // Expected on other platforms
+            Endpoint::Pipe(_) => {} // Expected on Windows
+            Endpoint::Tcp(_) => {} // Expected on other platforms
             #[allow(unreachable_patterns)]
             _ => panic!("Unexpected endpoint type"),
         }

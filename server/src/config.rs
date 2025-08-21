@@ -38,7 +38,6 @@ impl BridgeConfig {
     }
 }
 
-
 #[derive(Clone, Debug)]
 pub struct ServerConfig {
     pub bridge: BridgeConfig,

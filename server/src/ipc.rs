@@ -1,4 +1,4 @@
-pub mod path;
-pub mod framing;
-pub mod codec;
 pub mod client;
+pub mod codec;
+pub mod framing;
+pub mod path;

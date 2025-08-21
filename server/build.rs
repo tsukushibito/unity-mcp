@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut cfg = Config::new();
     cfg.out_dir(&out_dir);
     cfg.file_descriptor_set_path(&descriptor_path);
-    cfg.compile_protos(&files, &[proto_root.clone()])?;
+    cfg.compile_protos(&files, std::slice::from_ref(&proto_root))?;
 
     for f in &files {
         println!("cargo:rerun-if-changed={}", f.display());
