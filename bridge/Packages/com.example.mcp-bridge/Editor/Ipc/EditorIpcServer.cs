@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using Google.Protobuf;
+using Pb = Mcp.Unity.V1;
 
 namespace Mcp.Unity.V1.Ipc
 {
@@ -23,7 +25,7 @@ namespace Mcp.Unity.V1.Ipc
         static EditorIpcServer()
         {
             Debug.Log("[EditorIpcServer] Initializing IPC server...");
-            
+
             // Start the server automatically when Unity Editor loads
             _ = StartAsync();
 
@@ -47,7 +49,7 @@ namespace Mcp.Unity.V1.Ipc
                 // Cancel any existing operation
                 _cancellationTokenSource?.Cancel();
                 _cancellationTokenSource = new CancellationTokenSource();
-                
+
                 _transport = TcpTransport.CreateDefault();
                 _transport.Start();
                 _isRunning = true;
@@ -275,9 +277,6 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleBuildRequest(stream, correlationId, request.Build);
                         break;
 
-                    case IpcRequest.PayloadOneofCase.Hello:
-                        Debug.LogWarning("[EditorIpcServer] Received hello after handshake, ignoring");
-                        break;
 
                     default:
                         Debug.LogWarning($"[EditorIpcServer] Unhandled request type: {request.PayloadCase}");
@@ -343,12 +342,12 @@ namespace Mcp.Unity.V1.Ipc
                         {
                             _negotiatedFeatures.TryGetValue(stream, out features);
                         }
-                        
+
                         if (features == null)
                         {
                             throw new InvalidOperationException("No negotiated features found for connection");
                         }
-                        
+
                         assetsResponse = AssetsHandler.Handle(request, features);
                         tcs.SetResult(assetsResponse);
                     }
@@ -392,12 +391,12 @@ namespace Mcp.Unity.V1.Ipc
                         {
                             _negotiatedFeatures.TryGetValue(stream, out features);
                         }
-                        
+
                         if (features == null)
                         {
                             throw new InvalidOperationException("No negotiated features found for connection");
                         }
-                        
+
                         buildResponse = BuildHandler.Handle(request, features);
                         tcs.SetResult(buildResponse);
                     }
@@ -425,17 +424,17 @@ namespace Mcp.Unity.V1.Ipc
         private static async Task SendWelcomeAsync(Stream stream, IpcHello hello)
         {
             var welcome = CreateWelcome(hello);
-            
+
             // Store negotiated features for this connection
             lock (_streamLock)
             {
                 _negotiatedFeatures[stream] = new Bridge.Editor.Ipc.FeatureGuard(welcome.AcceptedFeatures);
             }
-            
+
             var welcomeControl = new IpcControl { Welcome = welcome };
             await SendControlFrameAsync(stream, welcomeControl);
         }
-        
+
         /// <summary>
         /// Create welcome response with feature negotiation
         /// </summary>
@@ -443,13 +442,13 @@ namespace Mcp.Unity.V1.Ipc
         {
             var clientFeatures = hello.Features;
             var serverFeatures = Bridge.Editor.Ipc.ServerFeatureConfig.GetEnabledFeatures();
-            
+
             // Negotiate features - intersection of client and server capabilities
             var acceptedFeatures = Bridge.Editor.Ipc.FeatureFlagExtensions.NegotiateFeatures(clientFeatures);
-            
+
             Debug.Log($"[EditorIpcServer] Feature negotiation: client requested {clientFeatures.Count}, " +
                       $"server supports {serverFeatures.Count}, accepted {acceptedFeatures.Count}");
-            
+
             return new IpcWelcome
             {
                 IpcVersion = hello.IpcVersion,
@@ -462,7 +461,7 @@ namespace Mcp.Unity.V1.Ipc
                 Meta = { { "platform", Application.platform.ToString() } }
             };
         }
-        
+
         /// <summary>
         /// Get package version
         /// </summary>
@@ -570,7 +569,7 @@ namespace Mcp.Unity.V1.Ipc
             }
 
             public static ValidationResult Success() => new ValidationResult(true, default, null);
-            public static ValidationResult Error(IpcReject.Types.Code code, string message) => 
+            public static ValidationResult Error(IpcReject.Types.Code code, string message) =>
                 new ValidationResult(false, code, message);
         }
 
@@ -608,7 +607,7 @@ namespace Mcp.Unity.V1.Ipc
         private static ValidationResult ValidateVersion(string clientVersion)
         {
             const string ServerVersion = "1.0"; // Current server version
-            
+
             if (string.IsNullOrEmpty(clientVersion))
             {
                 return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition, "missing ipc_version");
@@ -617,13 +616,13 @@ namespace Mcp.Unity.V1.Ipc
             // Parse major.minor
             var clientParts = clientVersion.Split('.');
             var serverParts = ServerVersion.Split('.');
-            
+
             if (clientParts.Length < 2 || serverParts.Length < 2)
             {
                 return ValidationResult.Error(IpcReject.Types.Code.OutOfRange, "invalid version format");
             }
 
-            if (!int.TryParse(clientParts[0], out int clientMajor) || 
+            if (!int.TryParse(clientParts[0], out int clientMajor) ||
                 !int.TryParse(serverParts[0], out int serverMajor))
             {
                 return ValidationResult.Error(IpcReject.Types.Code.OutOfRange, "invalid version numbers");
@@ -633,7 +632,7 @@ namespace Mcp.Unity.V1.Ipc
             if (clientMajor != serverMajor)
             {
                 return ValidationResult.Error(
-                    IpcReject.Types.Code.OutOfRange, 
+                    IpcReject.Types.Code.OutOfRange,
                     $"ipc_version {clientVersion} not supported; server={ServerVersion}"
                 );
             }
@@ -674,19 +673,20 @@ namespace Mcp.Unity.V1.Ipc
             {
                 var normalizedRoot = Path.GetFullPath(projectRoot);
                 var actualProjectPath = Path.GetFullPath(Directory.GetCurrentDirectory());
-                
+
                 if (!normalizedRoot.Equals(actualProjectPath, StringComparison.OrdinalIgnoreCase))
                 {
                     return ValidationResult.Error(
-                        IpcReject.Types.Code.FailedPrecondition, 
+                        IpcReject.Types.Code.FailedPrecondition,
                         "project_root mismatch"
                     );
                 }
             }
             catch (Exception ex)
             {
+                Debug.LogException(ex);
                 return ValidationResult.Error(
-                    IpcReject.Types.Code.FailedPrecondition, 
+                    IpcReject.Types.Code.FailedPrecondition,
                     "invalid project_root path"
                 );
             }

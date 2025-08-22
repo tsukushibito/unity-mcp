@@ -13,6 +13,14 @@ using System.Collections.Generic;
 public static class ManualBuildTests
 {
     /// <summary>
+    /// テスト用のFeatureGuardを作成（全機能を有効化）
+    /// </summary>
+    private static Bridge.Editor.Ipc.FeatureGuard CreateTestFeatureGuard()
+    {
+        var allFeatures = new List<string> { "assets.basic", "build.min", "events.log", "ops.progress" };
+        return new Bridge.Editor.Ipc.FeatureGuard(allFeatures);
+    }
+    /// <summary>
     /// Windows Standalone Player ビルドテスト
     /// Unity Editor Console で実行: ManualBuildTests.TestBuildPlayer();
     /// </summary>
@@ -40,7 +48,7 @@ public static class ManualBuildTests
         
         try 
         {
-            var response = BuildHandler.Handle(buildReq);
+            var response = BuildHandler.Handle(buildReq, CreateTestFeatureGuard());
             
             Debug.Log($"Build result: {response.Player.StatusCode} - {response.Player.Message}");
             
@@ -94,7 +102,7 @@ public static class ManualBuildTests
         
         try 
         {
-            var response = BuildHandler.Handle(buildReq);
+            var response = BuildHandler.Handle(buildReq, CreateTestFeatureGuard());
             
             Debug.Log($"AssetBundles result: {response.Bundles.StatusCode} - {response.Bundles.Message}");
             
@@ -160,7 +168,7 @@ public static class ManualBuildTests
         
         try 
         {
-            var response = BuildHandler.Handle(buildReq);
+            var response = BuildHandler.Handle(buildReq, CreateTestFeatureGuard());
             
             Debug.Log($"Android build result: {response.Player.StatusCode} - {response.Player.Message}");
             
@@ -203,7 +211,7 @@ public static class ManualBuildTests
         
         try 
         {
-            var response = BuildHandler.Handle(buildReq);
+            var response = BuildHandler.Handle(buildReq, CreateTestFeatureGuard());
             
             Debug.Log($"Invalid path test result: {response.Player.StatusCode} - {response.Player.Message}");
             
@@ -244,7 +252,7 @@ public static class ManualBuildTests
         
         try 
         {
-            var response = BuildHandler.Handle(buildReq);
+            var response = BuildHandler.Handle(buildReq, CreateTestFeatureGuard());
             
             Debug.Log($"Invalid platform test result: {response.Player.StatusCode} - {response.Player.Message}");
             
@@ -296,7 +304,7 @@ public static class ManualBuildTests
             
             try 
             {
-                var response = BuildHandler.Handle(buildReq);
+                var response = BuildHandler.Handle(buildReq, CreateTestFeatureGuard());
                 Debug.Log($"  {platform}: {response.Player.StatusCode} - {response.Player.Message}");
             }
             catch (System.Exception ex)
@@ -335,7 +343,7 @@ public static class ManualBuildTests
         
         try 
         {
-            var response = BuildHandler.Handle(buildReq);
+            var response = BuildHandler.Handle(buildReq, CreateTestFeatureGuard());
             var endTime = System.DateTime.Now;
             var totalTime = endTime - startTime;
             

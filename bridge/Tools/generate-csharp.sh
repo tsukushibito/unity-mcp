@@ -28,6 +28,7 @@ protoc \
   "$PROTO_ROOT"/mcp/unity/v1/build.proto \
   "$PROTO_ROOT"/mcp/unity/v1/operations.proto \
   "$PROTO_ROOT"/mcp/unity/v1/events.proto \
-  "$PROTO_ROOT"/mcp/unity/v1/ipc.proto
+  "$PROTO_ROOT"/mcp/unity/v1/ipc.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/ipc_control.proto
 
 echo "[generate-csharp.sh] C# Protobuf messages generated into $OUT"
