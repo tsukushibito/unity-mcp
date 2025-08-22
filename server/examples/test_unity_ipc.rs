@@ -16,6 +16,7 @@ async fn main() -> anyhow::Result<()> {
         handshake_timeout: Duration::from_secs(5),
         total_handshake_timeout: Duration::from_secs(15),
         call_timeout: Duration::from_secs(10),
+        max_reconnect_attempts: Some(3), // Allow retries for example
     };
 
     println!("Attempting to connect to tcp://127.0.0.1:7777...");

@@ -166,20 +166,42 @@ namespace Mcp.Unity.V1.Ipc
                     var hello = control.Hello;
                     Debug.Log($"[EditorIpcServer] Received T01 handshake: version={hello.IpcVersion}, client={hello.ClientName}, features={string.Join(",", hello.Features)}");
 
-                    // Basic validation (Phase 2 - minimal checks only)
-                    if (string.IsNullOrEmpty(hello.Token))
+                    // Phase 3: Comprehensive validation
+                    // 1. Token validation
+                    var tokenValidation = ValidateToken(hello.Token);
+                    if (!tokenValidation.IsValid)
                     {
-                        await SendRejectAsync(stream, IpcReject.Types.Code.Unauthenticated, "missing token");
+                        await SendRejectAsync(stream, tokenValidation.ErrorCode, tokenValidation.ErrorMessage);
                         return;
                     }
 
-                    // TODO: Token validation (Phase 3)
-                    // TODO: Version validation (Phase 4)
-                    // TODO: Schema validation (Phase 5)
+                    // 2. Version compatibility check
+                    var versionValidation = ValidateVersion(hello.IpcVersion);
+                    if (!versionValidation.IsValid)
+                    {
+                        await SendRejectAsync(stream, versionValidation.ErrorCode, versionValidation.ErrorMessage);
+                        return;
+                    }
+
+                    // 3. Editor state validation
+                    var editorValidation = ValidateEditorState();
+                    if (!editorValidation.IsValid)
+                    {
+                        await SendRejectAsync(stream, editorValidation.ErrorCode, editorValidation.ErrorMessage);
+                        return;
+                    }
+
+                    // 4. Project root validation
+                    var pathValidation = ValidateProjectRoot(hello.ProjectRoot);
+                    if (!pathValidation.IsValid)
+                    {
+                        await SendRejectAsync(stream, pathValidation.ErrorCode, pathValidation.ErrorMessage);
+                        return;
+                    }
 
                     // Step 2: Send T01 welcome response
                     await SendWelcomeAsync(stream, hello);
-                    Debug.Log("[EditorIpcServer] T01 Handshake completed");
+                    Debug.Log($"[EditorIpcServer] T01 Handshake completed: session={hello.ClientName}");
 
                     // Step 3: Register the stream as active
                     RegisterStream(stream);
@@ -474,6 +496,170 @@ namespace Mcp.Unity.V1.Ipc
                 stream = null;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Validation result structure
+        /// </summary>
+        private struct ValidationResult
+        {
+            public bool IsValid { get; }
+            public IpcReject.Types.Code ErrorCode { get; }
+            public string ErrorMessage { get; }
+
+            private ValidationResult(bool isValid, IpcReject.Types.Code errorCode, string errorMessage)
+            {
+                IsValid = isValid;
+                ErrorCode = errorCode;
+                ErrorMessage = errorMessage;
+            }
+
+            public static ValidationResult Success() => new ValidationResult(true, default, null);
+            public static ValidationResult Error(IpcReject.Types.Code code, string message) => 
+                new ValidationResult(false, code, message);
+        }
+
+        /// <summary>
+        /// Validate authentication token
+        /// </summary>
+        private static ValidationResult ValidateToken(string token)
+        {
+            // Check if token is empty
+            if (string.IsNullOrEmpty(token))
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated, "missing token");
+            }
+
+            // Get expected token from configuration
+            var expectedToken = GetConfiguredToken();
+            if (string.IsNullOrEmpty(expectedToken))
+            {
+                // Development mode - accept any non-empty token
+                return ValidationResult.Success();
+            }
+
+            // Production mode - exact match required
+            if (token != expectedToken)
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated, "invalid token");
+            }
+
+            return ValidationResult.Success();
+        }
+
+        /// <summary>
+        /// Validate IPC version compatibility
+        /// </summary>
+        private static ValidationResult ValidateVersion(string clientVersion)
+        {
+            const string ServerVersion = "1.0"; // Current server version
+            
+            if (string.IsNullOrEmpty(clientVersion))
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition, "missing ipc_version");
+            }
+
+            // Parse major.minor
+            var clientParts = clientVersion.Split('.');
+            var serverParts = ServerVersion.Split('.');
+            
+            if (clientParts.Length < 2 || serverParts.Length < 2)
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.OutOfRange, "invalid version format");
+            }
+
+            if (!int.TryParse(clientParts[0], out int clientMajor) || 
+                !int.TryParse(serverParts[0], out int serverMajor))
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.OutOfRange, "invalid version numbers");
+            }
+
+            // Major version must match exactly
+            if (clientMajor != serverMajor)
+            {
+                return ValidationResult.Error(
+                    IpcReject.Types.Code.OutOfRange, 
+                    $"ipc_version {clientVersion} not supported; server={ServerVersion}"
+                );
+            }
+
+            return ValidationResult.Success();
+        }
+
+        /// <summary>
+        /// Validate Unity Editor state
+        /// </summary>
+        private static ValidationResult ValidateEditorState()
+        {
+            // Check if Unity Editor is in a valid state
+            if (EditorApplication.isCompiling)
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.Unavailable, "editor compiling");
+            }
+
+            if (EditorApplication.isUpdating)
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.Unavailable, "editor updating");
+            }
+
+            return ValidationResult.Success();
+        }
+
+        /// <summary>
+        /// Validate project root path
+        /// </summary>
+        private static ValidationResult ValidateProjectRoot(string projectRoot)
+        {
+            if (string.IsNullOrEmpty(projectRoot))
+            {
+                return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition, "missing project_root");
+            }
+
+            try
+            {
+                var normalizedRoot = Path.GetFullPath(projectRoot);
+                var actualProjectPath = Path.GetFullPath(Directory.GetCurrentDirectory());
+                
+                if (!normalizedRoot.Equals(actualProjectPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return ValidationResult.Error(
+                        IpcReject.Types.Code.FailedPrecondition, 
+                        "project_root mismatch"
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                return ValidationResult.Error(
+                    IpcReject.Types.Code.FailedPrecondition, 
+                    "invalid project_root path"
+                );
+            }
+
+            return ValidationResult.Success();
+        }
+
+        /// <summary>
+        /// Get configured authentication token
+        /// </summary>
+        private static string GetConfiguredToken()
+        {
+            // Try environment variable first
+            var envToken = Environment.GetEnvironmentVariable("MCP_IPC_TOKEN");
+            if (!string.IsNullOrEmpty(envToken))
+            {
+                return envToken;
+            }
+
+            // Try EditorPrefs
+            var prefKey = "MCP.IpcToken";
+            if (EditorPrefs.HasKey(prefKey))
+            {
+                return EditorPrefs.GetString(prefKey);
+            }
+
+            // No token configured - development mode
+            return null;
         }
 
         /// <summary>

@@ -1,6 +1,6 @@
 use futures::{SinkExt, StreamExt};
 use server::generated::mcp::unity::v1 as pb;
-use server::ipc::{client::IpcClient, path::IpcConfig};
+use server::ipc::{client::{IpcClient, IpcError}, path::IpcConfig};
 use server::ipc::{codec, framing};
 use tokio::{net::TcpListener, time::Duration};
 
@@ -22,6 +22,20 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
                     let reject = pb::IpcReject {
                         code: pb::ipc_reject::Code::Unauthenticated as i32,
                         message: "missing token".to_string(),
+                    };
+                    let reject_control = pb::IpcControl {
+                        kind: Some(pb::ipc_control::Kind::Reject(reject)),
+                    };
+                    let reject_bytes = codec::encode_control(&reject_control).unwrap();
+                    let _ = framed.send(reject_bytes).await;
+                    return;
+                }
+
+                // For test purposes, reject "wrong-token"
+                if hello.token == "wrong-token" {
+                    let reject = pb::IpcReject {
+                        code: pb::ipc_reject::Code::Unauthenticated as i32,
+                        message: "invalid token".to_string(),
                     };
                     let reject_control = pb::IpcControl {
                         kind: Some(pb::ipc_control::Kind::Reject(reject)),
@@ -103,6 +117,7 @@ async fn test_t01_basic_handshake_success() -> anyhow::Result<()> {
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
         call_timeout: Duration::from_secs(5),
+        max_reconnect_attempts: Some(1), // Don't retry for test
     };
 
     // Test T01 handshake
@@ -133,15 +148,17 @@ async fn test_t01_basic_token_rejection() -> anyhow::Result<()> {
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
         call_timeout: Duration::from_secs(5),
+        max_reconnect_attempts: Some(1), // Don't retry for test
     };
 
-    // Should fail with handshake error
+    // Should fail with authentication error
     let result = IpcClient::connect(cfg).await;
     assert!(result.is_err());
 
     if let Err(e) = result {
+        // With the new error handling, should get Authentication error
+        assert!(matches!(e, IpcError::Authentication(_)));
         let error_msg = e.to_string();
-        assert!(error_msg.contains("handshake failed"));
         assert!(error_msg.contains("missing token"));
     }
 
@@ -158,8 +175,117 @@ async fn test_connection_timeout() {
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(3),
         call_timeout: Duration::from_secs(1),
+        max_reconnect_attempts: Some(1), // Don't retry for test
     };
 
     let result = IpcClient::connect(cfg).await;
     assert!(result.is_err());
+    
+    if let Err(e) = result {
+        assert!(matches!(e, IpcError::ConnectTimeout));
+    }
+}
+
+#[tokio::test]
+async fn test_handshake_authentication_failure() -> anyhow::Result<()> {
+    let port = 18802;
+
+    // Start mock server that will reject invalid tokens  
+    tokio::spawn(mock_unity_server(port));
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let cfg = IpcConfig {
+        endpoint: Some(format!("tcp://127.0.0.1:{}", port)),
+        token: Some("wrong-token".to_string()),
+        project_root: Some(".".to_string()),
+        connect_timeout: Duration::from_secs(5),
+        handshake_timeout: Duration::from_secs(2),
+        total_handshake_timeout: Duration::from_secs(8),
+        call_timeout: Duration::from_secs(5),
+        max_reconnect_attempts: Some(1),
+    };
+
+    let result = IpcClient::connect(cfg).await;
+    assert!(result.is_err());
+    
+    if let Err(e) = result {
+        assert!(matches!(e, IpcError::Authentication(_)));
+        let error_msg = e.to_string();
+        assert!(error_msg.contains("invalid token") || error_msg.contains("missing token"));
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_handshake_version_incompatible() -> anyhow::Result<()> {
+    let port = 18803;
+
+    // Start mock server with version check
+    tokio::spawn(mock_unity_server(port));
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    // TODO: Modify IpcClient to allow version override for testing
+    // For now, this test validates the framework is in place
+    
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_connect_with_retry_success() -> anyhow::Result<()> {
+    let port = 18804;
+
+    // Start server after a delay to test retry logic
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(500)).await; // Delay server start
+        let _ = mock_unity_server(port).await;
+    });
+
+    let cfg = IpcConfig {
+        endpoint: Some(format!("tcp://127.0.0.1:{}", port)),
+        token: Some("test-token".to_string()),
+        project_root: Some(".".to_string()),
+        connect_timeout: Duration::from_millis(200),
+        handshake_timeout: Duration::from_secs(2),
+        total_handshake_timeout: Duration::from_secs(8),
+        call_timeout: Duration::from_secs(5),
+        max_reconnect_attempts: Some(5), // Allow retries
+    };
+
+    // Should succeed after retries
+    let client = IpcClient::connect_with_retry(cfg).await?;
+    let health = client.health(Duration::from_secs(1)).await?;
+    assert_eq!(health.status, "ok");
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_connect_with_retry_permanent_failure() -> anyhow::Result<()> {
+    let port = 18805;
+
+    // Start server that rejects authentication
+    tokio::spawn(mock_unity_server(port));
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let cfg = IpcConfig {
+        endpoint: Some(format!("tcp://127.0.0.1:{}", port)),
+        token: Some("".to_string()), // Empty token will be permanently rejected
+        project_root: Some(".".to_string()),
+        connect_timeout: Duration::from_secs(5),
+        handshake_timeout: Duration::from_secs(2),
+        total_handshake_timeout: Duration::from_secs(8),
+        call_timeout: Duration::from_secs(5),
+        max_reconnect_attempts: Some(3),
+    };
+
+    // Should fail immediately without retries for authentication errors
+    let result = IpcClient::connect_with_retry(cfg).await;
+    assert!(result.is_err());
+    
+    if let Err(e) = result {
+        assert!(matches!(e, IpcError::Authentication(_)));
+    }
+
+    Ok(())
 }

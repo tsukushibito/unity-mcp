@@ -18,6 +18,7 @@ pub struct IpcConfig {
     pub handshake_timeout: Duration, // T01: hello送信後の応答待ち
     pub total_handshake_timeout: Duration, // T01: 全体制限時間
     pub call_timeout: Duration,
+    pub max_reconnect_attempts: Option<u32>, // Phase 3: 再接続試行回数制限
 }
 
 impl Default for IpcConfig {
@@ -52,6 +53,10 @@ impl Default for IpcConfig {
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(4000),
             ),
+            max_reconnect_attempts: env::var("MCP_IPC_MAX_RECONNECT_ATTEMPTS")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .or(Some(10)), // Default to 10 attempts
         }
     }
 }

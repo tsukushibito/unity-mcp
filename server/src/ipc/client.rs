@@ -33,6 +33,20 @@ pub enum IpcError {
     ConnectTimeout,
     #[error("handshake failed: {0}")]
     Handshake(String),
+    #[error("authentication failed: {0}")]
+    Authentication(String),
+    #[error("version incompatible: {0}")]
+    VersionIncompatible(String),
+    #[error("schema mismatch: {0}")]
+    SchemaMismatch(String),
+    #[error("server unavailable: {0}")]
+    ServerUnavailable(String),
+    #[error("permission denied: {0}")]
+    PermissionDenied(String),
+    #[error("unsupported feature: {0}")]
+    UnsupportedFeature(String),
+    #[error("failed precondition: {0}")]
+    FailedPrecondition(String),
     #[error("io: {0}")]
     Io(#[from] std::io::Error),
     #[error("codec: {0}")]
@@ -462,15 +476,7 @@ impl IpcClient {
             while let Some(frame) = framed.next().await {
                 let bytes = frame.map_err(IpcError::Io)?;
                 let control = codec::decode_control(bytes.freeze())?;
-                match control.kind {
-                    Some(pb::ipc_control::Kind::Welcome(w)) => {
-                        return Ok::<_, IpcError>(w);
-                    }
-                    Some(pb::ipc_control::Kind::Reject(r)) => {
-                        return Err(IpcError::Handshake(format!("{:?}: {}", r.code, r.message)));
-                    }
-                    _ => continue,
-                }
+                return Self::handle_handshake_response(control).await;
             }
             Err(IpcError::Handshake("no welcome response".into()))
         })
@@ -524,6 +530,77 @@ impl IpcClient {
         });
 
         Ok(())
+    }
+
+    async fn handle_handshake_response(
+        control: pb::IpcControl,
+    ) -> Result<pb::IpcWelcome, IpcError> {
+        match control.kind {
+            Some(pb::ipc_control::Kind::Welcome(w)) => Ok(w),
+            Some(pb::ipc_control::Kind::Reject(r)) => {
+                use pb::ipc_reject::Code;
+                
+                match r.code() {
+                    Code::Unauthenticated => Err(IpcError::Authentication(r.message)),
+                    Code::OutOfRange => Err(IpcError::VersionIncompatible(r.message)),
+                    Code::FailedPrecondition => {
+                        if r.message.contains("schema") {
+                            Err(IpcError::SchemaMismatch(r.message))
+                        } else {
+                            Err(IpcError::FailedPrecondition(r.message))
+                        }
+                    }
+                    Code::Unavailable => Err(IpcError::ServerUnavailable(r.message)),
+                    Code::PermissionDenied => Err(IpcError::PermissionDenied(r.message)),
+                    Code::Internal => Err(IpcError::Handshake(format!("server error: {}", r.message))),
+                    _ => Err(IpcError::Handshake(format!("{:?}: {}", r.code, r.message))),
+                }
+            }
+            _ => Err(IpcError::Handshake("unexpected control response".into())),
+        }
+    }
+
+    pub async fn connect_with_retry(cfg: IpcConfig) -> Result<Self, IpcError> {
+        let mut backoff_ms = 250u64;
+        const MAX_BACKOFF_MS: u64 = 5000;
+        let max_attempts = cfg.max_reconnect_attempts.unwrap_or(10);
+        
+        for attempt in 1..=max_attempts {
+            match Self::connect(cfg.clone()).await {
+                Ok(client) => return Ok(client),
+                Err(e) => {
+                    let should_retry = match &e {
+                        IpcError::ServerUnavailable(_) => true,
+                        IpcError::ConnectTimeout => true,
+                        IpcError::Io(_) => true,
+                        IpcError::Authentication(_) => false, // Don't retry auth errors
+                        IpcError::VersionIncompatible(_) => false, // Don't retry version errors
+                        IpcError::SchemaMismatch(_) => false, // Don't retry schema errors
+                        IpcError::UnsupportedFeature(_) => false, // Don't retry feature errors
+                        IpcError::PermissionDenied(_) => false, // Don't retry permission errors
+                        IpcError::FailedPrecondition(_) => false, // Don't retry precondition errors
+                        _ => false,
+                    };
+                    
+                    if !should_retry || attempt == max_attempts {
+                        return Err(e);
+                    }
+                    
+                    tracing::warn!(
+                        "Connection attempt {} failed: {}. Retrying in {}ms", 
+                        attempt, e, backoff_ms
+                    );
+                    
+                    tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
+                    
+                    // Exponential backoff with jitter
+                    let jitter = rand::random::<u64>() % (backoff_ms / 4);
+                    backoff_ms = std::cmp::min(backoff_ms * 2, MAX_BACKOFF_MS) + jitter;
+                }
+            }
+        }
+        
+        unreachable!()
     }
 }
 
