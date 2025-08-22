@@ -30,6 +30,3 @@ transport-ipc = []
 [dev-dependencies]
 tokio-stream = "0.1.17"
 
-[build-dependencies]
-prost-build = "0.14.1"
-sha2 = "0.10"
