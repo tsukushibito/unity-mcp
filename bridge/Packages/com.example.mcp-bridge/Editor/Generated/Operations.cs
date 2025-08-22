@@ -25,18 +25,17 @@ namespace Mcp.Unity.V1 {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Ch1tY3AvdW5pdHkvdjEvb3BlcmF0aW9ucy5wcm90bxIMbWNwLnVuaXR5LnYx",
-            "GhltY3AvdW5pdHkvdjEvY29tbW9uLnByb3RvIiEKE09wZXJhdGlvbkdldFJl",
-            "cXVlc3QSCgoCaWQYASABKAkiQgoUT3BlcmF0aW9uR2V0UmVzcG9uc2USCgoC",
-            "aWQYASABKAkSDQoFc3RhdGUYAiABKAkSDwoHbWVzc2FnZRgDIAEoCSIkChZP",
-            "cGVyYXRpb25DYW5jZWxSZXF1ZXN0EgoKAmlkGAEgASgJIisKF09wZXJhdGlv",
-            "bkNhbmNlbFJlc3BvbnNlEhAKCGFjY2VwdGVkGAEgASgIMsMBCgpPcGVyYXRp",
-            "b25zElUKDEdldE9wZXJhdGlvbhIhLm1jcC51bml0eS52MS5PcGVyYXRpb25H",
-            "ZXRSZXF1ZXN0GiIubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJlc3BvbnNl",
-            "El4KD0NhbmNlbE9wZXJhdGlvbhIkLm1jcC51bml0eS52MS5PcGVyYXRpb25D",
-            "YW5jZWxSZXF1ZXN0GiUubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkNhbmNlbFJl",
-            "c3BvbnNlYgZwcm90bzM="));
+            "IiEKE09wZXJhdGlvbkdldFJlcXVlc3QSCgoCaWQYASABKAkiQgoUT3BlcmF0",
+            "aW9uR2V0UmVzcG9uc2USCgoCaWQYASABKAkSDQoFc3RhdGUYAiABKAkSDwoH",
+            "bWVzc2FnZRgDIAEoCSIkChZPcGVyYXRpb25DYW5jZWxSZXF1ZXN0EgoKAmlk",
+            "GAEgASgJIisKF09wZXJhdGlvbkNhbmNlbFJlc3BvbnNlEhAKCGFjY2VwdGVk",
+            "GAEgASgIMsMBCgpPcGVyYXRpb25zElUKDEdldE9wZXJhdGlvbhIhLm1jcC51",
+            "bml0eS52MS5PcGVyYXRpb25HZXRSZXF1ZXN0GiIubWNwLnVuaXR5LnYxLk9w",
+            "ZXJhdGlvbkdldFJlc3BvbnNlEl4KD0NhbmNlbE9wZXJhdGlvbhIkLm1jcC51",
+            "bml0eS52MS5PcGVyYXRpb25DYW5jZWxSZXF1ZXN0GiUubWNwLnVuaXR5LnYx",
+            "Lk9wZXJhdGlvbkNhbmNlbFJlc3BvbnNlYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, },
+          new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.OperationGetRequest), global::Mcp.Unity.V1.OperationGetRequest.Parser, new[]{ "Id" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.OperationGetResponse), global::Mcp.Unity.V1.OperationGetResponse.Parser, new[]{ "Id", "State", "Message" }, null, null, null, null),

@@ -18,6 +18,7 @@ namespace Mcp.Unity.V1.Ipc
         private static bool _isRunning = false;
         private static readonly List<Stream> _activeStreams = new();
         private static readonly object _streamLock = new();
+        private static readonly Dictionary<Stream, Bridge.Editor.Ipc.FeatureGuard> _negotiatedFeatures = new();
 
         static EditorIpcServer()
         {
@@ -337,7 +338,18 @@ namespace Mcp.Unity.V1.Ipc
                 {
                     try
                     {
-                        assetsResponse = AssetsHandler.Handle(request);
+                        Bridge.Editor.Ipc.FeatureGuard features;
+                        lock (_streamLock)
+                        {
+                            _negotiatedFeatures.TryGetValue(stream, out features);
+                        }
+                        
+                        if (features == null)
+                        {
+                            throw new InvalidOperationException("No negotiated features found for connection");
+                        }
+                        
+                        assetsResponse = AssetsHandler.Handle(request, features);
                         tcs.SetResult(assetsResponse);
                     }
                     catch (Exception ex)
@@ -375,7 +387,18 @@ namespace Mcp.Unity.V1.Ipc
                 {
                     try
                     {
-                        buildResponse = BuildHandler.Handle(request);
+                        Bridge.Editor.Ipc.FeatureGuard features;
+                        lock (_streamLock)
+                        {
+                            _negotiatedFeatures.TryGetValue(stream, out features);
+                        }
+                        
+                        if (features == null)
+                        {
+                            throw new InvalidOperationException("No negotiated features found for connection");
+                        }
+                        
+                        buildResponse = BuildHandler.Handle(request, features);
                         tcs.SetResult(buildResponse);
                     }
                     catch (Exception ex)
@@ -401,20 +424,52 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static async Task SendWelcomeAsync(Stream stream, IpcHello hello)
         {
-            var welcome = new IpcWelcome
+            var welcome = CreateWelcome(hello);
+            
+            // Store negotiated features for this connection
+            lock (_streamLock)
             {
-                IpcVersion = hello.IpcVersion, // Echo back for now
-                AcceptedFeatures = { hello.Features }, // Accept all for now
-                SchemaHash = hello.SchemaHash, // Echo back for now  
+                _negotiatedFeatures[stream] = new Bridge.Editor.Ipc.FeatureGuard(welcome.AcceptedFeatures);
+            }
+            
+            var welcomeControl = new IpcControl { Welcome = welcome };
+            await SendControlFrameAsync(stream, welcomeControl);
+        }
+        
+        /// <summary>
+        /// Create welcome response with feature negotiation
+        /// </summary>
+        private static IpcWelcome CreateWelcome(IpcHello hello)
+        {
+            var clientFeatures = hello.Features;
+            var serverFeatures = Bridge.Editor.Ipc.ServerFeatureConfig.GetEnabledFeatures();
+            
+            // Negotiate features - intersection of client and server capabilities
+            var acceptedFeatures = Bridge.Editor.Ipc.FeatureFlagExtensions.NegotiateFeatures(clientFeatures);
+            
+            Debug.Log($"[EditorIpcServer] Feature negotiation: client requested {clientFeatures.Count}, " +
+                      $"server supports {serverFeatures.Count}, accepted {acceptedFeatures.Count}");
+            
+            return new IpcWelcome
+            {
+                IpcVersion = hello.IpcVersion,
+                AcceptedFeatures = { acceptedFeatures },
+                SchemaHash = hello.SchemaHash, // Will be implemented in Phase 5
                 ServerName = "unity-editor-bridge",
-                ServerVersion = "0.1.0", // TODO: Get from package
+                ServerVersion = GetPackageVersion(),
                 EditorVersion = Application.unityVersion,
                 SessionId = Guid.NewGuid().ToString(),
                 Meta = { { "platform", Application.platform.ToString() } }
             };
-
-            var welcomeControl = new IpcControl { Welcome = welcome };
-            await SendControlFrameAsync(stream, welcomeControl);
+        }
+        
+        /// <summary>
+        /// Get package version
+        /// </summary>
+        private static string GetPackageVersion()
+        {
+            // TODO: Get actual package version from package.json
+            return "0.1.0";
         }
 
         /// <summary>
@@ -682,6 +737,7 @@ namespace Mcp.Unity.V1.Ipc
             lock (_streamLock)
             {
                 _activeStreams.Remove(stream);
+                _negotiatedFeatures.Remove(stream);
                 Debug.Log($"[EditorIpcServer] Unregistered stream, active count: {_activeStreams.Count}");
             }
         }

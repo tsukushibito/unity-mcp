@@ -22,7 +22,7 @@ trait IpcStream: AsyncRead + AsyncWrite + Unpin + Send {}
 impl<T> IpcStream for T where T: AsyncRead + AsyncWrite + Unpin + Send {}
 
 use super::{
-    codec, framing,
+    codec, features::{FeatureFlag, FeatureSet}, framing,
     path::{Endpoint, IpcConfig, default_endpoint, parse_endpoint},
 };
 use crate::generated::mcp::unity::v1 as pb;
@@ -71,6 +71,7 @@ struct Inner {
     events_tx: broadcast::Sender<pb::IpcEvent>,
     // Write side: we use an mpsc channel to serialize outgoing frames
     tx: mpsc::Sender<Bytes>,
+    negotiated_features: Mutex<FeatureSet>,
 }
 
 impl IpcClient {
@@ -89,6 +90,7 @@ impl IpcClient {
             pending: Mutex::new(HashMap::new()),
             events_tx,
             tx: writer_tx,
+            negotiated_features: Mutex::new(FeatureSet::new()),
         });
 
         // Spawn reconnection supervisor task
@@ -146,6 +148,15 @@ impl IpcClient {
         }
     }
 
+    pub async fn has_feature(&self, feature: FeatureFlag) -> bool {
+        let features = self.inner.negotiated_features.lock().await;
+        features.contains(&feature)
+    }
+    
+    pub async fn get_negotiated_features(&self) -> FeatureSet {
+        self.inner.negotiated_features.lock().await.clone()
+    }
+
     pub async fn assets_import(
         &self,
         paths: Vec<String>,
@@ -153,6 +164,13 @@ impl IpcClient {
         auto_refresh: bool,
         timeout: Duration,
     ) -> Result<pb::ImportAssetResponse, IpcError> {
+        // Check if assets.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::AssetsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "assets.basic feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Import(
@@ -185,6 +203,13 @@ impl IpcClient {
         to_path: String,
         timeout: Duration,
     ) -> Result<pb::MoveAssetResponse, IpcError> {
+        // Check if assets.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::AssetsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "assets.basic feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Move(pb::MoveAssetRequest {
@@ -214,6 +239,13 @@ impl IpcClient {
         soft: bool,
         timeout: Duration,
     ) -> Result<pb::DeleteAssetResponse, IpcError> {
+        // Check if assets.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::AssetsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "assets.basic feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Delete(
@@ -241,6 +273,13 @@ impl IpcClient {
         force: bool,
         timeout: Duration,
     ) -> Result<pb::RefreshResponse, IpcError> {
+        // Check if assets.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::AssetsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "assets.basic feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Refresh(pb::RefreshRequest {
@@ -268,6 +307,13 @@ impl IpcClient {
         guids: Vec<String>,
         timeout: Duration,
     ) -> Result<pb::GuidToPathResponse, IpcError> {
+        // Check if assets.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::AssetsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "assets.basic feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::G2p(pb::GuidToPathRequest {
@@ -295,6 +341,13 @@ impl IpcClient {
         paths: Vec<String>,
         timeout: Duration,
     ) -> Result<pb::PathToGuidResponse, IpcError> {
+        // Check if assets.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::AssetsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "assets.basic feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::P2g(pb::PathToGuidRequest {
@@ -322,6 +375,13 @@ impl IpcClient {
         req: pb::BuildPlayerRequest,
         timeout: Duration,
     ) -> Result<pb::BuildPlayerResponse, IpcError> {
+        // Check if build.min feature is negotiated
+        if !self.has_feature(FeatureFlag::BuildMin).await {
+            return Err(IpcError::UnsupportedFeature(
+                "build.min feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
                 payload: Some(pb::build_request::Payload::Player(req)),
@@ -343,6 +403,13 @@ impl IpcClient {
         req: pb::BuildAssetBundlesRequest,
         timeout: Duration,
     ) -> Result<pb::BuildAssetBundlesResponse, IpcError> {
+        // Check if build.min feature is negotiated  
+        if !self.has_feature(FeatureFlag::BuildMin).await {
+            return Err(IpcError::UnsupportedFeature(
+                "build.min feature not negotiated".into()
+            ));
+        }
+        
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
                 payload: Some(pb::build_request::Payload::Bundles(req)),
@@ -442,15 +509,11 @@ impl IpcClient {
         let mut framed = framing::into_framed(io);
 
         // 2) T01 handshake
+        let desired_features = FeatureSet::supported_by_client();
         let hello = pb::IpcHello {
             token: inner.cfg.token.clone().unwrap_or_default(),
             ipc_version: "1.0".to_string(),
-            features: vec![
-                "assets.basic".to_string(),
-                "events.log".to_string(),
-                "build.min".to_string(),
-                "ops.progress".to_string(),
-            ],
+            features: desired_features.to_strings(),
             schema_hash: codec::schema_hash(),
             project_root: normalize_project_root(
                 &inner
@@ -482,11 +545,19 @@ impl IpcClient {
         })
         .await
         .map_err(|_| IpcError::ConnectTimeout)??;
+        
+        // Process negotiated features
+        let negotiated = FeatureSet::from_strings(&welcome.accepted_features);
+        {
+            let mut features = inner.negotiated_features.lock().await;
+            *features = negotiated.clone();
+        }
+        
         // 4) Log successful handshake
         tracing::info!(
             "T01 Handshake OK: version={}, features={:?}, session={}, server={} {}",
             welcome.ipc_version,
-            welcome.accepted_features,
+            negotiated.to_strings(),
             welcome.session_id,
             welcome.server_name,
             welcome.server_version
@@ -553,7 +624,6 @@ impl IpcClient {
                     Code::Unavailable => Err(IpcError::ServerUnavailable(r.message)),
                     Code::PermissionDenied => Err(IpcError::PermissionDenied(r.message)),
                     Code::Internal => Err(IpcError::Handshake(format!("server error: {}", r.message))),
-                    _ => Err(IpcError::Handshake(format!("{:?}: {}", r.code, r.message))),
                 }
             }
             _ => Err(IpcError::Handshake("unexpected control response".into())),
@@ -680,6 +750,7 @@ mod tests {
             pending: Mutex::new(HashMap::new()),
             events_tx: broadcast::channel(1).0,
             tx: mpsc::channel(1).0,
+            negotiated_features: Mutex::new(FeatureSet::new()),
         });
         let client = IpcClient { inner };
 
@@ -701,6 +772,7 @@ mod tests {
             pending: Mutex::new(HashMap::new()),
             events_tx: broadcast::channel(1).0,
             tx: mpsc::channel(1).0,
+            negotiated_features: Mutex::new(FeatureSet::new()),
         });
         let client = IpcClient { inner };
 
@@ -732,6 +804,7 @@ mod tests {
             pending: Mutex::new(HashMap::new()),
             events_tx: broadcast::channel(1).0,
             tx: mpsc::channel(1).0,
+            negotiated_features: Mutex::new(FeatureSet::new()),
         });
         let client = IpcClient { inner };
 

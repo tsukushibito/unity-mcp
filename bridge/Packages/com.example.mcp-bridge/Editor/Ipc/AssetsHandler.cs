@@ -19,8 +19,11 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Main dispatch handler for Assets requests
         /// </summary>
-        public static Pb.AssetsResponse Handle(Pb.AssetsRequest req)
+        public static Pb.AssetsResponse Handle(Pb.AssetsRequest req, Bridge.Editor.Ipc.FeatureGuard features)
         {
+            // Require assets.basic feature for all assets operations
+            features.RequireFeature(Bridge.Editor.Ipc.FeatureFlag.AssetsBasic);
+            
             switch (req.PayloadCase)
             {
                 case Pb.AssetsRequest.PayloadOneofCase.Import:  return Import(req.Import);

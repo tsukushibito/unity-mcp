@@ -16,8 +16,11 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Main dispatch handler for Build requests
         /// </summary>
-        public static Pb.BuildResponse Handle(Pb.BuildRequest req)
+        public static Pb.BuildResponse Handle(Pb.BuildRequest req, Bridge.Editor.Ipc.FeatureGuard features)
         {
+            // Require build.min feature for all build operations
+            features.RequireFeature(Bridge.Editor.Ipc.FeatureFlag.BuildMin);
+            
             return req.PayloadCase switch
             {
                 Pb.BuildRequest.PayloadOneofCase.Player  => new Pb.BuildResponse { Player  = BuildPlayer(req.Player) },

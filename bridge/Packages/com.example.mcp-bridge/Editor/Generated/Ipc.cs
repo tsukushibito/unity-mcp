@@ -32,41 +32,35 @@ namespace Mcp.Unity.V1 {
             "cGUSFgoOY29ycmVsYXRpb25faWQYASABKAkSKwoHcmVxdWVzdBgCIAEoCzIY",
             "Lm1jcC51bml0eS52MS5JcGNSZXF1ZXN0SAASLQoIcmVzcG9uc2UYAyABKAsy",
             "GS5tY3AudW5pdHkudjEuSXBjUmVzcG9uc2VIABInCgVldmVudBgEIAEoCzIW",
-            "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQiQwoISXBjSGVsbG8S",
-            "EwoLaXBjX3ZlcnNpb24YASABKAUSEwoLc2NoZW1hX2hhc2gYAiABKAkSDQoF",
-            "dG9rZW4YAyABKAkiJwoKSXBjV2VsY29tZRIKCgJvaxgBIAEoCBINCgVlcnJv",
-            "chgCIAEoCSKyAwoKSXBjUmVxdWVzdBInCgVoZWxsbxgBIAEoCzIWLm1jcC51",
-            "bml0eS52MS5JcGNIZWxsb0gAEi0KBmhlYWx0aBgCIAEoCzIbLm1jcC51bml0",
-            "eS52MS5IZWFsdGhSZXF1ZXN0SAASLAoNZ2V0X3BsYXlfbW9kZRgKIAEoCzIT",
-            "Lm1jcC51bml0eS52MS5FbXB0eUgAEjkKDXNldF9wbGF5X21vZGUYCyABKAsy",
-            "IC5tY3AudW5pdHkudjEuU2V0UGxheU1vZGVSZXF1ZXN0SAASLQoGYXNzZXRz",
-            "GBQgASgLMhsubWNwLnVuaXR5LnYxLkFzc2V0c1JlcXVlc3RIABIrCgVidWls",
-            "ZBgeIAEoCzIaLm1jcC51bml0eS52MS5CdWlsZFJlcXVlc3RIABI6Cg1vcGVy",
-            "YXRpb25fZ2V0GCggASgLMiEubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJl",
-            "cXVlc3RIABJAChBvcGVyYXRpb25fY2FuY2VsGCkgASgLMiQubWNwLnVuaXR5",
-            "LnYxLk9wZXJhdGlvbkNhbmNlbFJlcXVlc3RIAEIJCgdwYXlsb2FkIuMDCgtJ",
-            "cGNSZXNwb25zZRIWCg5jb3JyZWxhdGlvbl9pZBgBIAEoCRIrCgd3ZWxjb21l",
-            "GAIgASgLMhgubWNwLnVuaXR5LnYxLklwY1dlbGNvbWVIABIuCgZoZWFsdGgY",
-            "AyABKAsyHC5tY3AudW5pdHkudjEuSGVhbHRoUmVzcG9uc2VIABI6Cg1nZXRf",
-            "cGxheV9tb2RlGAogASgLMiEubWNwLnVuaXR5LnYxLkdldFBsYXlNb2RlUmVz",
-            "cG9uc2VIABI6Cg1zZXRfcGxheV9tb2RlGAsgASgLMiEubWNwLnVuaXR5LnYx",
-            "LlNldFBsYXlNb2RlUmVzcG9uc2VIABIuCgZhc3NldHMYFCABKAsyHC5tY3Au",
-            "dW5pdHkudjEuQXNzZXRzUmVzcG9uc2VIABIsCgVidWlsZBgeIAEoCzIbLm1j",
-            "cC51bml0eS52MS5CdWlsZFJlc3BvbnNlSAASOwoNb3BlcmF0aW9uX2dldBgo",
-            "IAEoCzIiLm1jcC51bml0eS52MS5PcGVyYXRpb25HZXRSZXNwb25zZUgAEkEK",
-            "EG9wZXJhdGlvbl9jYW5jZWwYKSABKAsyJS5tY3AudW5pdHkudjEuT3BlcmF0",
-            "aW9uQ2FuY2VsUmVzcG9uc2VIAEIJCgdwYXlsb2FkIoEBCghJcGNFdmVudBIX",
-            "Cg9tb25vdG9uaWNfdHNfbnMYASABKAMSJQoDbG9nGAogASgLMhYubWNwLnVu",
-            "aXR5LnYxLkxvZ0V2ZW50SAASKgoCb3AYCyABKAsyHC5tY3AudW5pdHkudjEu",
-            "T3BlcmF0aW9uRXZlbnRIAEIJCgdwYXlsb2FkYgZwcm90bzM="));
+            "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQiiQMKCklwY1JlcXVl",
+            "c3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYxLkhlYWx0aFJlcXVl",
+            "c3RIABIsCg1nZXRfcGxheV9tb2RlGAogASgLMhMubWNwLnVuaXR5LnYxLkVt",
+            "cHR5SAASOQoNc2V0X3BsYXlfbW9kZRgLIAEoCzIgLm1jcC51bml0eS52MS5T",
+            "ZXRQbGF5TW9kZVJlcXVlc3RIABItCgZhc3NldHMYFCABKAsyGy5tY3AudW5p",
+            "dHkudjEuQXNzZXRzUmVxdWVzdEgAEisKBWJ1aWxkGB4gASgLMhoubWNwLnVu",
+            "aXR5LnYxLkJ1aWxkUmVxdWVzdEgAEjoKDW9wZXJhdGlvbl9nZXQYKCABKAsy",
+            "IS5tY3AudW5pdHkudjEuT3BlcmF0aW9uR2V0UmVxdWVzdEgAEkAKEG9wZXJh",
+            "dGlvbl9jYW5jZWwYKSABKAsyJC5tY3AudW5pdHkudjEuT3BlcmF0aW9uQ2Fu",
+            "Y2VsUmVxdWVzdEgAQgkKB3BheWxvYWQitgMKC0lwY1Jlc3BvbnNlEhYKDmNv",
+            "cnJlbGF0aW9uX2lkGAEgASgJEi4KBmhlYWx0aBgCIAEoCzIcLm1jcC51bml0",
+            "eS52MS5IZWFsdGhSZXNwb25zZUgAEjoKDWdldF9wbGF5X21vZGUYCiABKAsy",
+            "IS5tY3AudW5pdHkudjEuR2V0UGxheU1vZGVSZXNwb25zZUgAEjoKDXNldF9w",
+            "bGF5X21vZGUYCyABKAsyIS5tY3AudW5pdHkudjEuU2V0UGxheU1vZGVSZXNw",
+            "b25zZUgAEi4KBmFzc2V0cxgUIAEoCzIcLm1jcC51bml0eS52MS5Bc3NldHNS",
+            "ZXNwb25zZUgAEiwKBWJ1aWxkGB4gASgLMhsubWNwLnVuaXR5LnYxLkJ1aWxk",
+            "UmVzcG9uc2VIABI7Cg1vcGVyYXRpb25fZ2V0GCggASgLMiIubWNwLnVuaXR5",
+            "LnYxLk9wZXJhdGlvbkdldFJlc3BvbnNlSAASQQoQb3BlcmF0aW9uX2NhbmNl",
+            "bBgpIAEoCzIlLm1jcC51bml0eS52MS5PcGVyYXRpb25DYW5jZWxSZXNwb25z",
+            "ZUgAQgkKB3BheWxvYWQigQEKCElwY0V2ZW50EhcKD21vbm90b25pY190c19u",
+            "cxgBIAEoAxIlCgNsb2cYCiABKAsyFi5tY3AudW5pdHkudjEuTG9nRXZlbnRI",
+            "ABIqCgJvcBgLIAEoCzIcLm1jcC51bml0eS52MS5PcGVyYXRpb25FdmVudEgA",
+            "QgkKB3BheWxvYWRiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEnvelope), global::Mcp.Unity.V1.IpcEnvelope.Parser, new[]{ "CorrelationId", "Request", "Response", "Event" }, new[]{ "Kind" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcHello), global::Mcp.Unity.V1.IpcHello.Parser, new[]{ "IpcVersion", "SchemaHash", "Token" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcWelcome), global::Mcp.Unity.V1.IpcWelcome.Parser, new[]{ "Ok", "Error" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Hello", "Health", "GetPlayMode", "SetPlayMode", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Welcome", "Health", "GetPlayMode", "SetPlayMode", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
@@ -465,531 +459,6 @@ namespace Mcp.Unity.V1 {
   }
 
   /// <summary>
-  /// Handshake messages
-  /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
-  public sealed partial class IpcHello : pb::IMessage<IpcHello>
-  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      , pb::IBufferMessage
-  #endif
-  {
-    private static readonly pb::MessageParser<IpcHello> _parser = new pb::MessageParser<IpcHello>(() => new IpcHello());
-    private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pb::MessageParser<IpcHello> Parser { get { return _parser; } }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pbr::MessageDescriptor Descriptor {
-      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[1]; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    pbr::MessageDescriptor pb::IMessage.Descriptor {
-      get { return Descriptor; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public IpcHello() {
-      OnConstruction();
-    }
-
-    partial void OnConstruction();
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public IpcHello(IpcHello other) : this() {
-      ipcVersion_ = other.ipcVersion_;
-      schemaHash_ = other.schemaHash_;
-      token_ = other.token_;
-      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public IpcHello Clone() {
-      return new IpcHello(this);
-    }
-
-    /// <summary>Field number for the "ipc_version" field.</summary>
-    public const int IpcVersionFieldNumber = 1;
-    private int ipcVersion_;
-    /// <summary>
-    /// Protocol version (e.g., 1)
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int IpcVersion {
-      get { return ipcVersion_; }
-      set {
-        ipcVersion_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "schema_hash" field.</summary>
-    public const int SchemaHashFieldNumber = 2;
-    private string schemaHash_ = "";
-    /// <summary>
-    /// Schema compatibility hash
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string SchemaHash {
-      get { return schemaHash_; }
-      set {
-        schemaHash_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
-    /// <summary>Field number for the "token" field.</summary>
-    public const int TokenFieldNumber = 3;
-    private string token_ = "";
-    /// <summary>
-    /// Optional authentication token
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string Token {
-      get { return token_; }
-      set {
-        token_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override bool Equals(object other) {
-      return Equals(other as IpcHello);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool Equals(IpcHello other) {
-      if (ReferenceEquals(other, null)) {
-        return false;
-      }
-      if (ReferenceEquals(other, this)) {
-        return true;
-      }
-      if (IpcVersion != other.IpcVersion) return false;
-      if (SchemaHash != other.SchemaHash) return false;
-      if (Token != other.Token) return false;
-      return Equals(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override int GetHashCode() {
-      int hash = 1;
-      if (IpcVersion != 0) hash ^= IpcVersion.GetHashCode();
-      if (SchemaHash.Length != 0) hash ^= SchemaHash.GetHashCode();
-      if (Token.Length != 0) hash ^= Token.GetHashCode();
-      if (_unknownFields != null) {
-        hash ^= _unknownFields.GetHashCode();
-      }
-      return hash;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override string ToString() {
-      return pb::JsonFormatter.ToDiagnosticString(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void WriteTo(pb::CodedOutputStream output) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      output.WriteRawMessage(this);
-    #else
-      if (IpcVersion != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(IpcVersion);
-      }
-      if (SchemaHash.Length != 0) {
-        output.WriteRawTag(18);
-        output.WriteString(SchemaHash);
-      }
-      if (Token.Length != 0) {
-        output.WriteRawTag(26);
-        output.WriteString(Token);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(output);
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (IpcVersion != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(IpcVersion);
-      }
-      if (SchemaHash.Length != 0) {
-        output.WriteRawTag(18);
-        output.WriteString(SchemaHash);
-      }
-      if (Token.Length != 0) {
-        output.WriteRawTag(26);
-        output.WriteString(Token);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(ref output);
-      }
-    }
-    #endif
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int CalculateSize() {
-      int size = 0;
-      if (IpcVersion != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(IpcVersion);
-      }
-      if (SchemaHash.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(SchemaHash);
-      }
-      if (Token.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Token);
-      }
-      if (_unknownFields != null) {
-        size += _unknownFields.CalculateSize();
-      }
-      return size;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(IpcHello other) {
-      if (other == null) {
-        return;
-      }
-      if (other.IpcVersion != 0) {
-        IpcVersion = other.IpcVersion;
-      }
-      if (other.SchemaHash.Length != 0) {
-        SchemaHash = other.SchemaHash;
-      }
-      if (other.Token.Length != 0) {
-        Token = other.Token;
-      }
-      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(pb::CodedInputStream input) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      input.ReadRawMessage(this);
-    #else
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
-            break;
-          case 8: {
-            IpcVersion = input.ReadInt32();
-            break;
-          }
-          case 18: {
-            SchemaHash = input.ReadString();
-            break;
-          }
-          case 26: {
-            Token = input.ReadString();
-            break;
-          }
-        }
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
-            break;
-          case 8: {
-            IpcVersion = input.ReadInt32();
-            break;
-          }
-          case 18: {
-            SchemaHash = input.ReadString();
-            break;
-          }
-          case 26: {
-            Token = input.ReadString();
-            break;
-          }
-        }
-      }
-    }
-    #endif
-
-  }
-
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
-  public sealed partial class IpcWelcome : pb::IMessage<IpcWelcome>
-  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      , pb::IBufferMessage
-  #endif
-  {
-    private static readonly pb::MessageParser<IpcWelcome> _parser = new pb::MessageParser<IpcWelcome>(() => new IpcWelcome());
-    private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pb::MessageParser<IpcWelcome> Parser { get { return _parser; } }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pbr::MessageDescriptor Descriptor {
-      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[2]; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    pbr::MessageDescriptor pb::IMessage.Descriptor {
-      get { return Descriptor; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public IpcWelcome() {
-      OnConstruction();
-    }
-
-    partial void OnConstruction();
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public IpcWelcome(IpcWelcome other) : this() {
-      ok_ = other.ok_;
-      error_ = other.error_;
-      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public IpcWelcome Clone() {
-      return new IpcWelcome(this);
-    }
-
-    /// <summary>Field number for the "ok" field.</summary>
-    public const int OkFieldNumber = 1;
-    private bool ok_;
-    /// <summary>
-    /// true if handshake accepted
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool Ok {
-      get { return ok_; }
-      set {
-        ok_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "error" field.</summary>
-    public const int ErrorFieldNumber = 2;
-    private string error_ = "";
-    /// <summary>
-    /// Error message if ok=false
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string Error {
-      get { return error_; }
-      set {
-        error_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override bool Equals(object other) {
-      return Equals(other as IpcWelcome);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool Equals(IpcWelcome other) {
-      if (ReferenceEquals(other, null)) {
-        return false;
-      }
-      if (ReferenceEquals(other, this)) {
-        return true;
-      }
-      if (Ok != other.Ok) return false;
-      if (Error != other.Error) return false;
-      return Equals(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override int GetHashCode() {
-      int hash = 1;
-      if (Ok != false) hash ^= Ok.GetHashCode();
-      if (Error.Length != 0) hash ^= Error.GetHashCode();
-      if (_unknownFields != null) {
-        hash ^= _unknownFields.GetHashCode();
-      }
-      return hash;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override string ToString() {
-      return pb::JsonFormatter.ToDiagnosticString(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void WriteTo(pb::CodedOutputStream output) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      output.WriteRawMessage(this);
-    #else
-      if (Ok != false) {
-        output.WriteRawTag(8);
-        output.WriteBool(Ok);
-      }
-      if (Error.Length != 0) {
-        output.WriteRawTag(18);
-        output.WriteString(Error);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(output);
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Ok != false) {
-        output.WriteRawTag(8);
-        output.WriteBool(Ok);
-      }
-      if (Error.Length != 0) {
-        output.WriteRawTag(18);
-        output.WriteString(Error);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(ref output);
-      }
-    }
-    #endif
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int CalculateSize() {
-      int size = 0;
-      if (Ok != false) {
-        size += 1 + 1;
-      }
-      if (Error.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Error);
-      }
-      if (_unknownFields != null) {
-        size += _unknownFields.CalculateSize();
-      }
-      return size;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(IpcWelcome other) {
-      if (other == null) {
-        return;
-      }
-      if (other.Ok != false) {
-        Ok = other.Ok;
-      }
-      if (other.Error.Length != 0) {
-        Error = other.Error;
-      }
-      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(pb::CodedInputStream input) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      input.ReadRawMessage(this);
-    #else
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
-            break;
-          case 8: {
-            Ok = input.ReadBool();
-            break;
-          }
-          case 18: {
-            Error = input.ReadString();
-            break;
-          }
-        }
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
-            break;
-          case 8: {
-            Ok = input.ReadBool();
-            break;
-          }
-          case 18: {
-            Error = input.ReadString();
-            break;
-          }
-        }
-      }
-    }
-    #endif
-
-  }
-
-  /// <summary>
   /// Request message with typed payloads
   /// </summary>
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
@@ -1007,7 +476,7 @@ namespace Mcp.Unity.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1028,9 +497,6 @@ namespace Mcp.Unity.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public IpcRequest(IpcRequest other) : this() {
       switch (other.PayloadCase) {
-        case PayloadOneofCase.Hello:
-          Hello = other.Hello.Clone();
-          break;
         case PayloadOneofCase.Health:
           Health = other.Health.Clone();
           break;
@@ -1063,23 +529,8 @@ namespace Mcp.Unity.V1 {
       return new IpcRequest(this);
     }
 
-    /// <summary>Field number for the "hello" field.</summary>
-    public const int HelloFieldNumber = 1;
-    /// <summary>
-    /// Handshake
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Mcp.Unity.V1.IpcHello Hello {
-      get { return payloadCase_ == PayloadOneofCase.Hello ? (global::Mcp.Unity.V1.IpcHello) payload_ : null; }
-      set {
-        payload_ = value;
-        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Hello;
-      }
-    }
-
     /// <summary>Field number for the "health" field.</summary>
-    public const int HealthFieldNumber = 2;
+    public const int HealthFieldNumber = 1;
     /// <summary>
     /// Health check
     /// </summary>
@@ -1181,8 +632,7 @@ namespace Mcp.Unity.V1 {
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
       None = 0,
-      Hello = 1,
-      Health = 2,
+      Health = 1,
       GetPlayMode = 10,
       SetPlayMode = 11,
       Assets = 20,
@@ -1219,7 +669,6 @@ namespace Mcp.Unity.V1 {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(Hello, other.Hello)) return false;
       if (!object.Equals(Health, other.Health)) return false;
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
@@ -1235,7 +684,6 @@ namespace Mcp.Unity.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (payloadCase_ == PayloadOneofCase.Hello) hash ^= Hello.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Health) hash ^= Health.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
@@ -1262,12 +710,8 @@ namespace Mcp.Unity.V1 {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (payloadCase_ == PayloadOneofCase.Hello) {
-        output.WriteRawTag(10);
-        output.WriteMessage(Hello);
-      }
       if (payloadCase_ == PayloadOneofCase.Health) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(10);
         output.WriteMessage(Health);
       }
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) {
@@ -1304,12 +748,8 @@ namespace Mcp.Unity.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (payloadCase_ == PayloadOneofCase.Hello) {
-        output.WriteRawTag(10);
-        output.WriteMessage(Hello);
-      }
       if (payloadCase_ == PayloadOneofCase.Health) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(10);
         output.WriteMessage(Health);
       }
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) {
@@ -1346,9 +786,6 @@ namespace Mcp.Unity.V1 {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (payloadCase_ == PayloadOneofCase.Hello) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Hello);
-      }
       if (payloadCase_ == PayloadOneofCase.Health) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Health);
       }
@@ -1383,12 +820,6 @@ namespace Mcp.Unity.V1 {
         return;
       }
       switch (other.PayloadCase) {
-        case PayloadOneofCase.Hello:
-          if (Hello == null) {
-            Hello = new global::Mcp.Unity.V1.IpcHello();
-          }
-          Hello.MergeFrom(other.Hello);
-          break;
         case PayloadOneofCase.Health:
           if (Health == null) {
             Health = new global::Mcp.Unity.V1.HealthRequest();
@@ -1453,15 +884,6 @@ namespace Mcp.Unity.V1 {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            global::Mcp.Unity.V1.IpcHello subBuilder = new global::Mcp.Unity.V1.IpcHello();
-            if (payloadCase_ == PayloadOneofCase.Hello) {
-              subBuilder.MergeFrom(Hello);
-            }
-            input.ReadMessage(subBuilder);
-            Hello = subBuilder;
-            break;
-          }
-          case 18: {
             global::Mcp.Unity.V1.HealthRequest subBuilder = new global::Mcp.Unity.V1.HealthRequest();
             if (payloadCase_ == PayloadOneofCase.Health) {
               subBuilder.MergeFrom(Health);
@@ -1544,15 +966,6 @@ namespace Mcp.Unity.V1 {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            global::Mcp.Unity.V1.IpcHello subBuilder = new global::Mcp.Unity.V1.IpcHello();
-            if (payloadCase_ == PayloadOneofCase.Hello) {
-              subBuilder.MergeFrom(Hello);
-            }
-            input.ReadMessage(subBuilder);
-            Hello = subBuilder;
-            break;
-          }
-          case 18: {
             global::Mcp.Unity.V1.HealthRequest subBuilder = new global::Mcp.Unity.V1.HealthRequest();
             if (payloadCase_ == PayloadOneofCase.Health) {
               subBuilder.MergeFrom(Health);
@@ -1640,7 +1053,7 @@ namespace Mcp.Unity.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[4]; }
+      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1662,9 +1075,6 @@ namespace Mcp.Unity.V1 {
     public IpcResponse(IpcResponse other) : this() {
       correlationId_ = other.correlationId_;
       switch (other.PayloadCase) {
-        case PayloadOneofCase.Welcome:
-          Welcome = other.Welcome.Clone();
-          break;
         case PayloadOneofCase.Health:
           Health = other.Health.Clone();
           break;
@@ -1712,23 +1122,8 @@ namespace Mcp.Unity.V1 {
       }
     }
 
-    /// <summary>Field number for the "welcome" field.</summary>
-    public const int WelcomeFieldNumber = 2;
-    /// <summary>
-    /// Handshake
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Mcp.Unity.V1.IpcWelcome Welcome {
-      get { return payloadCase_ == PayloadOneofCase.Welcome ? (global::Mcp.Unity.V1.IpcWelcome) payload_ : null; }
-      set {
-        payload_ = value;
-        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Welcome;
-      }
-    }
-
     /// <summary>Field number for the "health" field.</summary>
-    public const int HealthFieldNumber = 3;
+    public const int HealthFieldNumber = 2;
     /// <summary>
     /// Health check
     /// </summary>
@@ -1830,8 +1225,7 @@ namespace Mcp.Unity.V1 {
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
       None = 0,
-      Welcome = 2,
-      Health = 3,
+      Health = 2,
       GetPlayMode = 10,
       SetPlayMode = 11,
       Assets = 20,
@@ -1869,7 +1263,6 @@ namespace Mcp.Unity.V1 {
         return true;
       }
       if (CorrelationId != other.CorrelationId) return false;
-      if (!object.Equals(Welcome, other.Welcome)) return false;
       if (!object.Equals(Health, other.Health)) return false;
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
@@ -1886,7 +1279,6 @@ namespace Mcp.Unity.V1 {
     public override int GetHashCode() {
       int hash = 1;
       if (CorrelationId.Length != 0) hash ^= CorrelationId.GetHashCode();
-      if (payloadCase_ == PayloadOneofCase.Welcome) hash ^= Welcome.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Health) hash ^= Health.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
@@ -1917,12 +1309,8 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(10);
         output.WriteString(CorrelationId);
       }
-      if (payloadCase_ == PayloadOneofCase.Welcome) {
-        output.WriteRawTag(18);
-        output.WriteMessage(Welcome);
-      }
       if (payloadCase_ == PayloadOneofCase.Health) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(18);
         output.WriteMessage(Health);
       }
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) {
@@ -1963,12 +1351,8 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(10);
         output.WriteString(CorrelationId);
       }
-      if (payloadCase_ == PayloadOneofCase.Welcome) {
-        output.WriteRawTag(18);
-        output.WriteMessage(Welcome);
-      }
       if (payloadCase_ == PayloadOneofCase.Health) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(18);
         output.WriteMessage(Health);
       }
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) {
@@ -2008,9 +1392,6 @@ namespace Mcp.Unity.V1 {
       if (CorrelationId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(CorrelationId);
       }
-      if (payloadCase_ == PayloadOneofCase.Welcome) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Welcome);
-      }
       if (payloadCase_ == PayloadOneofCase.Health) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Health);
       }
@@ -2048,12 +1429,6 @@ namespace Mcp.Unity.V1 {
         CorrelationId = other.CorrelationId;
       }
       switch (other.PayloadCase) {
-        case PayloadOneofCase.Welcome:
-          if (Welcome == null) {
-            Welcome = new global::Mcp.Unity.V1.IpcWelcome();
-          }
-          Welcome.MergeFrom(other.Welcome);
-          break;
         case PayloadOneofCase.Health:
           if (Health == null) {
             Health = new global::Mcp.Unity.V1.HealthResponse();
@@ -2122,15 +1497,6 @@ namespace Mcp.Unity.V1 {
             break;
           }
           case 18: {
-            global::Mcp.Unity.V1.IpcWelcome subBuilder = new global::Mcp.Unity.V1.IpcWelcome();
-            if (payloadCase_ == PayloadOneofCase.Welcome) {
-              subBuilder.MergeFrom(Welcome);
-            }
-            input.ReadMessage(subBuilder);
-            Welcome = subBuilder;
-            break;
-          }
-          case 26: {
             global::Mcp.Unity.V1.HealthResponse subBuilder = new global::Mcp.Unity.V1.HealthResponse();
             if (payloadCase_ == PayloadOneofCase.Health) {
               subBuilder.MergeFrom(Health);
@@ -2217,15 +1583,6 @@ namespace Mcp.Unity.V1 {
             break;
           }
           case 18: {
-            global::Mcp.Unity.V1.IpcWelcome subBuilder = new global::Mcp.Unity.V1.IpcWelcome();
-            if (payloadCase_ == PayloadOneofCase.Welcome) {
-              subBuilder.MergeFrom(Welcome);
-            }
-            input.ReadMessage(subBuilder);
-            Welcome = subBuilder;
-            break;
-          }
-          case 26: {
             global::Mcp.Unity.V1.HealthResponse subBuilder = new global::Mcp.Unity.V1.HealthResponse();
             if (payloadCase_ == PayloadOneofCase.Health) {
               subBuilder.MergeFrom(Health);
@@ -2313,7 +1670,7 @@ namespace Mcp.Unity.V1 {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[5]; }
+      get { return global::Mcp.Unity.V1.IpcReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
