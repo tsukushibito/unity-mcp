@@ -40,9 +40,13 @@ cargo test -- --nocapture
 cargo test <module_or_test_name>
 cargo test # All tests including IPC integration tests
 
-# Development workflow after proto changes
-cargo clean  # Force rebuild when proto files change
-cargo build
+# Protocol Buffer generation (when proto files change)
+./scripts/generate-rust-proto.sh  # Generate Rust structs from proto files
+git add src/generated/             # Commit generated files
+git commit -m "regenerate proto files"
+
+# Development workflow
+cargo build  # Fast build (no proto generation)
 
 # Run server locally
 cargo run
@@ -55,7 +59,8 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 ```
 
 **Key Development Notes:**
-- Protocol buffer changes require clean rebuild to regenerate code properly
+- Protocol buffer changes require manual regeneration using `./scripts/generate-rust-proto.sh`
+- Generated proto files are committed to Git for consistent builds
 - CI/CD requires protoc 3.21.12 and runs matrix testing on Ubuntu/macOS
 - IPC endpoints are OS-specific: Unix domain sockets on Unix-like systems, Named pipes on Windows
 - Use scripts/ directory for additional wrapper commands
