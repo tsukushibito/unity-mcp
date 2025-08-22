@@ -14,10 +14,12 @@ args = [
     "serena",
     "start-mcp-server",
     "--context",
-    "ide-assistant",
-    "--project",
-    "/workspaces/unity-mcp",
+    "codex",
 ]
+
+[mcp_servers.brave-search]
+command = "npx"
+args = ["-y", "@brave/brave-search-mcp-server", "--transport", "stdio"]
 # env = {}
 
 # NOTE: Codex currently supports only stdio-launched MCP servers.

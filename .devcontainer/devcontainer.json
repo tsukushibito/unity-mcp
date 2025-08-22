@@ -36,6 +36,11 @@
 	"features": {},
 	// Post-create bootstrap
 	"postCreateCommand": "/bin/sh .devcontainer/setup.sh",
+	"forwardPorts": [
+		24282,
+		24283,
+		24284
+	],
 	// VS Code customizations (extensions + performance excludes)
 	"customizations": {
 		"vscode": {
