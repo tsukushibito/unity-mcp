@@ -65,20 +65,8 @@ pub fn default_endpoint() -> Endpoint {
     if let Ok(raw) = env::var("MCP_IPC_ENDPOINT") {
         return parse_endpoint(&raw);
     }
-    // OS-specific defaults
-    cfg_if::cfg_if! {
-        if #[cfg(unix)] {
-            let dir = std::env::var("XDG_RUNTIME_DIR")
-                .ok()
-                .map(PathBuf::from)
-                .unwrap_or(std::env::temp_dir());
-            Endpoint::Unix(dir.join("unity-mcp").join("ipc.sock"))
-        } else if #[cfg(windows)] {
-            Endpoint::Pipe(r"\\.\pipe\unity-mcp\default".to_string())
-        } else {
-            Endpoint::Tcp("127.0.0.1:7777".to_string())
-        }
-    }
+    // Use TCP as default for all platforms to match Unity bridge
+    Endpoint::Tcp("127.0.0.1:7777".to_string())
 }
 
 pub fn parse_endpoint(s: &str) -> Endpoint {
@@ -139,13 +127,11 @@ mod tests {
     fn test_default_endpoint() {
         let endpoint = default_endpoint();
         match endpoint {
-            #[cfg(unix)]
-            Endpoint::Unix(_) => {} // Expected on Unix
-            #[cfg(windows)]
-            Endpoint::Pipe(_) => {} // Expected on Windows
-            Endpoint::Tcp(_) => {} // Expected on other platforms
+            Endpoint::Tcp(addr) => {
+                assert_eq!(addr, "127.0.0.1:7777");
+            }
             #[allow(unreachable_patterns)]
-            _ => panic!("Unexpected endpoint type"),
+            _ => panic!("Expected TCP endpoint, got {:?}", endpoint),
         }
     }
 }
