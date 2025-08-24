@@ -40,6 +40,10 @@ cargo test -- --nocapture
 cargo test <module_or_test_name>
 cargo test # All tests including IPC integration tests
 
+# Integration tests with Unity Editor
+export MCP_IPC_TOKEN=test-token  # Required for IPC authentication
+cargo test test_assets_operations_end_to_end -- --nocapture
+
 # Protocol Buffer generation (when proto files change)
 ./scripts/generate-rust-proto.sh  # Generate Rust structs from proto files
 git add src/generated/             # Commit generated files
