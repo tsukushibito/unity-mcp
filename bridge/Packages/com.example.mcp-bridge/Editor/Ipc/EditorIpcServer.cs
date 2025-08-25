@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 using Google.Protobuf;
 using Pb = Mcp.Unity.V1;
+using Mcp.Unity.V1.Ipc.Infra;
 
 namespace Mcp.Unity.V1.Ipc
 {
@@ -39,7 +40,11 @@ namespace Mcp.Unity.V1.Ipc
             _ = StartAsync();
 
             // Clean shutdown when Unity Editor closes
+            // TODO(UNITY_API): touches EditorApplication.quitting — must run on main via EditorDispatcher
             EditorApplication.quitting += Shutdown;
+#if UNITY_EDITOR && DEBUG
+            Diag.LogUnityApiAccess("EditorApplication.quitting", "EditorIpcServer.static_constructor");
+#endif
         }
 
         /// <summary>
@@ -66,6 +71,7 @@ namespace Mcp.Unity.V1.Ipc
                 Debug.Log("[EditorIpcServer] IPC server started successfully");
 
                 // Start accepting connections in background
+                // TODO(BG_ORIGIN): Task.Run creates background thread that may call Unity APIs
                 await Task.Run(() => AcceptConnectionsAsync(_cancellationTokenSource.Token));
             }
             catch (Exception ex)
@@ -121,6 +127,7 @@ namespace Mcp.Unity.V1.Ipc
                     {
                         var stream = await _transport.AcceptAsync(cancellationToken);
                         // Handle each connection in its own task to allow concurrent connections
+                        // TODO(BG_ORIGIN): Task.Run creates background thread that may call Unity APIs
                         _ = Task.Run(() => HandleConnectionAsync(stream, cancellationToken), cancellationToken);
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -196,7 +203,7 @@ namespace Mcp.Unity.V1.Ipc
                     }
 
                     // 3. Editor state validation
-                    var editorValidation = ValidateEditorState();
+                    var editorValidation = await ValidateEditorStateAsync();
                     if (!editorValidation.IsValid)
                     {
                         await SendRejectAsync(stream, editorValidation.ErrorCode, editorValidation.ErrorMessage);
@@ -307,10 +314,18 @@ namespace Mcp.Unity.V1.Ipc
         {
             Debug.Log("[EditorIpcServer] Processing health request");
 
-            // Get Unity state information
-            var ready = !EditorApplication.isCompiling && !EditorApplication.isUpdating;
-            var version = Application.unityVersion;
-            var status = ready ? "OK" : "BUSY";
+            // Get Unity state information safely via EditorDispatcher
+            var (ready, version, status) = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+#if UNITY_EDITOR && DEBUG
+                Diag.LogUnityApiAccess("EditorApplication.isCompiling/isUpdating", "HandleHealthRequest");
+                Diag.LogUnityApiAccess("Application.unityVersion", "HandleHealthRequest");
+#endif
+                var isReady = !EditorApplication.isCompiling && !EditorApplication.isUpdating;
+                var unityVersion = Application.unityVersion;
+                var healthStatus = isReady ? "OK" : "BUSY";
+                return (isReady, unityVersion, healthStatus);
+            });
 
             var healthResponse = new HealthResponse
             {
@@ -338,9 +353,14 @@ namespace Mcp.Unity.V1.Ipc
 
             // Assets operations must run on the main thread
             AssetsResponse assetsResponse = null;
+            // TODO(BG_ORIGIN): Task.Run creates background thread, but uses EditorApplication.delayCall to marshal back to main
             await Task.Run(() =>
             {
                 // Use EditorApplication.delayCall to marshal to main thread
+                // TODO(UNITY_API): touches EditorApplication.delayCall — must run on main via EditorDispatcher
+#if UNITY_EDITOR && DEBUG
+                Diag.LogUnityApiAccess("EditorApplication.delayCall", "HandleAssetsRequest");
+#endif
                 var tcs = new TaskCompletionSource<AssetsResponse>();
                 EditorApplication.delayCall += () =>
                 {
@@ -387,9 +407,14 @@ namespace Mcp.Unity.V1.Ipc
 
             // Build operations must run on the main thread
             BuildResponse buildResponse = null;
+            // TODO(BG_ORIGIN): Task.Run creates background thread, but uses EditorApplication.delayCall to marshal back to main
             await Task.Run(() =>
             {
                 // Use EditorApplication.delayCall to marshal to main thread
+                // TODO(UNITY_API): touches EditorApplication.delayCall — must run on main via EditorDispatcher
+#if UNITY_EDITOR && DEBUG
+                Diag.LogUnityApiAccess("EditorApplication.delayCall", "HandleBuildRequest");
+#endif
                 var tcs = new TaskCompletionSource<BuildResponse>();
                 EditorApplication.delayCall += () =>
                 {
@@ -432,7 +457,7 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static async Task SendWelcomeAsync(Stream stream, IpcHello hello)
         {
-            var welcome = CreateWelcome(hello);
+            var welcome = await CreateWelcomeAsync(hello);
 
             // Store negotiated features for this connection
             lock (_streamLock)
@@ -447,7 +472,7 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Create welcome response with feature negotiation
         /// </summary>
-        private static IpcWelcome CreateWelcome(IpcHello hello)
+        private static async Task<IpcWelcome> CreateWelcomeAsync(IpcHello hello)
         {
             var clientFeatures = hello.Features;
             var serverFeatures = Bridge.Editor.Ipc.ServerFeatureConfig.GetEnabledFeatures();
@@ -458,6 +483,16 @@ namespace Mcp.Unity.V1.Ipc
             Debug.Log($"[EditorIpcServer] Feature negotiation: client requested {clientFeatures.Count}, " +
                       $"server supports {serverFeatures.Count}, accepted {acceptedFeatures.Count}");
 
+            // Get Unity version and platform safely via EditorDispatcher
+            var (unityVersion, platformString) = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+#if UNITY_EDITOR && DEBUG
+                Diag.LogUnityApiAccess("Application.unityVersion", "CreateWelcomeAsync");
+                Diag.LogUnityApiAccess("Application.platform", "CreateWelcomeAsync");
+#endif
+                return (Application.unityVersion, Application.platform.ToString());
+            });
+
             return new IpcWelcome
             {
                 IpcVersion = hello.IpcVersion,
@@ -465,9 +500,9 @@ namespace Mcp.Unity.V1.Ipc
                 SchemaHash = hello.SchemaHash, // Will be implemented in Phase 5
                 ServerName = "unity-editor-bridge",
                 ServerVersion = GetPackageVersion(),
-                EditorVersion = Application.unityVersion,
+                EditorVersion = unityVersion,
                 SessionId = Guid.NewGuid().ToString(),
-                Meta = { { "platform", Application.platform.ToString() } }
+                Meta = { { "platform", platformString } }
             };
         }
 
@@ -652,15 +687,24 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Validate Unity Editor state
         /// </summary>
-        private static ValidationResult ValidateEditorState()
+        private static async Task<ValidationResult> ValidateEditorStateAsync()
         {
-            // Check if Unity Editor is in a valid state
-            if (EditorApplication.isCompiling)
+            // Check if Unity Editor is in a valid state safely via EditorDispatcher
+            var (isCompiling, isUpdating) = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+#if UNITY_EDITOR && DEBUG
+                Diag.LogUnityApiAccess("EditorApplication.isCompiling", "ValidateEditorStateAsync");
+                Diag.LogUnityApiAccess("EditorApplication.isUpdating", "ValidateEditorStateAsync");
+#endif
+                return (EditorApplication.isCompiling, EditorApplication.isUpdating);
+            });
+
+            if (isCompiling)
             {
                 return ValidationResult.Error(IpcReject.Types.Code.Unavailable, "editor compiling");
             }
 
-            if (EditorApplication.isUpdating)
+            if (isUpdating)
             {
                 return ValidationResult.Error(IpcReject.Types.Code.Unavailable, "editor updating");
             }
@@ -739,6 +783,10 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static void UpdateEditorStateCache()
         {
+            // TODO(UNITY_API): touches EditorApplication state — must run on main via EditorDispatcher
+#if UNITY_EDITOR && DEBUG
+            Diag.LogUnityApiAccess("EditorApplication.isCompiling/isUpdating", "UpdateEditorStateCache");
+#endif
             _cachedIsCompiling = EditorApplication.isCompiling;
             _cachedIsUpdating = EditorApplication.isUpdating;
         }

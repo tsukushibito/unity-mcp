@@ -12,6 +12,7 @@ namespace Mcp.Unity.V1.Ipc
     {
         static EditorLogBridge()
         {
+            // TODO(UNITY_API): touches Application.logMessageReceivedThreaded — must run on main via EditorDispatcher
             Application.logMessageReceivedThreaded += OnLog;
         }
 

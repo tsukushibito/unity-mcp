@@ -54,9 +54,11 @@ namespace Mcp.Unity.V1.Ipc
                         results.Add(new Pb.ImportAssetResult{ Path = p, Ok = false, Message = "invalid path"}); 
                         continue; 
                     }
+                    // TODO(UNITY_API): touches AssetDatabase — must run on main via EditorDispatcher
                     string guidBefore = AssetDatabase.AssetPathToGUID(p);
                     try 
                     {
+                        // TODO(UNITY_API): touches AssetDatabase — must run on main via EditorDispatcher
                         if (r.Recursive)
                             AssetDatabase.ImportAsset(p, ImportAssetOptions.ImportRecursive);
                         else
@@ -90,6 +92,7 @@ namespace Mcp.Unity.V1.Ipc
             if (!IsValidUnityPath(r.FromPath) || !IsValidUnityPath(r.ToPath))
                 return new Pb.AssetsResponse { StatusCode = 2, Message = "invalid path" };
             
+            // TODO(UNITY_API): touches AssetDatabase — must run on main via EditorDispatcher
             string error = AssetDatabase.MoveAsset(r.FromPath, r.ToPath);
             if (!string.IsNullOrEmpty(error))
                 return new Pb.AssetsResponse { StatusCode = 13, Message = error };
@@ -111,6 +114,7 @@ namespace Mcp.Unity.V1.Ipc
                     failed.Add(p); 
                     continue; 
                 }
+                // TODO(UNITY_API): touches AssetDatabase — must run on main via EditorDispatcher
                 bool ok = r.Soft ? AssetDatabase.MoveAssetToTrash(p) : AssetDatabase.DeleteAsset(p);
                 (ok ? deleted : failed).Add(p);
             }
@@ -122,6 +126,7 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static Pb.AssetsResponse Refresh(Pb.RefreshRequest r)
         {
+            // TODO(UNITY_API): touches AssetDatabase — must run on main via EditorDispatcher
             AssetDatabase.Refresh(r.Force ? ImportAssetOptions.ForceUpdate : ImportAssetOptions.Default);
             return new Pb.AssetsResponse { StatusCode = 0, Refresh = new Pb.RefreshResponse { Ok = true } };
         }
@@ -132,6 +137,7 @@ namespace Mcp.Unity.V1.Ipc
         private static Pb.AssetsResponse G2P(Pb.GuidToPathRequest r)
         {
             var map = new Pb.GuidToPathResponse();
+            // TODO(UNITY_API): touches AssetDatabase — must run on main via EditorDispatcher
             foreach (var g in r.Guids)
                 map.Map[g] = AssetDatabase.GUIDToAssetPath(g);
             return new Pb.AssetsResponse { StatusCode = 0, G2P = map };
@@ -143,6 +149,7 @@ namespace Mcp.Unity.V1.Ipc
         private static Pb.AssetsResponse P2G(Pb.PathToGuidRequest r)
         {
             var map = new Pb.PathToGuidResponse();
+            // TODO(UNITY_API): touches AssetDatabase — must run on main via EditorDispatcher
             foreach (var p in r.Paths)
                 map.Map[p] = AssetDatabase.AssetPathToGUID(p);
             return new Pb.AssetsResponse { StatusCode = 0, P2G = map };

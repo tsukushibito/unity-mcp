@@ -65,6 +65,7 @@ namespace Mcp.Unity.V1.Ipc
                     return new Pb.BuildPlayerResponse { StatusCode = 7, Message = pathError };
 
                 // 3. Scene validation
+                // TODO(UNITY_API): touches EditorBuildSettings — must run on main via EditorDispatcher
                 string[] scenes = (r.Scenes.Count > 0) ? 
                     r.Scenes.ToArray() : 
                     EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
@@ -73,6 +74,7 @@ namespace Mcp.Unity.V1.Ipc
                     return new Pb.BuildPlayerResponse { StatusCode = 2, Message = "no scenes" };
 
                 // 4. Platform switching
+                // TODO(UNITY_API): touches EditorUserBuildSettings — must run on main via EditorDispatcher
                 if (EditorUserBuildSettings.activeBuildTarget != target)
                 {
                     if (!EditorUserBuildSettings.SwitchActiveBuildTarget(group, target))
@@ -98,6 +100,7 @@ namespace Mcp.Unity.V1.Ipc
                 string op = OperationTracker.Start("BuildPlayer", $"{target} -> {outPath}");
                 var t0 = DateTime.UtcNow;
                 
+                // TODO(UNITY_API): touches BuildPipeline — must run on main via EditorDispatcher
                 BuildReport report = BuildPipeline.BuildPlayer(bpo);
                 var summary = report.summary;
                 var ok = summary.result == BuildResult.Succeeded;
@@ -142,6 +145,7 @@ namespace Mcp.Unity.V1.Ipc
                 var t0 = DateTime.UtcNow;
                 
                 // Use current active target (as per investigation results)
+                // TODO(UNITY_API): touches EditorUserBuildSettings/BuildPipeline — must run on main via EditorDispatcher
                 var target = EditorUserBuildSettings.activeBuildTarget;
                 BuildPipeline.BuildAssetBundles(outDir, opts, target);
                 

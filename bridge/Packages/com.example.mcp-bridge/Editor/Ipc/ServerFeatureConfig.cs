@@ -5,8 +5,32 @@ using UnityEngine;
 
 namespace Bridge.Editor.Ipc
 {
+    [InitializeOnLoad]
     public static class ServerFeatureConfig
     {
+        private static bool _isBuildSystemAvailable = true; // Cache for build system availability
+        
+        static ServerFeatureConfig()
+        {
+            // Initialize cache on main thread
+            UpdateBuildSystemAvailabilityCache();
+            
+            // Update cache when play mode changes
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+        
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            // Update cache when play mode state changes
+            UpdateBuildSystemAvailabilityCache();
+        }
+        
+        private static void UpdateBuildSystemAvailabilityCache()
+        {
+            // This runs on main thread, safe to access Unity APIs
+            _isBuildSystemAvailable = !EditorApplication.isPlayingOrWillChangePlaymode;
+        }
+
         public static HashSet<FeatureFlag> GetEnabledFeatures()
         {
             var features = new HashSet<FeatureFlag>();
@@ -16,8 +40,8 @@ namespace Bridge.Editor.Ipc
             features.Add(FeatureFlag.EventsLog);
             features.Add(FeatureFlag.OpsProgress);
             
-            // Conditionally enabled features
-            if (IsBuildSystemAvailable())
+            // Conditionally enabled features (using cached value)
+            if (_isBuildSystemAvailable)
             {
                 features.Add(FeatureFlag.BuildMin);
             }
@@ -39,12 +63,6 @@ namespace Bridge.Editor.Ipc
             }
             
             return features;
-        }
-        
-        private static bool IsBuildSystemAvailable()
-        {
-            // Check if build system is properly configured
-            return !EditorApplication.isPlayingOrWillChangePlaymode;
         }
     }
 }
