@@ -10,6 +10,7 @@ using UnityEngine;
 using Google.Protobuf;
 using Pb = Mcp.Unity.V1;
 using Mcp.Unity.V1.Ipc.Infra;
+using Bridge.Editor.Ipc.Infra;
 
 namespace Mcp.Unity.V1.Ipc
 {
@@ -23,8 +24,6 @@ namespace Mcp.Unity.V1.Ipc
         private static readonly object _streamLock = new();
         private static readonly Dictionary<Stream, Bridge.Editor.Ipc.FeatureGuard> _negotiatedFeatures = new();
         private static string _cachedToken;
-        private static bool _cachedIsCompiling;
-        private static bool _cachedIsUpdating;
 
         static EditorIpcServer()
         {
@@ -33,8 +32,6 @@ namespace Mcp.Unity.V1.Ipc
             // Cache authentication token on main thread
             _cachedToken = LoadTokenFromPrefs();
             
-            // Cache editor state on main thread
-            UpdateEditorStateCache();
 
             // Start the server automatically when Unity Editor loads
             _ = StartAsync();
@@ -314,18 +311,10 @@ namespace Mcp.Unity.V1.Ipc
         {
             Debug.Log("[EditorIpcServer] Processing health request");
 
-            // Get Unity state information safely via EditorDispatcher
-            var (ready, version, status) = await EditorDispatcher.RunOnMainAsync(() =>
-            {
-#if UNITY_EDITOR && DEBUG
-                Diag.LogUnityApiAccess("EditorApplication.isCompiling/isUpdating", "HandleHealthRequest");
-                Diag.LogUnityApiAccess("Application.unityVersion", "HandleHealthRequest");
-#endif
-                var isReady = !EditorApplication.isCompiling && !EditorApplication.isUpdating;
-                var unityVersion = Application.unityVersion;
-                var healthStatus = isReady ? "OK" : "BUSY";
-                return (isReady, unityVersion, healthStatus);
-            });
+            // Use EditorStateMirror for BG-safe reads
+            var ready = !EditorStateMirror.IsCompiling && !EditorStateMirror.IsUpdating;
+            var version = EditorStateMirror.UnityVersion;
+            var status = ready ? "OK" : "BUSY";
 
             var healthResponse = new HealthResponse
             {
@@ -366,6 +355,7 @@ namespace Mcp.Unity.V1.Ipc
                 {
                     try
                     {
+                        MainThreadGuard.AssertMainThread();
                         Bridge.Editor.Ipc.FeatureGuard features;
                         lock (_streamLock)
                         {
@@ -420,6 +410,7 @@ namespace Mcp.Unity.V1.Ipc
                 {
                     try
                     {
+                        MainThreadGuard.AssertMainThread();
                         Bridge.Editor.Ipc.FeatureGuard features;
                         lock (_streamLock)
                         {
@@ -486,6 +477,7 @@ namespace Mcp.Unity.V1.Ipc
             // Get Unity version and platform safely via EditorDispatcher
             var (unityVersion, platformString) = await EditorDispatcher.RunOnMainAsync(() =>
             {
+                MainThreadGuard.AssertMainThread();
 #if UNITY_EDITOR && DEBUG
                 Diag.LogUnityApiAccess("Application.unityVersion", "CreateWelcomeAsync");
                 Diag.LogUnityApiAccess("Application.platform", "CreateWelcomeAsync");
@@ -689,9 +681,10 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static async Task<ValidationResult> ValidateEditorStateAsync()
         {
-            // Check if Unity Editor is in a valid state safely via EditorDispatcher
+            // For critical handshake validation, use EditorDispatcher for strong correctness
             var (isCompiling, isUpdating) = await EditorDispatcher.RunOnMainAsync(() =>
             {
+                MainThreadGuard.AssertMainThread();
 #if UNITY_EDITOR && DEBUG
                 Diag.LogUnityApiAccess("EditorApplication.isCompiling", "ValidateEditorStateAsync");
                 Diag.LogUnityApiAccess("EditorApplication.isUpdating", "ValidateEditorStateAsync");
@@ -760,6 +753,8 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static string LoadTokenFromPrefs()
         {
+            MainThreadGuard.AssertMainThread();
+            
             // Try environment variable first
             var envToken = Environment.GetEnvironmentVariable("MCP_IPC_TOKEN");
             if (!string.IsNullOrEmpty(envToken))
@@ -778,18 +773,6 @@ namespace Mcp.Unity.V1.Ipc
             return null;
         }
 
-        /// <summary>
-        /// Update cached editor state (called on main thread)
-        /// </summary>
-        private static void UpdateEditorStateCache()
-        {
-            // TODO(UNITY_API): touches EditorApplication state — must run on main via EditorDispatcher
-#if UNITY_EDITOR && DEBUG
-            Diag.LogUnityApiAccess("EditorApplication.isCompiling/isUpdating", "UpdateEditorStateCache");
-#endif
-            _cachedIsCompiling = EditorApplication.isCompiling;
-            _cachedIsUpdating = EditorApplication.isUpdating;
-        }
 
         /// <summary>
         /// Register an active stream
