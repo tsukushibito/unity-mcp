@@ -3,22 +3,22 @@ use std::collections::HashSet;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum FeatureFlag {
     // Asset management
-    AssetsBasic,     // "assets.basic" - path↔guid, import, refresh
-    
+    AssetsBasic, // "assets.basic" - path↔guid, import, refresh
+
     // Build system
-    BuildMin,        // "build.min" - minimal player build with operation events
-    
+    BuildMin, // "build.min" - minimal player build with operation events
+
     // Events and logging
-    EventsLog,       // "events.log" - Unity log events
-    
+    EventsLog, // "events.log" - Unity log events
+
     // Operations
-    OpsProgress,     // "ops.progress" - generic progress events for long-running operations
-    
+    OpsProgress, // "ops.progress" - generic progress events for long-running operations
+
     // Future extensions
-    AssetsAdvanced,  // "assets.advanced" - asset streaming, dependencies
-    BuildFull,       // "build.full" - full build pipeline with addressables
-    EventsFull,      // "events.full" - detailed Unity events (scene, play mode, etc.)
-    
+    AssetsAdvanced, // "assets.advanced" - asset streaming, dependencies
+    BuildFull,      // "build.full" - full build pipeline with addressables
+    EventsFull,     // "events.full" - detailed Unity events (scene, play mode, etc.)
+
     // Unknown/unsupported
     Unknown(String),
 }
@@ -36,7 +36,7 @@ impl FeatureFlag {
             _ => Self::Unknown(s.to_string()),
         }
     }
-    
+
     pub fn to_string(&self) -> String {
         match self {
             Self::AssetsBasic => "assets.basic".to_string(),
@@ -49,7 +49,7 @@ impl FeatureFlag {
             Self::Unknown(s) => s.clone(),
         }
     }
-    
+
     pub fn is_supported_by_client() -> Vec<Self> {
         vec![
             Self::AssetsBasic,
@@ -58,7 +58,7 @@ impl FeatureFlag {
             Self::OpsProgress,
         ]
     }
-    
+
     /// Normalize feature string (lowercase, trim)
     pub fn normalize_string(s: &str) -> String {
         s.trim().to_lowercase()
@@ -76,7 +76,7 @@ impl FeatureSet {
             features: HashSet::new(),
         }
     }
-    
+
     pub fn from_strings(strings: &[String]) -> Self {
         let features = strings
             .iter()
@@ -85,34 +85,30 @@ impl FeatureSet {
             .collect();
         Self { features }
     }
-    
+
     pub fn to_strings(&self) -> Vec<String> {
-        self.features
-            .iter()
-            .map(|f| f.to_string())
-            .collect()
+        self.features.iter().map(|f| f.to_string()).collect()
     }
-    
+
     pub fn intersect(&self, other: &Self) -> Self {
-        let features = self.features
+        let features = self
+            .features
             .intersection(&other.features)
             .cloned()
             .collect();
         Self { features }
     }
-    
+
     pub fn contains(&self, feature: &FeatureFlag) -> bool {
         self.features.contains(feature)
     }
-    
+
     pub fn insert(&mut self, feature: FeatureFlag) {
         self.features.insert(feature);
     }
-    
+
     pub fn supported_by_client() -> Self {
-        let features = FeatureFlag::is_supported_by_client()
-            .into_iter()
-            .collect();
+        let features = FeatureFlag::is_supported_by_client().into_iter().collect();
         Self { features }
     }
 }
@@ -129,11 +125,20 @@ mod tests {
 
     #[test]
     fn test_feature_flag_from_string() {
-        assert_eq!(FeatureFlag::from_string("assets.basic"), FeatureFlag::AssetsBasic);
+        assert_eq!(
+            FeatureFlag::from_string("assets.basic"),
+            FeatureFlag::AssetsBasic
+        );
         assert_eq!(FeatureFlag::from_string("build.min"), FeatureFlag::BuildMin);
-        assert_eq!(FeatureFlag::from_string("events.log"), FeatureFlag::EventsLog);
-        assert_eq!(FeatureFlag::from_string("ops.progress"), FeatureFlag::OpsProgress);
-        
+        assert_eq!(
+            FeatureFlag::from_string("events.log"),
+            FeatureFlag::EventsLog
+        );
+        assert_eq!(
+            FeatureFlag::from_string("ops.progress"),
+            FeatureFlag::OpsProgress
+        );
+
         match FeatureFlag::from_string("unknown.feature") {
             FeatureFlag::Unknown(s) => assert_eq!(s, "unknown.feature"),
             _ => panic!("Expected Unknown variant"),
@@ -152,7 +157,7 @@ mod tests {
     fn test_feature_string_normalization() {
         let normalized = FeatureFlag::normalize_string(" Assets.Basic ");
         assert_eq!(normalized, "assets.basic");
-        
+
         let feature = FeatureFlag::from_string(&normalized);
         assert_eq!(feature, FeatureFlag::AssetsBasic);
     }
@@ -161,9 +166,13 @@ mod tests {
     fn test_feature_set_from_strings() {
         let client_features = vec!["assets.basic".to_string(), "unknown.feature".to_string()];
         let feature_set = FeatureSet::from_strings(&client_features);
-        
+
         // Unknown features should be filtered out during negotiation
-        assert!(!feature_set.to_strings().contains(&"unknown.feature".to_string()));
+        assert!(
+            !feature_set
+                .to_strings()
+                .contains(&"unknown.feature".to_string())
+        );
         assert!(feature_set.contains(&FeatureFlag::AssetsBasic));
     }
 
@@ -173,12 +182,12 @@ mod tests {
         client_features.insert(FeatureFlag::AssetsBasic);
         client_features.insert(FeatureFlag::BuildMin);
         client_features.insert(FeatureFlag::EventsLog);
-        
+
         let mut server_features = FeatureSet::new();
         server_features.insert(FeatureFlag::AssetsBasic);
         server_features.insert(FeatureFlag::EventsLog);
         server_features.insert(FeatureFlag::OpsProgress);
-        
+
         let negotiated = client_features.intersect(&server_features);
         assert!(negotiated.contains(&FeatureFlag::AssetsBasic));
         assert!(negotiated.contains(&FeatureFlag::EventsLog));

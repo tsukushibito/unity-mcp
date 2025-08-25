@@ -22,7 +22,9 @@ trait IpcStream: AsyncRead + AsyncWrite + Unpin + Send {}
 impl<T> IpcStream for T where T: AsyncRead + AsyncWrite + Unpin + Send {}
 
 use super::{
-    codec, features::{FeatureFlag, FeatureSet}, framing,
+    codec,
+    features::{FeatureFlag, FeatureSet},
+    framing,
     path::{Endpoint, IpcConfig, default_endpoint, parse_endpoint},
 };
 use crate::generated::mcp::unity::v1 as pb;
@@ -152,7 +154,7 @@ impl IpcClient {
         let features = self.inner.negotiated_features.lock().await;
         features.contains(&feature)
     }
-    
+
     pub async fn get_negotiated_features(&self) -> FeatureSet {
         self.inner.negotiated_features.lock().await.clone()
     }
@@ -167,10 +169,10 @@ impl IpcClient {
         // Check if assets.basic feature is negotiated
         if !self.has_feature(FeatureFlag::AssetsBasic).await {
             return Err(IpcError::UnsupportedFeature(
-                "assets.basic feature not negotiated".into()
+                "assets.basic feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Import(
@@ -206,10 +208,10 @@ impl IpcClient {
         // Check if assets.basic feature is negotiated
         if !self.has_feature(FeatureFlag::AssetsBasic).await {
             return Err(IpcError::UnsupportedFeature(
-                "assets.basic feature not negotiated".into()
+                "assets.basic feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Move(pb::MoveAssetRequest {
@@ -242,10 +244,10 @@ impl IpcClient {
         // Check if assets.basic feature is negotiated
         if !self.has_feature(FeatureFlag::AssetsBasic).await {
             return Err(IpcError::UnsupportedFeature(
-                "assets.basic feature not negotiated".into()
+                "assets.basic feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Delete(
@@ -276,10 +278,10 @@ impl IpcClient {
         // Check if assets.basic feature is negotiated
         if !self.has_feature(FeatureFlag::AssetsBasic).await {
             return Err(IpcError::UnsupportedFeature(
-                "assets.basic feature not negotiated".into()
+                "assets.basic feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::Refresh(pb::RefreshRequest {
@@ -310,10 +312,10 @@ impl IpcClient {
         // Check if assets.basic feature is negotiated
         if !self.has_feature(FeatureFlag::AssetsBasic).await {
             return Err(IpcError::UnsupportedFeature(
-                "assets.basic feature not negotiated".into()
+                "assets.basic feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::G2p(pb::GuidToPathRequest {
@@ -344,10 +346,10 @@ impl IpcClient {
         // Check if assets.basic feature is negotiated
         if !self.has_feature(FeatureFlag::AssetsBasic).await {
             return Err(IpcError::UnsupportedFeature(
-                "assets.basic feature not negotiated".into()
+                "assets.basic feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Assets(pb::AssetsRequest {
                 payload: Some(pb::assets_request::Payload::P2g(pb::PathToGuidRequest {
@@ -378,10 +380,10 @@ impl IpcClient {
         // Check if build.min feature is negotiated
         if !self.has_feature(FeatureFlag::BuildMin).await {
             return Err(IpcError::UnsupportedFeature(
-                "build.min feature not negotiated".into()
+                "build.min feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
                 payload: Some(pb::build_request::Payload::Player(req)),
@@ -403,13 +405,13 @@ impl IpcClient {
         req: pb::BuildAssetBundlesRequest,
         timeout: Duration,
     ) -> Result<pb::BuildAssetBundlesResponse, IpcError> {
-        // Check if build.min feature is negotiated  
+        // Check if build.min feature is negotiated
         if !self.has_feature(FeatureFlag::BuildMin).await {
             return Err(IpcError::UnsupportedFeature(
-                "build.min feature not negotiated".into()
+                "build.min feature not negotiated".into(),
             ));
         }
-        
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Build(pb::BuildRequest {
                 payload: Some(pb::build_request::Payload::Bundles(req)),
@@ -545,14 +547,14 @@ impl IpcClient {
         })
         .await
         .map_err(|_| IpcError::ConnectTimeout)??;
-        
+
         // Process negotiated features
         let negotiated = FeatureSet::from_strings(&welcome.accepted_features);
         {
             let mut features = inner.negotiated_features.lock().await;
             *features = negotiated.clone();
         }
-        
+
         // 4) Log successful handshake
         tracing::info!(
             "T01 Handshake OK: version={}, features={:?}, session={}, server={} {}",
@@ -610,7 +612,7 @@ impl IpcClient {
             Some(pb::ipc_control::Kind::Welcome(w)) => Ok(w),
             Some(pb::ipc_control::Kind::Reject(r)) => {
                 use pb::ipc_reject::Code;
-                
+
                 match r.code() {
                     Code::Unauthenticated => Err(IpcError::Authentication(r.message)),
                     Code::OutOfRange => Err(IpcError::VersionIncompatible(r.message)),
@@ -623,7 +625,9 @@ impl IpcClient {
                     }
                     Code::Unavailable => Err(IpcError::ServerUnavailable(r.message)),
                     Code::PermissionDenied => Err(IpcError::PermissionDenied(r.message)),
-                    Code::Internal => Err(IpcError::Handshake(format!("server error: {}", r.message))),
+                    Code::Internal => {
+                        Err(IpcError::Handshake(format!("server error: {}", r.message)))
+                    }
                 }
             }
             _ => Err(IpcError::Handshake("unexpected control response".into())),
@@ -634,7 +638,7 @@ impl IpcClient {
         let mut backoff_ms = 250u64;
         const MAX_BACKOFF_MS: u64 = 5000;
         let max_attempts = cfg.max_reconnect_attempts.unwrap_or(10);
-        
+
         for attempt in 1..=max_attempts {
             match Self::connect(cfg.clone()).await {
                 Ok(client) => return Ok(client),
@@ -651,25 +655,27 @@ impl IpcClient {
                         IpcError::FailedPrecondition(_) => false, // Don't retry precondition errors
                         _ => false,
                     };
-                    
+
                     if !should_retry || attempt == max_attempts {
                         return Err(e);
                     }
-                    
+
                     tracing::warn!(
-                        "Connection attempt {} failed: {}. Retrying in {}ms", 
-                        attempt, e, backoff_ms
+                        "Connection attempt {} failed: {}. Retrying in {}ms",
+                        attempt,
+                        e,
+                        backoff_ms
                     );
-                    
+
                     tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
-                    
+
                     // Exponential backoff with jitter
                     let jitter = rand::random::<u64>() % (backoff_ms / 4);
                     backoff_ms = std::cmp::min(backoff_ms * 2, MAX_BACKOFF_MS) + jitter;
                 }
             }
         }
-        
+
         unreachable!()
     }
 }
@@ -720,10 +726,7 @@ async fn connect_endpoint(
         #[cfg(windows)]
         Endpoint::Pipe(name) => {
             use tokio::net::windows::named_pipe::ClientOptions;
-            let fut = ClientOptions::new().open(name);
-            let stream = tokio_timeout(timeout, fut)
-                .await
-                .map_err(|_| IpcError::ConnectTimeout)??;
+            let stream = ClientOptions::new().open(name).map_err(IpcError::Io)?;
             Ok(Box::new(stream))
         }
         Endpoint::Tcp(addr) => {

@@ -21,10 +21,19 @@ namespace Mcp.Unity.V1.Ipc
         private static readonly List<Stream> _activeStreams = new();
         private static readonly object _streamLock = new();
         private static readonly Dictionary<Stream, Bridge.Editor.Ipc.FeatureGuard> _negotiatedFeatures = new();
+        private static string _cachedToken;
+        private static bool _cachedIsCompiling;
+        private static bool _cachedIsUpdating;
 
         static EditorIpcServer()
         {
             Debug.Log("[EditorIpcServer] Initializing IPC server...");
+
+            // Cache authentication token on main thread
+            _cachedToken = LoadTokenFromPrefs();
+            
+            // Cache editor state on main thread
+            UpdateEditorStateCache();
 
             // Start the server automatically when Unity Editor loads
             _ = StartAsync();
@@ -578,20 +587,20 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static ValidationResult ValidateToken(string token)
         {
-            // Check if token is empty
+            // Get expected token from configuration first
+            var expectedToken = GetConfiguredToken();
+            if (string.IsNullOrEmpty(expectedToken))
+            {
+                // Development mode - accept empty or non-empty token
+                return ValidationResult.Success();
+            }
+            
+            // Production mode - check if token is empty
             if (string.IsNullOrEmpty(token))
             {
                 return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated, "missing token");
             }
-
-            // Get expected token from configuration
-            var expectedToken = GetConfiguredToken();
-            if (string.IsNullOrEmpty(expectedToken))
-            {
-                // Development mode - accept any non-empty token
-                return ValidationResult.Success();
-            }
-
+            
             // Production mode - exact match required
             if (token != expectedToken)
             {
@@ -699,6 +708,14 @@ namespace Mcp.Unity.V1.Ipc
         /// </summary>
         private static string GetConfiguredToken()
         {
+            return _cachedToken;
+        }
+
+        /// <summary>
+        /// Load authentication token from preferences (called on main thread)
+        /// </summary>
+        private static string LoadTokenFromPrefs()
+        {
             // Try environment variable first
             var envToken = Environment.GetEnvironmentVariable("MCP_IPC_TOKEN");
             if (!string.IsNullOrEmpty(envToken))
@@ -706,7 +723,7 @@ namespace Mcp.Unity.V1.Ipc
                 return envToken;
             }
 
-            // Try EditorPrefs
+            // Try EditorPrefs (safe on main thread)
             var prefKey = "MCP.IpcToken";
             if (EditorPrefs.HasKey(prefKey))
             {
@@ -715,6 +732,15 @@ namespace Mcp.Unity.V1.Ipc
 
             // No token configured - development mode
             return null;
+        }
+
+        /// <summary>
+        /// Update cached editor state (called on main thread)
+        /// </summary>
+        private static void UpdateEditorStateCache()
+        {
+            _cachedIsCompiling = EditorApplication.isCompiling;
+            _cachedIsUpdating = EditorApplication.isUpdating;
         }
 
         /// <summary>

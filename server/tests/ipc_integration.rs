@@ -1,6 +1,10 @@
 use futures::{SinkExt, StreamExt};
 use server::generated::mcp::unity::v1 as pb;
-use server::ipc::{client::{IpcClient, IpcError}, path::IpcConfig, features::{FeatureFlag, FeatureSet}};
+use server::ipc::{
+    client::{IpcClient, IpcError},
+    features::{FeatureFlag, FeatureSet},
+    path::IpcConfig,
+};
 use server::ipc::{codec, framing};
 use tokio::{net::TcpListener, time::Duration};
 
@@ -15,7 +19,8 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
             // T01: Handle handshake with IpcControl
             if let Some(Ok(bytes)) = framed.next().await
                 && let Ok(control) = codec::decode_control(bytes.freeze())
-                && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind {
+                && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind
+            {
                 // Basic validation
                 if hello.token.is_empty() {
                     // Send reject
@@ -69,7 +74,8 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
                 while let Some(Ok(bytes)) = framed.next().await {
                     if let Ok(env) = codec::decode_envelope(bytes.freeze())
                         && let Some(pb::ipc_envelope::Kind::Request(req)) = env.kind
-                        && let Some(pb::ipc_request::Payload::Health(_)) = req.payload {
+                        && let Some(pb::ipc_request::Payload::Health(_)) = req.payload
+                    {
                         // Respond to health check
                         let health_resp = pb::HealthResponse {
                             ready: true,
@@ -81,14 +87,10 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
                             correlation_id: cid.clone(),
                             kind: None,
                         };
-                        resp_env.kind = Some(pb::ipc_envelope::Kind::Response(
-                            pb::IpcResponse {
-                                correlation_id: cid,
-                                payload: Some(pb::ipc_response::Payload::Health(
-                                    health_resp,
-                                )),
-                            },
-                        ));
+                        resp_env.kind = Some(pb::ipc_envelope::Kind::Response(pb::IpcResponse {
+                            correlation_id: cid,
+                            payload: Some(pb::ipc_response::Payload::Health(health_resp)),
+                        }));
                         let resp_bytes = codec::encode_envelope(&resp_env).unwrap();
                         let _ = framed.send(resp_bytes).await;
                     }
@@ -180,7 +182,7 @@ async fn test_connection_timeout() {
 
     let result = IpcClient::connect(cfg).await;
     assert!(result.is_err());
-    
+
     if let Err(e) = result {
         assert!(matches!(e, IpcError::ConnectTimeout));
     }
@@ -190,7 +192,7 @@ async fn test_connection_timeout() {
 async fn test_handshake_authentication_failure() -> anyhow::Result<()> {
     let port = 18802;
 
-    // Start mock server that will reject invalid tokens  
+    // Start mock server that will reject invalid tokens
     tokio::spawn(mock_unity_server(port));
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -207,7 +209,7 @@ async fn test_handshake_authentication_failure() -> anyhow::Result<()> {
 
     let result = IpcClient::connect(cfg).await;
     assert!(result.is_err());
-    
+
     if let Err(e) = result {
         assert!(matches!(e, IpcError::Authentication(_)));
         let error_msg = e.to_string();
@@ -227,7 +229,7 @@ async fn test_handshake_version_incompatible() -> anyhow::Result<()> {
 
     // TODO: Modify IpcClient to allow version override for testing
     // For now, this test validates the framework is in place
-    
+
     Ok(())
 }
 
@@ -282,7 +284,7 @@ async fn test_connect_with_retry_permanent_failure() -> anyhow::Result<()> {
     // Should fail immediately without retries for authentication errors
     let result = IpcClient::connect_with_retry(cfg).await;
     assert!(result.is_err());
-    
+
     if let Err(e) = result {
         assert!(matches!(e, IpcError::Authentication(_)));
     }
@@ -300,13 +302,13 @@ impl MockUnityServer {
         Self {
             supported_features: vec![
                 "assets.basic".to_string(),
-                "build.min".to_string(), 
+                "build.min".to_string(),
                 "events.log".to_string(),
                 "ops.progress".to_string(),
             ],
         }
     }
-    
+
     pub fn with_supported_features(mut self, features: Vec<&str>) -> Self {
         self.supported_features = features.into_iter().map(|s| s.to_string()).collect();
         self
@@ -324,8 +326,8 @@ impl MockUnityServer {
                 // Handle handshake
                 if let Some(Ok(bytes)) = framed.next().await
                     && let Ok(control) = codec::decode_control(bytes.freeze())
-                    && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind {
-                    
+                    && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind
+                {
                     // Feature negotiation - intersection
                     let client_features: Vec<String> = hello.features;
                     let accepted_features: Vec<String> = client_features
@@ -375,10 +377,9 @@ fn test_config(port: u16) -> IpcConfig {
 #[tokio::test]
 async fn test_feature_negotiation_intersection() -> anyhow::Result<()> {
     let port = 18901;
-    
+
     // Start mock server with limited feature support
-    let server = MockUnityServer::new()
-        .with_supported_features(vec!["assets.basic", "events.log"]);
+    let server = MockUnityServer::new().with_supported_features(vec!["assets.basic", "events.log"]);
     tokio::spawn(async move {
         let _ = server.start(port).await;
     });
@@ -388,11 +389,11 @@ async fn test_feature_negotiation_intersection() -> anyhow::Result<()> {
 
     let features = client.get_negotiated_features().await;
     let feature_strings = features.to_strings();
-    
+
     // Should contain features that both client and server support
     assert!(feature_strings.contains(&"assets.basic".to_string()));
     assert!(feature_strings.contains(&"events.log".to_string()));
-    
+
     // Should NOT contain features not supported by mock server
     assert!(!feature_strings.contains(&"build.min".to_string()));
     assert!(!feature_strings.contains(&"ops.progress".to_string()));
@@ -403,10 +404,9 @@ async fn test_feature_negotiation_intersection() -> anyhow::Result<()> {
 #[tokio::test]
 async fn test_feature_dependent_operation_rejection() -> anyhow::Result<()> {
     let port = 18902;
-    
+
     // Start mock server with NO assets.basic support
-    let server = MockUnityServer::new()
-        .with_supported_features(vec!["events.log"]);
+    let server = MockUnityServer::new().with_supported_features(vec!["events.log"]);
     tokio::spawn(async move {
         let _ = server.start(port).await;
     });
@@ -415,7 +415,9 @@ async fn test_feature_dependent_operation_rejection() -> anyhow::Result<()> {
     let client = IpcClient::connect(test_config(port)).await?;
 
     // Try to call assets_import - should fail due to missing feature
-    let result = client.assets_import(vec![], false, false, Duration::from_secs(1)).await;
+    let result = client
+        .assets_import(vec![], false, false, Duration::from_secs(1))
+        .await;
     assert!(matches!(result, Err(IpcError::UnsupportedFeature(_))));
 
     if let Err(IpcError::UnsupportedFeature(msg)) = result {
@@ -429,7 +431,7 @@ async fn test_feature_dependent_operation_rejection() -> anyhow::Result<()> {
 async fn test_unknown_features_filtered_during_negotiation() -> anyhow::Result<()> {
     let client_features = vec!["assets.basic".to_string(), "unknown.feature".to_string()];
     let feature_set = FeatureSet::from_strings(&client_features);
-    
+
     // Unknown features should be filtered out during negotiation
     let result_strings = feature_set.to_strings();
     assert!(!result_strings.contains(&"unknown.feature".to_string()));
@@ -438,11 +440,11 @@ async fn test_unknown_features_filtered_during_negotiation() -> anyhow::Result<(
     Ok(())
 }
 
-#[tokio::test] 
+#[tokio::test]
 async fn test_feature_string_normalization() -> anyhow::Result<()> {
     let normalized = FeatureFlag::normalize_string(" Assets.Basic ");
     assert_eq!(normalized, "assets.basic");
-    
+
     let feature = FeatureFlag::from_string(&normalized);
     assert_eq!(feature, FeatureFlag::AssetsBasic);
 
@@ -455,12 +457,12 @@ async fn test_feature_set_intersection() -> anyhow::Result<()> {
     client_features.insert(FeatureFlag::AssetsBasic);
     client_features.insert(FeatureFlag::BuildMin);
     client_features.insert(FeatureFlag::EventsLog);
-    
+
     let mut server_features = FeatureSet::new();
     server_features.insert(FeatureFlag::AssetsBasic);
     server_features.insert(FeatureFlag::EventsLog);
     server_features.insert(FeatureFlag::OpsProgress);
-    
+
     let negotiated = client_features.intersect(&server_features);
     assert!(negotiated.contains(&FeatureFlag::AssetsBasic));
     assert!(negotiated.contains(&FeatureFlag::EventsLog));

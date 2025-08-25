@@ -1,4 +1,6 @@
-use std::{env, path::PathBuf, time::Duration};
+#[cfg(unix)]
+use std::path::PathBuf;
+use std::{env, time::Duration};
 
 #[derive(Debug, Clone)]
 pub enum Endpoint {
@@ -70,8 +72,11 @@ pub fn default_endpoint() -> Endpoint {
 }
 
 pub fn parse_endpoint(s: &str) -> Endpoint {
-    if let Some(rest) = s.strip_prefix("unix://") {
-        return Endpoint::Unix(PathBuf::from(rest));
+    #[cfg(unix)]
+    {
+        if let Some(rest) = s.strip_prefix("unix://") {
+            return Endpoint::Unix(PathBuf::from(rest));
+        }
     }
     #[cfg(windows)]
     {

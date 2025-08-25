@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(cargo check:*)",
+      "Read(/D:\\GitHub\\unity-mcp/**)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge\\Packages\\com.example.mcp-bridge\\Editor\\Ipc/**)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge\\Packages\\com.example.mcp-bridge\\Editor\\Ipc/**)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
+      "Bash(cargo test:*)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
+      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
