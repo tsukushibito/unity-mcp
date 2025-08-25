@@ -154,6 +154,9 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Handle a single IPC connection
         /// </summary>
+        /// <summary>
+        /// Handle a single IPC connection
+        /// </summary>
         private static async Task HandleConnectionAsync(Stream stream, CancellationToken cancellationToken)
         {
             Debug.Log("[EditorIpcServer] Handling new connection");
@@ -182,47 +185,51 @@ namespace Mcp.Unity.V1.Ipc
                     var hello = control.Hello;
                     Debug.Log($"[EditorIpcServer] Received T01 handshake: version={hello.IpcVersion}, client={hello.ClientName}, features={string.Join(",", hello.Features)}");
 
-                    // Phase 3: Comprehensive validation
-                    // 1. Token validation
+                    // Phase 1: BG-safe validations first (can run before dispatcher)
                     var tokenValidation = ValidateToken(hello.Token);
-                    if (!tokenValidation.IsValid)
-                    {
-                        await SendRejectAsync(stream, tokenValidation.ErrorCode, tokenValidation.ErrorMessage);
-                        return;
-                    }
-
-                    // 2. Version compatibility check
                     var versionValidation = ValidateVersion(hello.IpcVersion);
-                    if (!versionValidation.IsValid)
-                    {
-                        await SendRejectAsync(stream, versionValidation.ErrorCode, versionValidation.ErrorMessage);
-                        return;
-                    }
-
-                    // 3. Editor state validation
-                    var editorValidation = await ValidateEditorStateAsync();
-                    if (!editorValidation.IsValid)
-                    {
-                        await SendRejectAsync(stream, editorValidation.ErrorCode, editorValidation.ErrorMessage);
-                        return;
-                    }
-
-                    // 4. Project root validation
                     var pathValidation = ValidateProjectRoot(hello.ProjectRoot);
-                    if (!pathValidation.IsValid)
+
+                    // Phase 2: Single main-thread block for final decision and message construction
+                    var controlMessage = await EditorDispatcher.RunOnMainAsync(() =>
                     {
-                        await SendRejectAsync(stream, pathValidation.ErrorCode, pathValidation.ErrorMessage);
+                        // Early reject decisions (no Unity API needed)
+                        if (!tokenValidation.IsValid)
+                            return new IpcControl { Reject = new IpcReject { Code = tokenValidation.ErrorCode, Message = tokenValidation.ErrorMessage } };
+                        
+                        if (!versionValidation.IsValid)
+                            return new IpcControl { Reject = new IpcReject { Code = versionValidation.ErrorCode, Message = versionValidation.ErrorMessage } };
+                        
+                        if (!pathValidation.IsValid)
+                            return new IpcControl { Reject = new IpcReject { Code = pathValidation.ErrorCode, Message = pathValidation.ErrorMessage } };
+
+                        // Unity API touches must be here
+                        MainThreadGuard.AssertMainThread();
+
+                        var editorValidation = ValidateEditorState(); // Synchronous, main-thread version
+                        if (!editorValidation.IsValid)
+                            return new IpcControl { Reject = new IpcReject { Code = editorValidation.ErrorCode, Message = editorValidation.ErrorMessage } };
+
+                        var welcome = CreateWelcome(hello); // Synchronous, main-thread version
+                        return new IpcControl { Welcome = welcome };
+                    });
+
+                    // Step 2: Send control response and handle result
+                    if (controlMessage.Reject != null)
+                    {
+                        await SendControlFrameAsync(stream, controlMessage);
+                        Debug.LogWarning($"[EditorIpcServer] Sent reject response: {controlMessage.Reject.Code} - {controlMessage.Reject.Message}");
                         return;
                     }
 
-                    // Step 2: Send T01 welcome response
-                    await SendWelcomeAsync(stream, hello);
+                    // Step 3: Send welcome and register features
+                    await SendWelcomeAsync(stream, controlMessage.Welcome);
                     Debug.Log($"[EditorIpcServer] T01 Handshake completed: session={hello.ClientName}");
 
-                    // Step 3: Register the stream as active
+                    // Step 4: Register the stream as active
                     RegisterStream(stream);
 
-                    // Step 4: Enter request processing loop
+                    // Step 5: Enter request processing loop
                     await ProcessRequestsAsync(stream, cancellationToken);
                 }
             }
@@ -232,7 +239,7 @@ namespace Mcp.Unity.V1.Ipc
             }
             finally
             {
-                // Step 5: Unregister the stream
+                // Step 6: Unregister the stream
                 UnregisterStream(stream);
             }
         }
@@ -446,10 +453,11 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Send T01 welcome response
         /// </summary>
-        private static async Task SendWelcomeAsync(Stream stream, IpcHello hello)
+        /// <summary>
+        /// Send T01 welcome response
+        /// </summary>
+        private static async Task SendWelcomeAsync(Stream stream, IpcWelcome welcome)
         {
-            var welcome = await CreateWelcomeAsync(hello);
-
             // Store negotiated features for this connection
             lock (_streamLock)
             {
@@ -463,8 +471,13 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Create welcome response with feature negotiation
         /// </summary>
-        private static async Task<IpcWelcome> CreateWelcomeAsync(IpcHello hello)
+        /// <summary>
+        /// Create welcome response with feature negotiation (must be called from main thread)
+        /// </summary>
+        private static IpcWelcome CreateWelcome(IpcHello hello)
         {
+            MainThreadGuard.AssertMainThread();
+
             var clientFeatures = hello.Features;
             var serverFeatures = Bridge.Editor.Ipc.ServerFeatureConfig.GetEnabledFeatures();
 
@@ -474,16 +487,13 @@ namespace Mcp.Unity.V1.Ipc
             Debug.Log($"[EditorIpcServer] Feature negotiation: client requested {clientFeatures.Count}, " +
                       $"server supports {serverFeatures.Count}, accepted {acceptedFeatures.Count}");
 
-            // Get Unity version and platform safely via EditorDispatcher
-            var (unityVersion, platformString) = await EditorDispatcher.RunOnMainAsync(() =>
-            {
-                MainThreadGuard.AssertMainThread();
+            // Get Unity version and platform (safe on main thread)
 #if UNITY_EDITOR && DEBUG
-                Diag.LogUnityApiAccess("Application.unityVersion", "CreateWelcomeAsync");
-                Diag.LogUnityApiAccess("Application.platform", "CreateWelcomeAsync");
+            Diag.LogUnityApiAccess("Application.unityVersion", "CreateWelcome");
+            Diag.LogUnityApiAccess("Application.platform", "CreateWelcome");
 #endif
-                return (Application.unityVersion, Application.platform.ToString());
-            });
+            var unityVersion = Application.unityVersion;
+            var platformString = Application.platform.ToString();
 
             return new IpcWelcome
             {
@@ -679,25 +689,23 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Validate Unity Editor state
         /// </summary>
-        private static async Task<ValidationResult> ValidateEditorStateAsync()
+        /// <summary>
+        /// Validate Unity Editor state (must be called from main thread)
+        /// </summary>
+        private static ValidationResult ValidateEditorState()
         {
-            // For critical handshake validation, use EditorDispatcher for strong correctness
-            var (isCompiling, isUpdating) = await EditorDispatcher.RunOnMainAsync(() =>
-            {
-                MainThreadGuard.AssertMainThread();
+            MainThreadGuard.AssertMainThread();
 #if UNITY_EDITOR && DEBUG
-                Diag.LogUnityApiAccess("EditorApplication.isCompiling", "ValidateEditorStateAsync");
-                Diag.LogUnityApiAccess("EditorApplication.isUpdating", "ValidateEditorStateAsync");
+            Diag.LogUnityApiAccess("EditorApplication.isCompiling", "ValidateEditorState");
+            Diag.LogUnityApiAccess("EditorApplication.isUpdating", "ValidateEditorState");
 #endif
-                return (EditorApplication.isCompiling, EditorApplication.isUpdating);
-            });
 
-            if (isCompiling)
+            if (EditorApplication.isCompiling)
             {
                 return ValidationResult.Error(IpcReject.Types.Code.Unavailable, "editor compiling");
             }
 
-            if (isUpdating)
+            if (EditorApplication.isUpdating)
             {
                 return ValidationResult.Error(IpcReject.Types.Code.Unavailable, "editor updating");
             }

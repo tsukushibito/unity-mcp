@@ -24,6 +24,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
         private TcpClient _tcpClient;
         private NetworkStream _stream;
         private bool _disposed;
+        private Pb.IpcWelcome _lastWelcome;
 
         public MockIpcClient(IPAddress address, int port)
         {
@@ -31,6 +32,9 @@ namespace Mcp.Unity.V1.Ipc.Tests
             _port = port;
         }
 
+        /// <summary>
+        /// Connect to the IPC server and perform handshake
+        /// </summary>
         /// <summary>
         /// Connect to the IPC server and perform handshake
         /// </summary>
@@ -69,6 +73,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
                 if (responseControl.Welcome != null)
                 {
                     Debug.Log($"[MockIpcClient] Handshake successful: {responseControl.Welcome.SessionId}");
+                    _lastWelcome = responseControl.Welcome; // Store for inspection
                     return true;
                 }
                 else if (responseControl.Reject != null)
@@ -82,6 +87,117 @@ namespace Mcp.Unity.V1.Ipc.Tests
             catch (Exception ex)
             {
                 Debug.LogError($"[MockIpcClient] Connection failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Connect with specific version for version testing
+        /// </summary>
+        public async Task<bool> ConnectWithVersionAsync(string token, string version, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _tcpClient = new TcpClient();
+                await _tcpClient.ConnectAsync(_address, _port);
+                _stream = _tcpClient.GetStream();
+
+                // Send T01 handshake with specific version
+                var hello = new Pb.IpcHello
+                {
+                    IpcVersion = version, // Use specified version
+                    ClientName = "mock-test-client-version",
+                    Token = token ?? "test-token",
+                    ProjectRoot = Directory.GetCurrentDirectory(),
+                    SchemaHash = "mock-hash"
+                };
+                hello.Features.AddRange(new[] { 
+                    Pb.FeatureFlag.AssetsBasic,
+                    Pb.FeatureFlag.BuildMin,
+                    Pb.FeatureFlag.EventsLog
+                });
+
+                var control = new Pb.IpcControl { Hello = hello };
+                await SendControlFrameAsync(control);
+
+                // Wait for welcome or reject
+                var responseFrame = await Framing.ReadFrameAsync(_stream);
+                if (responseFrame == null) return false;
+
+                var responseControl = Pb.IpcControl.Parser.ParseFrom(responseFrame);
+                
+                if (responseControl.Welcome != null)
+                {
+                    Debug.Log($"[MockIpcClient] Version handshake successful: {responseControl.Welcome.SessionId}");
+                    return true;
+                }
+                else if (responseControl.Reject != null)
+                {
+                    Debug.LogWarning($"[MockIpcClient] Version handshake rejected: {responseControl.Reject.Code} - {responseControl.Reject.Message}");
+                    return false;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[MockIpcClient] Version connection failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Connect with specific project root for path testing
+        /// </summary>
+        public async Task<bool> ConnectWithProjectRootAsync(string token, string projectRoot, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                _tcpClient = new TcpClient();
+                await _tcpClient.ConnectAsync(_address, _port);
+                _stream = _tcpClient.GetStream();
+
+                // Send T01 handshake with specific project root
+                var hello = new Pb.IpcHello
+                {
+                    IpcVersion = "1.0",
+                    ClientName = "mock-test-client-path",
+                    Token = token ?? "test-token",
+                    ProjectRoot = projectRoot, // Use specified project root
+                    SchemaHash = "mock-hash"
+                };
+                hello.Features.AddRange(new[] { 
+                    Pb.FeatureFlag.AssetsBasic,
+                    Pb.FeatureFlag.BuildMin,
+                    Pb.FeatureFlag.EventsLog
+                });
+
+                var control = new Pb.IpcControl { Hello = hello };
+                await SendControlFrameAsync(control);
+
+                // Wait for welcome or reject
+                var responseFrame = await Framing.ReadFrameAsync(_stream);
+                if (responseFrame == null) return false;
+
+                var responseControl = Pb.IpcControl.Parser.ParseFrom(responseFrame);
+                
+                if (responseControl.Welcome != null)
+                {
+                    Debug.Log($"[MockIpcClient] Path handshake successful: {responseControl.Welcome.SessionId}");
+                    _lastWelcome = responseControl.Welcome; // Store for inspection
+                    return true;
+                }
+                else if (responseControl.Reject != null)
+                {
+                    Debug.LogWarning($"[MockIpcClient] Path handshake rejected: {responseControl.Reject.Code} - {responseControl.Reject.Message}");
+                    return false;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[MockIpcClient] Path connection failed: {ex.Message}");
                 return false;
             }
         }
@@ -218,6 +334,14 @@ namespace Mcp.Unity.V1.Ipc.Tests
                 }
 #endif
             });
+        }
+
+        /// <summary>
+        /// Get the last received welcome message for testing
+        /// </summary>
+        public Pb.IpcWelcome GetLastWelcomeInfo()
+        {
+            return _lastWelcome;
         }
 
         private async Task SendControlFrameAsync(Pb.IpcControl control)
