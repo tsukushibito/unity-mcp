@@ -11,8 +11,10 @@ Purpose: Track remaining high-level work to reach the MVP DoD. Keep progress her
 ## Security
 - [ ] Enforce non-empty token (no dev mode)
   - [ ] Unity: Reject empty/missing token even when no expected token is configured
-  - [ ] Quick guidance in error message on how to set token
+  - [ ] Quick guidance in error message on how to set token (Unity: EditorUserSettingsのみ、MCP: プロセスenvまたは `.cargo/config.toml`)
+  - [ ] Unity token source is EditorUserSettings only（環境変数 `MCP_IPC_TOKEN` と `EditorPrefs` の使用は廃止）
   - [ ] EditMode test: empty/missing token → `UNAUTHENTICATED`
+  - [ ] EditMode test: EditorUserSettingsからのみ取得し、環境変数/EditorPrefsが設定されていても無視されること
 
 ## CI & Proto Parity
 - [ ] Add proto regeneration + diff check to CI (Rust side)
@@ -23,9 +25,10 @@ Purpose: Track remaining high-level work to reach the MVP DoD. Keep progress her
 ## Developer Experience
 - [ ] Quickstart doc for Direct IPC
   - [ ] Unity open → bridge auto-start (TCP 127.0.0.1:7777)
-  - [ ] Set `MCP_IPC_TOKEN`, `MCP_PROJECT_ROOT`
+  - [ ] Set token: Unity=EditorUserSettings（`MCP.IpcToken` のみ使用）、MCPサーバー=プロセスenv または `.cargo/config.toml`; Set `MCP_PROJECT_ROOT`
   - [ ] `cargo run --example test_unity_ipc` (health + log tail)
   - [ ] Troubleshooting (port busy, token mismatch, missing protobuf DLL, schema mismatch)
+ - [ ] (Optional) Unity SettingsProvider for EditorUserSettings編集UI（非必須・ポストMVP可）
 
 ## Examples
 - [ ] Extend `examples/test_unity_ipc.rs`
@@ -47,6 +50,7 @@ Purpose: Track remaining high-level work to reach the MVP DoD. Keep progress her
 
 ## Documentation
 - [ ] Error vocabulary table (`docs/errors.md`) and mapping notes (Unity → MCP)
+ - [ ] Token setup guide reflects EditorUserSettings-only policy and cautions against storing secrets in ProjectSettings/VCS
 
 ## Milestone Verification
 - [ ] Fresh clone E2E
@@ -61,4 +65,3 @@ Purpose: Track remaining high-level work to reach the MVP DoD. Keep progress her
 Notes:
 - Keep this list high-level; attach PRs/issues per item for details.
 - Items marked Optional can be deferred if core DoD is satisfied.
-

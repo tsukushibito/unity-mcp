@@ -19,14 +19,17 @@
   - Rust統合テストに「不一致→SchemaMismatch」を追加。
 - A2: トークン必須（No Dev Mode）
   - 期待トークン未設定でも、空/未設定トークンをReject（`UNAUTHENTICATED`）。
-  - エラー文面に設定方法（環境変数/EditorPrefs）を簡潔に案内。
+  - エラー文面に設定方法を簡潔に案内（Unity: EditorUserSettings のみ、MCPサーバー: プロセス起動時のenvまたは`.cargo/config.toml`）。
+  - Unity側は「EditorUserSettingsのみ」から取得する方針に変更（環境変数 `MCP_IPC_TOKEN` と `EditorPrefs` の使用は廃止）。
+  - EditorUserSettings対応の簡易設定UI（任意・`SettingsProvider`）を検討（MVP後でも可）。
 
 2) フェーズB — CIとSSoTの固定化
 - B1: Rust側 proto 再生成＋差分検出をCIへ追加（失敗時に明快なメッセージ）。
 - B2: C#の `SchemaHash` をRust `SCHEMA_HASH_HEX` からCIで生成し、ハッシュの単一SOT化。
 
 3) フェーズC — 開発者体験（DX）
-- C1: Quickstart作成（Unity起動→環境変数→`cargo run --example test_unity_ipc`）。
+- C1: Quickstart作成（Unity起動→`cargo run --example test_unity_ipc`）。
+  - 設定手順に「Unity: EditorUserSettings で `MCP.IpcToken` を設定（環境変数/EditorPrefsは不使用）」を明記。
 - C2: 例の拡充（ログイベントを~10秒tailし、成功/失敗の出力を明確化）。
 
 4) フェーズD — テスト強化と最終仕上げ
@@ -34,6 +37,7 @@
   - Schema mismatch、project_root mismatch、機能交渉（unknown featureのドロップ）。
 - D2: Unity EditModeテスト更新
   - トークン必須、基本ハッピーパス（Health/Assets/Build）。
+  - トークン取得経路の検証（EditorUserSettingsのみ有効、環境変数/EditorPrefsが設定されていても無視される）。
 - D3: （任意）再接続の仕上げ
   - `spawn_supervisor` の writer 差し替えを実装。最低限の手動検証（Unity再起動→自動再接続）。
 
@@ -74,4 +78,3 @@
 リンク
 - チェックリスト: `tasks/mvp_worklist_checklist.md`
 - ロードマップ（凍結）: `tasks/direct_ipc_unity_mcp_server_mvp_task_list.md`
-
