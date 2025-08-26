@@ -35,11 +35,12 @@ namespace Bridge.Editor.Ipc
         
         public static FeatureFlag FromString(string str)
         {
-            var normalized = str.Trim().ToLowerInvariant();
+            var normalized = str.Trim().ToLowerInvariant().Replace('-', '.');
             return StringToFlag.TryGetValue(normalized, out var flag) ? flag : FeatureFlag.Unknown;
         }
-        
-        public static string ToString(this FeatureFlag flag)
+
+        // Convert FeatureFlag to protocol string (e.g., assets.basic)
+        public static string ToWireString(this FeatureFlag flag)
         {
             return FlagToString.TryGetValue(flag, out var str) ? str : "unknown";
         }
@@ -71,7 +72,7 @@ namespace Bridge.Editor.Ipc
             // Intersection - only features supported by both sides
             var acceptedFeatures = clientFlags
                 .Intersect(serverFlags)
-                .Select(f => f.ToString())
+                .Select(f => f.ToWireString())
                 .ToList();
             
             return acceptedFeatures;

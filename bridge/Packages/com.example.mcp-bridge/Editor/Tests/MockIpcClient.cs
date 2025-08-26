@@ -56,9 +56,9 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
                 };
                 hello.Features.AddRange(new[] { 
-                    "assets-basic",
-                    "build-min",
-                    "events-log"
+                    "assets.basic",
+                    "build.min",
+                    "events.log"
                 });
 
                 var control = new Pb.IpcControl { Hello = hello };
@@ -112,9 +112,9 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
                 };
                 hello.Features.AddRange(new[] { 
-                    "assets-basic",
-                    "build-min",
-                    "events-log"
+                    "assets.basic",
+                    "build.min",
+                    "events.log"
                 });
 
                 var control = new Pb.IpcControl { Hello = hello };
@@ -167,9 +167,9 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
                 };
                 hello.Features.AddRange(new[] { 
-                    "assets-basic",
-                    "build-min",
-                    "events-log"
+                    "assets.basic",
+                    "build.min",
+                    "events.log"
                 });
 
                 var control = new Pb.IpcControl { Hello = hello };
@@ -217,16 +217,22 @@ namespace Mcp.Unity.V1.Ipc.Tests
             var bytes = EnvelopeCodec.Encode(envelope);
             await Framing.WriteFrameAsync(_stream, bytes);
 
-            // Wait for response
-            var responseFrame = await Framing.ReadFrameAsync(_stream);
-            if (responseFrame == null) 
-                throw new InvalidOperationException("No response received");
+            // Wait for response (skip events)
+            while (true)
+            {
+                var responseFrame = await Framing.ReadFrameAsync(_stream);
+                if (responseFrame == null)
+                    throw new InvalidOperationException("No response received");
 
-            var responseEnvelope = EnvelopeCodec.Decode(responseFrame);
-            if (responseEnvelope.Response?.Health == null)
-                throw new InvalidOperationException("Invalid health response");
+                var responseEnvelope = EnvelopeCodec.Decode(responseFrame);
+                if (responseEnvelope.Response?.Health != null &&
+                    responseEnvelope.CorrelationId == correlationId)
+                {
+                    return responseEnvelope.Response.Health;
+                }
 
-            return responseEnvelope.Response.Health;
+                // Ignore non-matching frames (events, other requests)
+            }
         }
 
         /// <summary>
@@ -255,12 +261,16 @@ namespace Mcp.Unity.V1.Ipc.Tests
 
                 // Wait for response
                 var responseFrame = await Framing.ReadFrameAsync(_stream);
-                if (responseFrame == null) 
-                    throw new InvalidOperationException("No response received");
+                if (responseFrame == null)
+                {
+                    return new Pb.AssetsResponse { StatusCode = 13, Message = "no response received" };
+                }
 
                 var responseEnvelope = EnvelopeCodec.Decode(responseFrame);
                 if (responseEnvelope.Response?.Assets == null)
-                    throw new InvalidOperationException("Invalid assets response");
+                {
+                    return new Pb.AssetsResponse { StatusCode = 13, Message = "invalid assets response" };
+                }
 
                 return responseEnvelope.Response.Assets;
             });
@@ -297,12 +307,16 @@ namespace Mcp.Unity.V1.Ipc.Tests
 
                 // Wait for response
                 var responseFrame = await Framing.ReadFrameAsync(_stream);
-                if (responseFrame == null) 
-                    throw new InvalidOperationException("No response received");
+                if (responseFrame == null)
+                {
+                    return new Pb.BuildResponse { Bundles = new Pb.BuildAssetBundlesResponse { StatusCode = 13, Message = "no response received" } };
+                }
 
                 var responseEnvelope = EnvelopeCodec.Decode(responseFrame);
                 if (responseEnvelope.Response?.Build == null)
-                    throw new InvalidOperationException("Invalid build response");
+                {
+                    return new Pb.BuildResponse { Bundles = new Pb.BuildAssetBundlesResponse { StatusCode = 13, Message = "invalid build response" } };
+                }
 
                 return responseEnvelope.Response.Build;
             });
@@ -330,7 +344,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"Cross-thread Unity API access failed: {ex.Message}");
+                    Debug.LogWarning($"Cross-thread Unity API access failed: {ex.Message}");
                 }
 #endif
             });

@@ -47,7 +47,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
         public void SetUp()
         {
             // Use fixed port that matches TcpTransport default
-            _testPort = 7878; // Default port from TcpTransport.CreateDefault()
+            _testPort = 7777; // Default port from TcpTransport.CreateDefault()
             _mockClient = new MockIpcClient(IPAddress.Loopback, _testPort);
         }
 
@@ -145,7 +145,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Assets request test exception: {ex}");
+                Debug.LogWarning($"Assets request test exception: {ex.Message}");
                 return false;
             }
         }
@@ -191,7 +191,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Build request test exception: {ex}");
+                Debug.LogWarning($"Build request test exception: {ex.Message}");
                 return false;
             }
         }

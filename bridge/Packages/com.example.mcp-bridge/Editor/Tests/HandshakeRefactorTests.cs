@@ -39,7 +39,7 @@ namespace Bridge.Editor.Tests
         public void SetUp()
         {
             // Use fixed port that matches TcpTransport default
-            _testPort = 7878; // Default port from TcpTransport.CreateDefault()
+            _testPort = 7777; // Default port from TcpTransport.CreateDefault()
             _mockClient = new MockIpcClient(IPAddress.Loopback, _testPort);
         }
 

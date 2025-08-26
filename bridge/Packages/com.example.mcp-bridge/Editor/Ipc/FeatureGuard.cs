@@ -36,7 +36,7 @@ namespace Bridge.Editor.Ipc
         
         public List<string> GetNegotiatedFeatureStrings()
         {
-            return negotiatedFeatures.Select(f => f.ToString()).ToList();
+            return negotiatedFeatures.Select(f => FeatureFlagExtensions.ToWireString(f)).ToList();
         }
     }
 }

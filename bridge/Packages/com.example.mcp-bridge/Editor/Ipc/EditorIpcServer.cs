@@ -3,7 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Collections.Concurrent;
 using System.Threading;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -24,6 +26,7 @@ namespace Mcp.Unity.V1.Ipc
         private static readonly List<Stream> _activeStreams = new();
         private static readonly object _streamLock = new();
         private static readonly Dictionary<Stream, Bridge.Editor.Ipc.FeatureGuard> _negotiatedFeatures = new();
+        private static readonly ConcurrentDictionary<Stream, object> _writeLocks = new();
         private static string _cachedToken;
 
         static EditorIpcServer()
@@ -264,7 +267,31 @@ namespace Mcp.Unity.V1.Ipc
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var frame = await Framing.ReadFrameAsync(stream);
+                    byte[] frame;
+                    try
+                    {
+                        frame = await Framing.ReadFrameAsync(stream);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        // Normal shutdown
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        // Treat IO errors during read as normal connection close
+                        break;
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Stream disposed/closed by peer
+                        break;
+                    }
+                    catch (SocketException)
+                    {
+                        // Connection reset by peer etc.
+                        break;
+                    }
                     if (frame == null) break; // Connection closed
 
                     var envelope = EnvelopeCodec.Decode(frame);
@@ -341,42 +368,22 @@ namespace Mcp.Unity.V1.Ipc
         {
             Debug.Log($"[EditorIpcServer] Processing assets request: {request.PayloadCase}");
 
-            // Assets operations must run on the main thread
-            AssetsResponse assetsResponse = null;
-            // TODO(BG_ORIGIN): Task.Run creates background thread, but uses EditorApplication.delayCall to marshal back to main
-            await Task.Run(() =>
+            // Assets operations must run on the main thread. Marshal via EditorDispatcher.
+            var assetsResponse = await EditorDispatcher.RunOnMainAsync(() =>
             {
-                // Use EditorApplication.delayCall to marshal to main thread
-                // TODO(UNITY_API): touches EditorApplication.delayCall — must run on main via EditorDispatcher
-#if UNITY_EDITOR && DEBUG
-                Diag.LogUnityApiAccess("EditorApplication.delayCall", "HandleAssetsRequest");
-#endif
-                var tcs = new TaskCompletionSource<AssetsResponse>();
-                EditorApplication.delayCall += () =>
+                MainThreadGuard.AssertMainThread();
+                Bridge.Editor.Ipc.FeatureGuard features;
+                lock (_streamLock)
                 {
-                    try
-                    {
-                        MainThreadGuard.AssertMainThread();
-                        Bridge.Editor.Ipc.FeatureGuard features;
-                        lock (_streamLock)
-                        {
-                            _negotiatedFeatures.TryGetValue(stream, out features);
-                        }
+                    _negotiatedFeatures.TryGetValue(stream, out features);
+                }
 
-                        if (features == null)
-                        {
-                            throw new InvalidOperationException("No negotiated features found for connection");
-                        }
+                if (features == null)
+                {
+                    throw new InvalidOperationException("No negotiated features found for connection");
+                }
 
-                        assetsResponse = AssetsHandler.Handle(request, features);
-                        tcs.SetResult(assetsResponse);
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs.SetException(ex);
-                    }
-                };
-                return tcs.Task;
+                return AssetsHandler.Handle(request, features);
             });
 
             var response = new IpcResponse
@@ -396,42 +403,22 @@ namespace Mcp.Unity.V1.Ipc
         {
             Debug.Log($"[EditorIpcServer] Processing build request: {request.PayloadCase}");
 
-            // Build operations must run on the main thread
-            BuildResponse buildResponse = null;
-            // TODO(BG_ORIGIN): Task.Run creates background thread, but uses EditorApplication.delayCall to marshal back to main
-            await Task.Run(() =>
+            // Build operations must run on the main thread. Marshal via EditorDispatcher.
+            var buildResponse = await EditorDispatcher.RunOnMainAsync(() =>
             {
-                // Use EditorApplication.delayCall to marshal to main thread
-                // TODO(UNITY_API): touches EditorApplication.delayCall — must run on main via EditorDispatcher
-#if UNITY_EDITOR && DEBUG
-                Diag.LogUnityApiAccess("EditorApplication.delayCall", "HandleBuildRequest");
-#endif
-                var tcs = new TaskCompletionSource<BuildResponse>();
-                EditorApplication.delayCall += () =>
+                MainThreadGuard.AssertMainThread();
+                Bridge.Editor.Ipc.FeatureGuard features;
+                lock (_streamLock)
                 {
-                    try
-                    {
-                        MainThreadGuard.AssertMainThread();
-                        Bridge.Editor.Ipc.FeatureGuard features;
-                        lock (_streamLock)
-                        {
-                            _negotiatedFeatures.TryGetValue(stream, out features);
-                        }
+                    _negotiatedFeatures.TryGetValue(stream, out features);
+                }
 
-                        if (features == null)
-                        {
-                            throw new InvalidOperationException("No negotiated features found for connection");
-                        }
+                if (features == null)
+                {
+                    throw new InvalidOperationException("No negotiated features found for connection");
+                }
 
-                        buildResponse = BuildHandler.Handle(request, features);
-                        tcs.SetResult(buildResponse);
-                    }
-                    catch (Exception ex)
-                    {
-                        tcs.SetException(ex);
-                    }
-                };
-                return tcs.Task;
+                return BuildHandler.Handle(request, features);
             });
 
             var response = new IpcResponse
@@ -545,7 +532,7 @@ namespace Mcp.Unity.V1.Ipc
         private static async Task SendControlFrameAsync(Stream stream, IpcControl control)
         {
             var bytes = control.ToByteArray();
-            await Framing.WriteFrameAsync(stream, bytes);
+            await WriteFrameThreadSafe(stream, bytes);
         }
 
         /// <summary>
@@ -555,7 +542,25 @@ namespace Mcp.Unity.V1.Ipc
         {
             var envelope = EnvelopeCodec.CreateResponse(response.CorrelationId, response);
             var bytes = EnvelopeCodec.Encode(envelope);
-            await Framing.WriteFrameAsync(stream, bytes);
+            await WriteFrameThreadSafe(stream, bytes);
+        }
+
+        /// <summary>
+        /// Ensure frames written to a given stream are serialized to avoid interleaving.
+        /// </summary>
+        internal static async Task WriteFrameThreadSafe(Stream stream, ReadOnlyMemory<byte> payload)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            var gate = _writeLocks.GetOrAdd(stream, _ => new object());
+            lock (gate)
+            {
+                // Framing.WriteFrameAsync performs async I/O; to keep critical section small,
+                // we write synchronously to the extent possible by blocking here. Since Unity
+                // editor threads are limited, and frames are small, this is acceptable.
+                // If strict async is desired, use a SemaphoreSlim instead of lock.
+                Framing.WriteFrameAsync(stream, payload).GetAwaiter().GetResult();
+            }
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -797,6 +802,7 @@ namespace Mcp.Unity.V1.Ipc
             {
                 _activeStreams.Remove(stream);
                 _negotiatedFeatures.Remove(stream);
+                _writeLocks.TryRemove(stream, out _);
                 Debug.Log($"[EditorIpcServer] Unregistered stream, active count: {_activeStreams.Count}");
             }
         }

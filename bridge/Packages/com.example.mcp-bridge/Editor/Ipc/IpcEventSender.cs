@@ -45,7 +45,7 @@ namespace Mcp.Unity.V1.Ipc
                         {
                             var env = new Pb.IpcEnvelope { Event = ev };
                             var bytes = EnvelopeCodec.Encode(env);
-                            await Framing.WriteFrameAsync(stream, bytes);
+                            await EditorIpcServer.WriteFrameThreadSafe(stream, bytes);
                         }
                         catch (System.Exception ex)
                         {

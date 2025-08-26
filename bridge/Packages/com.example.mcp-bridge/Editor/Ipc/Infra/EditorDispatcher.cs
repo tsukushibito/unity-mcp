@@ -122,11 +122,15 @@ namespace Mcp.Unity.V1.Ipc.Infra
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            return RunOnMainAsync<object>(() =>
+            // 明示的に Func<object> を指定して、
+            // RunOnMainAsync<T>(Func<T>) オーバーロードに解決させる。
+            // これにより、ランダムに Func<Task<T>> 側に束縛されて
+            // null Task 例外が発生する可能性を排除する。
+            return RunOnMainAsync<object>((Func<object>)(() =>
             {
                 action();
                 return null;
-            });
+            }));
         }
 
         /// <summary>
