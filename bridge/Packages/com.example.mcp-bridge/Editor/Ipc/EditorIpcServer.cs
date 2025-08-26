@@ -30,19 +30,27 @@ namespace Mcp.Unity.V1.Ipc
         {
             Debug.Log("[EditorIpcServer] Initializing IPC server...");
 
-            // Cache authentication token on main thread
-            _cachedToken = LoadTokenFromPrefs();
-            
+            // Defer Unity API access to main thread to avoid cross-thread violations
+            EditorDispatcher.RunOnMainAsync(async () =>
+            {
+                try
+                {
+                    // Cache authentication token on main thread
+                    _cachedToken = LoadTokenFromPrefs();
 
-            // Start the server automatically when Unity Editor loads
-            _ = StartAsync();
+                    // Clean shutdown when Unity Editor closes
+                    EditorApplication.quitting += Shutdown;
 
-            // Clean shutdown when Unity Editor closes
-            // TODO(UNITY_API): touches EditorApplication.quitting — must run on main via EditorDispatcher
-            EditorApplication.quitting += Shutdown;
-#if UNITY_EDITOR && DEBUG
-            Diag.LogUnityApiAccess("EditorApplication.quitting", "EditorIpcServer.static_constructor");
-#endif
+                    // Start the server automatically when Unity Editor loads
+                    await StartAsync();
+                    
+                    Debug.Log("[EditorIpcServer] Main thread initialization completed");
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[EditorIpcServer] Main thread initialization failed: {ex}");
+                }
+            });
         }
 
         /// <summary>

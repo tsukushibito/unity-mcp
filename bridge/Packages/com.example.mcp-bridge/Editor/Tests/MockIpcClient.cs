@@ -53,12 +53,12 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     ClientName = "mock-test-client",
                     Token = token ?? "test-token",
                     ProjectRoot = Directory.GetCurrentDirectory(),
-                    SchemaHash = "mock-hash"
+                    SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
                 };
                 hello.Features.AddRange(new[] { 
-                    Pb.FeatureFlag.AssetsBasic,
-                    Pb.FeatureFlag.BuildMin,
-                    Pb.FeatureFlag.EventsLog
+                    "assets-basic",
+                    "build-min",
+                    "events-log"
                 });
 
                 var control = new Pb.IpcControl { Hello = hello };
@@ -109,12 +109,12 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     ClientName = "mock-test-client-version",
                     Token = token ?? "test-token",
                     ProjectRoot = Directory.GetCurrentDirectory(),
-                    SchemaHash = "mock-hash"
+                    SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
                 };
                 hello.Features.AddRange(new[] { 
-                    Pb.FeatureFlag.AssetsBasic,
-                    Pb.FeatureFlag.BuildMin,
-                    Pb.FeatureFlag.EventsLog
+                    "assets-basic",
+                    "build-min",
+                    "events-log"
                 });
 
                 var control = new Pb.IpcControl { Hello = hello };
@@ -164,12 +164,12 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     ClientName = "mock-test-client-path",
                     Token = token ?? "test-token",
                     ProjectRoot = projectRoot, // Use specified project root
-                    SchemaHash = "mock-hash"
+                    SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
                 };
                 hello.Features.AddRange(new[] { 
-                    Pb.FeatureFlag.AssetsBasic,
-                    Pb.FeatureFlag.BuildMin,
-                    Pb.FeatureFlag.EventsLog
+                    "assets-basic",
+                    "build-min",
+                    "events-log"
                 });
 
                 var control = new Pb.IpcControl { Hello = hello };
