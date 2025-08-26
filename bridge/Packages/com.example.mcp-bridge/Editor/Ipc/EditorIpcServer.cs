@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using Google.Protobuf;
+using Bridge.Editor.Ipc.Handlers;
 using Pb = Mcp.Unity.V1;
 using Mcp.Unity.V1.Ipc.Infra;
 using Bridge.Editor.Ipc.Infra;
@@ -318,26 +319,11 @@ namespace Mcp.Unity.V1.Ipc
         {
             Debug.Log("[EditorIpcServer] Processing health request");
 
-            // Use EditorStateMirror for BG-safe reads
-            var ready = !EditorStateMirror.IsCompiling && !EditorStateMirror.IsUpdating;
-            var version = EditorStateMirror.UnityVersion;
-            var status = ready ? "OK" : "BUSY";
-
-            var healthResponse = new HealthResponse
-            {
-                Ready = ready,
-                Version = version,
-                Status = status
-            };
-
-            var response = new IpcResponse
-            {
-                CorrelationId = correlationId,
-                Health = healthResponse
-            };
+            var response = await HealthHandler.HandleAsync(request);
+            response.CorrelationId = correlationId;
 
             await SendResponseAsync(stream, response);
-            Debug.Log($"[EditorIpcServer] Sent health response: ready={ready}, version={version}");
+            Debug.Log($"[EditorIpcServer] Sent health response: ready={response.Health.Ready}, version={response.Health.Version}");
         }
 
         /// <summary>
