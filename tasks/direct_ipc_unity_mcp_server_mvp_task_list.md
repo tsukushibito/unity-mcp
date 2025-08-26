@@ -1,5 +1,7 @@
 # Direct-IPC Unity MCP Server — MVP Task List
 
+> NOTE (Frozen Roadmap): This document is kept as a reference roadmap for the MVP scope and definition of done. Active progress tracking has moved to: `tasks/mvp_worklist_checklist.md` (MVP Closeout Checklist). Please update progress there. (Last banner update: 2025-08-26)
+
 **Goal** Ship a minimum viable Unity MCP Server that communicates with the Unity Editor via a direct IPC transport (initially TCP on localhost), exposes a small but useful tool surface over MCP (health, logs, core asset ops, minimal build), and is reproducible locally and in CI.
 
 **Scope (MVP must include)**
@@ -258,4 +260,3 @@ PR(s):
 Status: ☐ Todo ☐ In progress ☐ Review ☐ Done
 Notes:
 ```
-
