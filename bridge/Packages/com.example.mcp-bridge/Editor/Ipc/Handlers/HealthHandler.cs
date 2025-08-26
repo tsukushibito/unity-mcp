@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Bridge.Editor.Ipc.Infra;
 using Mcp.Unity.V1;
@@ -9,6 +10,9 @@ namespace Bridge.Editor.Ipc.Handlers
 #if HEALTH_STRICT
         public static async Task<IpcResponse> HandleAsync(HealthRequest req)
         {
+            if (req == null)
+                throw new ArgumentNullException(nameof(req));
+                
             var snap = await EditorDispatcher.RunOnMainAsync(() => new
             {
                 compiling = UnityEditor.EditorApplication.isCompiling,
@@ -32,6 +36,9 @@ namespace Bridge.Editor.Ipc.Handlers
 #else
         public static Task<IpcResponse> HandleAsync(HealthRequest req)
         {
+            if (req == null)
+                throw new ArgumentNullException(nameof(req));
+                
             var ready = !EditorStateMirror.IsCompiling && !EditorStateMirror.IsUpdating;
             var status = ready ? "OK" : "BUSY";
 

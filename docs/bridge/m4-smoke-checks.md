@@ -36,6 +36,18 @@ Unity Editor で Debug ログが表示されるよう設定：
 
 ## 基本スモークテスト手順
 
+### 重要: テスト手順の分類
+
+**手動で実行可能**:
+- ✅ Unity Editor起動確認
+- ✅ ポート接続確認 (Test-NetConnection)
+- ✅ ログ確認
+
+**自動テスト推奨** (複雑なプロトコル処理のため):
+- Hello→Welcome フロー → Unity Test Runner
+- Health リクエスト → Unity Test Runner  
+- エラー条件テスト → Unity Test Runner
+
 ### ステップ 1: Unity Editor 起動と Bridge 確認
 
 1. **Unity Editor の起動**
@@ -49,8 +61,13 @@ Unity Editor で Debug ログが表示されるよう設定：
    - エラーがある場合は手動起動を試行
 
 3. **手動 Bridge 起動**（必要に応じて）
+   現在、手動起動用のメニューアイテムは実装されていません。
+   サーバーは Unity Editor 起動時に InitializeOnLoadAttribute により自動起動されます。
+   手動での再起動が必要な場合は、Unity Editor を再起動してください。
+   
+   **起動確認**: Console で以下のログを確認
    ```
-   Menu > Tools > MCP Bridge > Start Server
+   [TcpTransport] Started listening on 127.0.0.1:7777
    ```
 
 4. **起動確認**
@@ -61,33 +78,91 @@ Unity Editor で Debug ログが表示されるよう設定：
 ### ステップ 2: IPC クライアント接続テスト
 
 1. **簡単なクライアント接続**
-   - TCP ポート 7878 (デフォルト) への接続を試行
+   - TCP ポート 7777 (デフォルト) への接続を試行
    - 手動テストツールまたは curl を使用：
 
    ```bash
    # 基本的な接続テスト
-   telnet localhost 7878
+   # Linux/macOS
+   telnet localhost 7777
+   
+   # Windows (PowerShell推奨)
+   Test-NetConnection -ComputerName 127.0.0.1 -Port 7777
    ```
 
-2. **Hello → Welcome フローテスト**
-   - 有効なトークン (`test-token`) を使用して Hello リクエストを送信
-   - Welcome レスポンスの受信を確認
-   - Console で `[BRIDGE.THREAD MAIN]` タグの出現を確認
+   **注意**: Test-NetConnection での接続テスト時、以下の警告が表示されますが正常動作です：
+   ```
+   [EditorIpcServer] Connection closed before handshake
+   ```
+   これは接続確認のみでハンドシェイクを行わないためです。
 
-### ステップ 3: Health リクエストテスト
+## 自動テスト実行（推奨）
 
-1. **基本 Health リクエスト**
-   - Health リクエストを送信
-   - 以下を含むレスポンスの確認：
-     - `UnityVersion`: 空でない
-     - `IsCompiling`: boolean 値
-     - `IsUpdating`: boolean 値
-     - `Ready`: true または false
+### Unity Test Runner での実行
 
-2. **連続 Health リクエスト**
-   - 0.5-1.0秒間隔で 10-20 回の Health リクエストを送信
-   - 全てのレスポンスが成功することを確認
-   - Unity Editor の応答性が維持されることを確認
+複雑なIPCプロトコルテストは Unity Test Runner での実行を推奨します。
+
+1. **Unity Test Runner 起動**
+   - **Window > General > Test Runner**
+
+2. **EditMode テスト実行**
+   - **CrossThreadDiagnosticsTests**: Health リクエストのクロススレッド安全性テスト
+   - **HandshakeRefactorTests**: Hello→Welcome ハンドシェイクフローテスト  
+   - **HealthTests**: Strict/Fast モード動作テスト
+
+3. **テスト実行手順**
+   ```
+   1. Test Runner ウィンドウで「EditMode」タブを選択
+   2. 各テストクラスを展開して個別テストを確認
+   3. 「Run All」または個別テストを実行
+   4. Console でテスト結果とログを確認
+   ```
+
+4. **期待される結果**
+   - 全テストが PASS
+   - `[BRIDGE.THREAD MAIN]` タグの出現
+   - クロススレッド違反エラーが発生しない
+
+### Rust 統合テスト実行（開発者向け）
+
+server/ ディレクトリでの統合テスト実行方法：
+
+1. **前提条件**
+   - Unity Editor が起動しており、IPC サーバーが動作中
+   - Rust 開発環境がセットアップ済み
+
+2. **統合テスト実行**
+   ```bash
+   cd server/
+   
+   # 環境変数設定
+   export MCP_IPC_TOKEN=test-token
+   
+   # 統合テスト実行
+   cargo test test_assets_operations_end_to_end -- --nocapture
+   
+   # 全テスト実行
+   cargo test -- --nocapture
+   ```
+
+3. **期待される結果**
+   - IPC ハンドシェイクが成功
+   - Health チェックが正常に応答
+   - Unity Editor との通信が確立
+
+## 手動テスト制限事項
+
+### 接続確認のみ可能
+- ✅ ポート7777の接続性確認
+- ✅ サーバー起動状態確認
+- ✅ 基本ログの確認
+
+### プロトコルテストは自動テスト推奨
+以下の理由により、手動実行は困難です：
+- 複雑なバイナリプロトコル（Protocol Buffers）
+- フレーミングプロトコル（長さプレフィックス）
+- 認証トークン処理
+- コリレーション ID 管理
 
 ### ステップ 4: スクリプト変更時の動作確認
 
@@ -200,7 +275,7 @@ done
 
 1. **Bridge が起動しない**
    - Console でエラーメッセージを確認
-   - Port 7878 が他のプロセスに使用されていないか確認
+   - Port 7777 が他のプロセスに使用されていないか確認
    - Unity Editor を再起動
 
 2. **MainThreadGuard エラーが発生**
@@ -216,12 +291,46 @@ done
    - localhost (127.0.0.1) 接続を試行
    - Unity Editor のバージョン互換性を確認
 
+### Windows環境固有の注意事項
+
+1. **ポート確認方法**
+   ```cmd
+   netstat -an | findstr 7777
+   ```
+
+2. **ファイアウォール設定**
+   - Windows Defender ファイアウォールでローカルホスト通信が許可されていることを確認
+   - 必要に応じて Unity Editor を例外に追加
+
+3. **接続テスト**
+   
+   **Option A: telnetクライアント機能を有効化**
+   ```cmd
+   # Windows機能の有効化（管理者権限が必要）
+   dism /online /Enable-Feature /FeatureName:TelnetClient
+   
+   # その後telnetコマンドが使用可能
+   telnet 127.0.0.1 7777
+   ```
+   
+   **Option B: PowerShellでの接続テスト**
+   ```powershell
+   # PowerShellでのTCP接続テスト
+   Test-NetConnection -ComputerName 127.0.0.1 -Port 7777
+   ```
+   
+   **Option C: curlでの接続テスト**
+   ```cmd
+   # curlでのTCP接続確認（Windows 10/11に標準搭載）
+   curl -v telnet://127.0.0.1:7777
+   ```
+
 ## ログ分析
 
 ### 正常動作時のログパターン
 
 ```log
-[BRIDGE] EditorIpcServer starting on port 7878
+[TcpTransport] Started listening on 127.0.0.1:7777
 [BRIDGE.THREAD MAIN] EditorStateMirror initialized
 [BRIDGE.THREAD MAIN] MainThreadGuard: Thread validation passed
 [BRIDGE] Client connected from 127.0.0.1

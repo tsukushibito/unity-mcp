@@ -37,10 +37,11 @@ namespace Mcp.Unity.V1.Ipc.Infra.Tests
             int? executedThreadId = null;
             Exception capturedException = null;
 
-            var task = EditorDispatcher.RunOnMainAsync(() =>
+            Action action = () =>
             {
                 executedThreadId = Thread.CurrentThread.ManagedThreadId;
-            });
+            };
+            var task = EditorDispatcher.RunOnMainAsync(action);
 
             // Wait for completion
             yield return new WaitUntil(() => task.IsCompleted);
@@ -187,10 +188,11 @@ namespace Mcp.Unity.V1.Ipc.Infra.Tests
             for (int i = 0; i < taskCount; i++)
             {
                 var taskIndex = i;
-                tasks[i] = EditorDispatcher.RunOnMainAsync(() =>
+                Action action = () =>
                 {
                     results[taskIndex] = taskIndex * 2;
-                });
+                };
+                tasks[i] = EditorDispatcher.RunOnMainAsync(action);
             }
 
             // Wait for all to complete

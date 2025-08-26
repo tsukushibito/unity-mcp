@@ -176,7 +176,10 @@ namespace Mcp.Unity.V1.Ipc.Infra
             {
                 try
                 {
-                    var result = await func().ConfigureAwait(false);
+                    var task = func();
+                    if (task == null)
+                        throw new InvalidOperationException("Function returned null task");
+                    var result = await task.ConfigureAwait(false);
                     tcs.SetResult(result);
                 }
                 catch (Exception ex)
