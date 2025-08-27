@@ -40,18 +40,19 @@
 
 ---
 
-## 現状確認（2025-08-27）
+## 現状確認（2025-08-27 最終）
 - Rust 側
-  - 例: `server/examples/test_unity_ipc.rs` が存在（接続＋Handshake＋Health の疎通確認）。
-  - イベント: `IpcClient::events()` により `pb::IpcEvent` を購読可能（`events.log` フラグあり）。ログtail用の専用例は未実装。
+  - 例: `server/examples/test_unity_ipc.rs`（接続＋Handshake＋Health）。`MCP_PROJECT_ROOT` を参照するよう更新。
+  - 例: `server/examples/unity_log_tail.rs` を追加（~10秒 tail、レベル集計、error>0で非0終了）。
   - 機能フラグ: `events.log` を含むクライアント対応が `server/src/ipc/features.rs` に実装済み。
-  - README: Quickstart未掲載（hooksブートストラップのみ記載）。
+  - パス正規化: Windows の拡張パス `\\?\`/`\\?\UNC\` を除去するよう修正（`server/src/ipc/client.rs`）。
+  - README/Docs: Quickstart を作成し、`MCP_PROJECT_ROOT` の設定や `--manifest-path` 代替を記載。
 - Unity 側（bridge）
-  - トークン: `EditorUserSettings["MCP.IpcToken"]` を厳格に使用（Env/EditorPrefsは無効）。`EditorIpcServer.cs` で検証ロジック実装済み（空/不一致は `UNAUTHENTICATED`）。
-  - スキーマ: SCHEMA_HASH 検証あり（不一致は `FAILED_PRECONDITION`）。
-  - 設定UI: `MCP.IpcToken` を設定するメニュー/SettingsProviderは未実装（テストコードでの設定例はあり）。
+  - トークン: `EditorUserSettings["MCP.IpcToken"]` を厳格に使用（Env/EditorPrefsは無視）。
+  - 設定UI: Project Settings（`Project/MCP Bridge`）の SettingsProvider を追加済み（`Editor/UI/McpSettingsProvider.cs`）。
+  - スキーマ/検証: 既存仕様どおり。
 
-判定: C1 はドキュメント中心（Quickstart整備＋トラブルシュート）、C2 は Rust 例の追加（ログtail）で実現可能。コード大改修は不要。
+判定: C1/C2 の実装・ドキュメント整備が完了し、E2E を実機で確認済み。
 
 ---
 
@@ -66,20 +67,18 @@
 - 具体手順（ドキュメントに記載）
   1) リポジトリをクローンし、`./scripts/bootstrap-hooks.sh` を実行。
   2) Unity Editor で `bridge/` を開く。
-  3) `MCP.IpcToken` を設定（例: `test-token`）。方法は以下のいずれかを記載:
-     - 一時的なエディタスクリプト（`Assets/Editor/SetIpcToken.cs`）で `EditorUserSettings.SetConfigValue("MCP.IpcToken", "test-token")` を実行（サンプルコード提示）。
-     - 既存テストを流用する場合の注意（推奨はしないが参考として記載）。
-  4) Unity が待受（127.0.0.1:7777）していることを確認（コンソールに `EditorIpcServer` のログ）。
-  5) Rust 例を実行: `cd server && cargo run --example test_unity_ipc`（例内のトークンは `test-token`）。
-  6) `✓ Handshake completed` と `✓ Health response` が出力されれば成功。
+  3) `MCP.IpcToken` を設定（例: `test-token`）。推奨は Project Settings（`Project/MCP Bridge`）。代替として一時スクリプト例を記載。
+  4) `MCP_PROJECT_ROOT` を設定（推奨）または `bridge/` をカレントにして `--manifest-path` で実行。
+  5) Unity が待受（127.0.0.1:7777）していることを確認（コンソールに `EditorIpcServer` のログ）。
+  6) Rust 例を実行: `cd server && cargo run --example test_unity_ipc`。続けて `cargo run --example unity_log_tail`。
 - 変更ファイル
   - `README.md`: Quickstart へのリンクと1スクリーン分のダイジェストを追記。
-  - `docs/quickstart.md`: 新規作成（上記手順・Troubleshooting・FAQ）。
+  - `docs/quickstart.md`: 作成（手順・Troubleshooting・FAQ、`MCP_PROJECT_ROOT` 追記）。
 - 受け入れ条件
   - 新規クローン→Quickstartに沿って <15 分で `test_unity_ipc` が成功する。
   - `MCP.IpcToken` の設定方法が明確（Unityのどこで・どうやって）で、Env/EditorPrefs不使用が明記されている。
 - 検証観点
-  - Windows/macOS/Linux で手順に差異がないか（パスや改行差異を注記）。
+  - Windows/macOS/Linux の差異（パス区切り、PowerShell のバックスラッシュ、Windows 拡張パスの扱い）を注記。
   - スキーマ不一致・ポート占有時のガイダンス（メッセージ引用と対処）。
 
 ### C2: 例の拡充（詳細）
@@ -91,8 +90,8 @@
     - ログ受信数が0件の場合は `[WARN] no logs received`。`Error/Warn` を受信したら件数集計。
     - 終了時にサマリ: `info=N warn=N error=N`。`error>0` の場合は非0で終了（終了コード1）。
 - 変更ファイル
-  - `server/examples/unity_log_tail.rs`: 新規作成。
-  - （任意）`server/examples/test_unity_ipc.rs`: 出力整形（成功/失敗のタグを少し明確化）。
+  - `server/examples/unity_log_tail.rs`: 追加済み。
+  - `server/examples/test_unity_ipc.rs`: `MCP_PROJECT_ROOT` 参照対応を追加。
 - 受け入れ条件
   - `cargo run --example unity_log_tail` が実行でき、10秒間のログを受信・集計してサマリを表示。
   - `events.log` 未交渉時は分かりやすい案内が出る（Unity側設定またはバージョン差を疑う）。
@@ -103,15 +102,16 @@
 
 ---
 
-## 実施順序と所要目安
-1) C1-Quickstart 文書化（0.5d）
-2) C2-ログtail例 追加（0.5d）
-3) README 整理・スクリーンショット反映（0.25d）
-4) 手動E2Eリハーサル（0.25d）
+## 実施結果（完了）
+- UI: Project Settings（`Project/MCP Bridge`）追加（トークン編集/クリア、メニューショートカット付き）。
+- 例: `unity_log_tail` 追加。`test_unity_ipc` は `MCP_PROJECT_ROOT` に対応。
+- 正規化: Windows の `\\?\` プレフィックス除去を実装。
+- ドキュメント: Quickstart と README を更新（Project Settings 経路、PowerShell の記法、`MCP_PROJECT_ROOT`、代替実行、トラブルシュート）。
+- 手動検証: Windows 環境で E2E 実行し、ハンドシェイク成功・ログ受信（error=0）を確認。
 
 ---
 
-## トラブルシュート追記案（Quickstartに同梱）
+## トラブルシュート（Quickstartに同梱済み）
 - `UNAUTHENTICATED: Missing or empty token` → Unity の `EditorUserSettings["MCP.IpcToken"]` を設定（例: `test-token`）。
 - `FAILED_PRECONDITION: schema mismatch` → C# 側 SCHEMA_HASH を再生成（CI/手順参照）。
 - `FAILED_PRECONDITION: project_root mismatch` → Rust 側 `IpcHello.project_root` が Unity のプロジェクト直下の絶対パスと一致しているか確認。
@@ -120,7 +120,7 @@
 
 ---
 
-## 成果物の場所（予定）
+## 成果物の場所
 - `docs/quickstart.md` — Quickstart 本文（スクショ/ログ例含む）
 - `README.md` — Quickstart 概要とリンク
 - `server/examples/test_unity_ipc.rs` — ハッピーパスの基本疎通
@@ -134,4 +134,3 @@
   - `ipc_event::Payload::Log` を match し、`log_event::Level` ごとにカウント。
   - 最後にサマリ出力。`error>0` で `std::process::exit(1)`。
   - トークン/エンドポイントは `test_unity_ipc.rs` と同等の最低限（将来は CLI 引数化）。
-
