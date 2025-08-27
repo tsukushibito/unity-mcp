@@ -1,0 +1,58 @@
+#!/usr/bin/env sh
+# Pre-commit hook: Run Rust format check and clippy lint to mirror CI.
+# Cross-platform: works on Unix and Git for Windows (POSIX sh via Git Bash).
+
+set -eu
+
+# Allow opt-out when needed (CI rebase etc.)
+if [ "${SKIP_PRECOMMIT_LINT:-}" = "1" ] || [ "${SKIP_PRE_COMMIT_LINT:-}" = "1" ]; then
+  printf "[pre-commit] Skipping lint/format due to SKIP_PRECOMMIT_LINT=1\n" >&2
+  exit 0
+fi
+
+# Move to repo root
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || printf '.')
+cd "$REPO_ROOT"
+
+info()  { printf "[pre-commit] %s\n" "$*"; }
+error() { printf "[pre-commit] ERROR: %s\n" "$*" >&2; }
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# Only run if server/ exists (Rust crate lives here per repo guidelines)
+if [ ! -d "server" ]; then
+  info "No server/ directory found. Nothing to lint/format."
+  exit 0
+fi
+
+# Basic tool checks
+if ! have cargo; then
+  error "cargo not found. Install Rust (https://rustup.rs)."
+  exit 1
+fi
+
+# rustfmt check mirrors CI: `cargo fmt --all -- --check`
+info "Checking formatting (cargo fmt --all -- --check)"
+(
+  cd server
+  if ! cargo fmt --version >/dev/null 2>&1; then
+    error "rustfmt not installed. Try: rustup component add rustfmt"
+    exit 1
+  fi
+  cargo fmt --all -- --check
+)
+
+# clippy mirrors CI: `cargo clippy --all-targets -- -D warnings`
+info "Running clippy (cargo clippy --all-targets -- -D warnings)"
+(
+  cd server
+  if ! cargo clippy -V >/dev/null 2>&1; then
+    error "clippy not installed. Try: rustup component add clippy"
+    exit 1
+  fi
+  cargo clippy --all-targets -- -D warnings
+)
+
+info "All checks passed. Proceeding with commit."
+exit 0
+
