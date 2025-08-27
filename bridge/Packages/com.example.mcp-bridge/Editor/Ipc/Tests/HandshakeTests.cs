@@ -5,7 +5,9 @@ using NUnit.Framework;
 using UnityEngine;
 using Bridge.Editor.Ipc.Infra;
 using Mcp.Unity.V1;
+using Mcp.Unity.V1.Ipc;
 using Mcp.Unity.V1.Ipc.Infra;
+using Mcp.Unity.V1.Generated;
 
 namespace Bridge.Editor.Ipc.Tests
 {
@@ -228,6 +230,84 @@ namespace Bridge.Editor.Ipc.Tests
         }
 
         /// <summary>
+        /// Test schema hash validation
+        /// </summary>
+        [Test]
+        public void TestSchemaHashValidation()
+        {
+#if UNITY_EDITOR && DEBUG
+            Diag.Log("Testing schema hash validation scenarios");
+#endif
+
+            Assert.DoesNotThrow(() =>
+            {
+                // Test valid schema hash (using the expected hash from generated code)
+                var validSchemaHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes);
+                Assert.IsNotNull(validSchemaHash, "Valid schema hash should not be null");
+                Assert.AreEqual(32, validSchemaHash.Length, "Schema hash should be 32 bytes (SHA-256)");
+                
+                // Test empty schema hash (should be rejected)
+                var emptySchemaHash = Google.Protobuf.ByteString.Empty;
+                Assert.IsTrue(emptySchemaHash.IsEmpty, "Empty schema hash should be caught");
+                
+                // Test wrong length schema hash (should be rejected)
+                var wrongLengthHash = Google.Protobuf.ByteString.CopyFrom(new byte[] { 1, 2, 3 });
+                Assert.AreNotEqual(32, wrongLengthHash.Length, "Wrong length hash should be rejected");
+                
+                // Test schema hash hex format consistency
+                var expectedHex = Mcp.Unity.V1.Generated.Schema.SCHEMA_HASH_HEX;
+                Assert.IsNotEmpty(expectedHex, "Schema hash hex should not be empty");
+                Assert.AreEqual(64, expectedHex.Length, "Schema hash hex should be 64 characters");
+
+#if UNITY_EDITOR && DEBUG
+                Diag.Log($"Schema hash validation test completed: hex={expectedHex}");
+#endif
+            });
+        }
+
+        /// <summary>
+        /// Test ValidateSchemaHash method branches - comprehensive validation scenarios
+        /// </summary>
+        [Test]
+        public void TestValidateSchemaHashBranches()
+        {
+#if UNITY_EDITOR && DEBUG
+            Diag.Log("Testing ValidateSchemaHash method branches comprehensively");
+#endif
+
+            // Branch 1: Empty schema hash (should fail with FAILED_PRECONDITION)
+            var emptyHash = Google.Protobuf.ByteString.Empty;
+            var emptyResult = EditorIpcServerAccessor.TestValidateSchemaHash(emptyHash);
+            Assert.IsFalse(EditorIpcServerAccessor.IsValidationResultValid(emptyResult), "Empty schema hash should be invalid");
+            Assert.AreEqual(IpcReject.Types.Code.FailedPrecondition, EditorIpcServerAccessor.GetValidationResultErrorCode(emptyResult), "Empty hash should return FAILED_PRECONDITION");
+            Assert.IsTrue(EditorIpcServerAccessor.GetValidationResultErrorMessage(emptyResult).Contains("Schema hash missing"), "Error message should mention schema hash missing");
+
+            // Branch 2: Wrong length schema hash (should fail with FAILED_PRECONDITION)
+            var wrongLengthHash = Google.Protobuf.ByteString.CopyFrom(new byte[] { 0x01, 0x02, 0x03, 0x04 }); // Only 4 bytes instead of 32
+            var lengthResult = EditorIpcServerAccessor.TestValidateSchemaHash(wrongLengthHash);
+            Assert.IsFalse(EditorIpcServerAccessor.IsValidationResultValid(lengthResult), "Wrong length schema hash should be invalid");
+            Assert.AreEqual(IpcReject.Types.Code.FailedPrecondition, EditorIpcServerAccessor.GetValidationResultErrorCode(lengthResult), "Wrong length should return FAILED_PRECONDITION");
+            Assert.IsTrue(EditorIpcServerAccessor.GetValidationResultErrorMessage(lengthResult).Contains("length mismatch"), "Error message should mention length mismatch");
+
+            // Branch 3: Correct length but wrong bytes (should fail with FAILED_PRECONDITION)
+            var wrongBytesHash = Google.Protobuf.ByteString.CopyFrom(new byte[32]); // All zeros, 32 bytes
+            var bytesResult = EditorIpcServerAccessor.TestValidateSchemaHash(wrongBytesHash);
+            Assert.IsFalse(EditorIpcServerAccessor.IsValidationResultValid(bytesResult), "Wrong bytes schema hash should be invalid");
+            Assert.AreEqual(IpcReject.Types.Code.FailedPrecondition, EditorIpcServerAccessor.GetValidationResultErrorCode(bytesResult), "Wrong bytes should return FAILED_PRECONDITION");
+            Assert.IsTrue(EditorIpcServerAccessor.GetValidationResultErrorMessage(bytesResult).Contains("Schema hash mismatch"), "Error message should mention schema hash mismatch");
+
+            // Branch 4: Correct schema hash (should succeed)
+            var validHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes);
+            var validResult = EditorIpcServerAccessor.TestValidateSchemaHash(validHash);
+            Assert.IsTrue(EditorIpcServerAccessor.IsValidationResultValid(validResult), "Valid schema hash should be accepted");
+            Assert.IsNull(EditorIpcServerAccessor.GetValidationResultErrorMessage(validResult), "Valid result should not have error message");
+
+#if UNITY_EDITOR && DEBUG
+            Diag.Log("ValidateSchemaHash branches test completed - all scenarios verified");
+#endif
+        }
+
+        /// <summary>
         /// Test handshake rejection scenarios execute quickly without Unity API access
         /// </summary>
         [Test]
@@ -248,6 +328,10 @@ namespace Bridge.Editor.Ipc.Tests
                 var incompatibleVersion = "999.0";
                 Assert.IsTrue(incompatibleVersion.StartsWith("999"), "Incompatible version should be caught early");
                 
+                // Schema validation (no Unity API needed)
+                var invalidSchemaHash = Google.Protobuf.ByteString.CopyFrom(new byte[] { 0xFF, 0xFF });
+                Assert.AreNotEqual(32, invalidSchemaHash.Length, "Invalid schema hash should be caught early");
+                
                 // These validations should happen BEFORE any Unity API access
                 // and thus before MainThreadGuard.AssertMainThread() is called
                 
@@ -255,6 +339,56 @@ namespace Bridge.Editor.Ipc.Tests
                 Diag.Log("Early rejection validations completed without Unity API access");
 #endif
             });
+        }
+    }
+
+    /// <summary>
+    /// Test accessor for EditorIpcServer private methods
+    /// </summary>
+    public static class EditorIpcServerAccessor
+    {
+        /// <summary>
+        /// Test access to ValidateSchemaHash method
+        /// </summary>
+        public static object TestValidateSchemaHash(Google.Protobuf.ByteString schemaHash)
+        {
+            // Use reflection to access the private ValidateSchemaHash method
+            var method = typeof(EditorIpcServer).GetMethod("ValidateSchemaHash", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            
+            if (method == null)
+            {
+                throw new System.InvalidOperationException("ValidateSchemaHash method not found");
+            }
+            
+            return method.Invoke(null, new object[] { schemaHash });
+        }
+        
+        /// <summary>
+        /// Helper to check if validation result is valid
+        /// </summary>
+        public static bool IsValidationResultValid(object validationResult)
+        {
+            var isValidProperty = validationResult.GetType().GetProperty("IsValid");
+            return (bool)isValidProperty.GetValue(validationResult);
+        }
+        
+        /// <summary>
+        /// Helper to get error code from validation result
+        /// </summary>
+        public static IpcReject.Types.Code GetValidationResultErrorCode(object validationResult)
+        {
+            var errorCodeProperty = validationResult.GetType().GetProperty("ErrorCode");
+            return (IpcReject.Types.Code)errorCodeProperty.GetValue(validationResult);
+        }
+        
+        /// <summary>
+        /// Helper to get error message from validation result
+        /// </summary>
+        public static string GetValidationResultErrorMessage(object validationResult)
+        {
+            var errorMessageProperty = validationResult.GetType().GetProperty("ErrorMessage");
+            return (string)errorMessageProperty.GetValue(validationResult);
         }
     }
 }

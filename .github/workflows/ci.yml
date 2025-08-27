@@ -63,3 +63,78 @@ jobs:
 
       - name: Test server
         run: cd server && cargo test -- --nocapture
+
+  parity-check:
+    name: Proto & Schema Parity Check
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up protoc 3.31.1
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "31.1"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo (target/ + registries)
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Regenerate Rust protobuf files
+        run: cd server && ./scripts/generate-rust-proto.sh
+
+      - name: Check for Rust generated file drift
+        run: |
+          cd server
+          if ! git diff --exit-code src/generated/; then
+            echo "❌ Rust generated files are out of sync!"
+            echo "Please run 'cd server && ./scripts/generate-rust-proto.sh' and commit the changes."
+            git diff src/generated/
+            exit 1
+          fi
+          echo "✅ Rust generated files are up to date."
+
+      - name: Regenerate C# protobuf files and SchemaHash.cs
+        run: cd bridge && ./Tools/generate-csharp.sh
+
+      - name: Verify schema hash parity between Rust and C#
+        run: |
+          # Get Rust schema hash from generated file
+          RUST_HASH_HEX=$(cd server && sha256sum src/generated/schema.pb | cut -d' ' -f1)
+          echo "Rust schema hash (from schema.pb): $RUST_HASH_HEX"
+          
+          # Get C# schema hash from generated file
+          CSHARP_HASH_HEX=$(grep 'SCHEMA_HASH_HEX = "' bridge/Packages/com.example.mcp-bridge/Editor/Generated/SchemaHash.cs | sed 's/.*SCHEMA_HASH_HEX = "\([^"]*\)".*/\1/')
+          echo "C# schema hash (from SchemaHash.cs): $CSHARP_HASH_HEX"
+          
+          # Compare hashes
+          if [ "$RUST_HASH_HEX" != "$CSHARP_HASH_HEX" ]; then
+            echo "❌ Schema hash mismatch between Rust and C#!"
+            echo "Rust:  $RUST_HASH_HEX"
+            echo "C#:    $CSHARP_HASH_HEX"
+            echo ""
+            echo "To fix this issue:"
+            echo "1. Run: cd bridge && ./Tools/generate-csharp.sh"
+            echo "2. Commit the updated SchemaHash.cs file"
+            exit 1
+          fi
+          echo "✅ Schema hash parity verified: Rust and C# hashes match."
+
+      - name: Check for C# generated file drift
+        run: |
+          cd bridge
+          if ! git diff --exit-code Packages/com.example.mcp-bridge/Editor/Generated/; then
+            echo "❌ C# generated files are out of sync!"
+            echo "Please run 'cd bridge && ./Tools/generate-csharp.sh' and commit the changes."
+            git diff Packages/com.example.mcp-bridge/Editor/Generated/
+            exit 1
+          fi
+          echo "✅ C# generated files are up to date."

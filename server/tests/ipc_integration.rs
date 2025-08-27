@@ -50,6 +50,20 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
                     return;
                 }
 
+                // Schema hash validation (pure validation - no token dependency)
+                if hello.schema_hash != codec::schema_hash() {
+                    let reject = pb::IpcReject {
+                        code: pb::ipc_reject::Code::FailedPrecondition as i32,
+                        message: "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI).".to_string(),
+                    };
+                    let reject_control = pb::IpcControl {
+                        kind: Some(pb::ipc_control::Kind::Reject(reject)),
+                    };
+                    let reject_bytes = codec::encode_control(&reject_control).unwrap();
+                    let _ = framed.send(reject_bytes).await;
+                    return;
+                }
+
                 // Send welcome response
                 let welcome = pb::IpcWelcome {
                     ipc_version: hello.ipc_version,
@@ -295,6 +309,7 @@ async fn test_connect_with_retry_permanent_failure() -> anyhow::Result<()> {
 /// Mock Unity server with configurable feature support
 struct MockUnityServer {
     supported_features: Vec<String>,
+    override_schema_hash_for_test: Option<Vec<u8>>,
 }
 
 impl MockUnityServer {
@@ -306,6 +321,7 @@ impl MockUnityServer {
                 "events.log".to_string(),
                 "ops.progress".to_string(),
             ],
+            override_schema_hash_for_test: None,
         }
     }
 
@@ -314,12 +330,19 @@ impl MockUnityServer {
         self
     }
 
+    pub fn with_fake_schema_hash_for_test(mut self, fake_hash: Vec<u8>) -> Self {
+        self.override_schema_hash_for_test = Some(fake_hash);
+        self
+    }
+
     pub async fn start(&self, port: u16) -> anyhow::Result<()> {
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
         let supported_features = self.supported_features.clone();
+        let override_schema_hash = self.override_schema_hash_for_test.clone();
 
         while let Ok((stream, _)) = listener.accept().await {
             let features_clone = supported_features.clone();
+            let hash_override = override_schema_hash.clone();
             tokio::spawn(async move {
                 let mut framed = framing::into_framed(stream);
 
@@ -328,6 +351,26 @@ impl MockUnityServer {
                     && let Ok(control) = codec::decode_control(bytes.freeze())
                     && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind
                 {
+                    // Schema hash validation (responsibility separated from token)
+                    let expected_schema_hash = if let Some(fake_hash) = hash_override {
+                        fake_hash
+                    } else {
+                        codec::schema_hash().to_vec()
+                    };
+                    
+                    if hello.schema_hash != expected_schema_hash {
+                        let reject = pb::IpcReject {
+                            code: pb::ipc_reject::Code::FailedPrecondition as i32,
+                            message: "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI).".to_string(),
+                        };
+                        let reject_control = pb::IpcControl {
+                            kind: Some(pb::ipc_control::Kind::Reject(reject)),
+                        };
+                        let reject_bytes = codec::encode_control(&reject_control).unwrap();
+                        let _ = framed.send(reject_bytes).await;
+                        return;
+                    }
+
                     // Feature negotiation - intersection
                     let client_features: Vec<String> = hello.features;
                     let accepted_features: Vec<String> = client_features
@@ -480,6 +523,46 @@ async fn test_supported_by_client() -> anyhow::Result<()> {
     assert!(client_features.contains(&FeatureFlag::EventsLog));
     assert!(client_features.contains(&FeatureFlag::OpsProgress));
     assert!(!client_features.contains(&FeatureFlag::AssetsAdvanced));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_schema_hash_mismatch_rejection() -> anyhow::Result<()> {
+    let port = 18806;
+
+    // Create fake schema hash - different from expected
+    let fake_hash = vec![0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 
+                         0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
+                         0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                         0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff];
+
+    // Start mock server with fake schema hash for test
+    let server = MockUnityServer::new().with_fake_schema_hash_for_test(fake_hash);
+    tokio::spawn(async move {
+        let _ = server.start(port).await;
+    });
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let cfg = IpcConfig {
+        endpoint: Some(format!("tcp://127.0.0.1:{}", port)),
+        token: Some("test-token".to_string()), // Valid token - schema hash is the issue
+        project_root: Some(".".to_string()),
+        connect_timeout: Duration::from_secs(5),
+        handshake_timeout: Duration::from_secs(2),
+        total_handshake_timeout: Duration::from_secs(8),
+        call_timeout: Duration::from_secs(5),
+        max_reconnect_attempts: Some(1),
+    };
+
+    let result = IpcClient::connect(cfg).await;
+    assert!(result.is_err());
+
+    if let Err(e) = result {
+        // Should get a FAILED_PRECONDITION error for schema mismatch
+        let error_msg = e.to_string();
+        assert!(error_msg.contains("Schema hash mismatch") || error_msg.contains("FAILED_PRECONDITION"));
+    }
 
     Ok(())
 }
