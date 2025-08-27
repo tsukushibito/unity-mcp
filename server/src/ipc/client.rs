@@ -707,7 +707,7 @@ fn normalize_project_root(path: &str) -> Result<String, std::io::Error> {
         while s.len() > 3 && s.ends_with('\\') {
             s.pop();
         }
-        return Ok(s);
+        Ok(s)
     }
 
     #[cfg(unix)]
