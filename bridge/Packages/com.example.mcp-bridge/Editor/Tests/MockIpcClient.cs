@@ -42,9 +42,11 @@ namespace Mcp.Unity.V1.Ipc.Tests
         {
             try
             {
+                Debug.Log($"[MockIpcClient] Attempting to connect to {_address}:{_port}");
                 _tcpClient = new TcpClient();
                 await _tcpClient.ConnectAsync(_address, _port);
                 _stream = _tcpClient.GetStream();
+                Debug.Log($"[MockIpcClient] TCP connection established");
 
                 // Send T01 handshake
                 var hello = new Pb.IpcHello
@@ -53,7 +55,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     ClientName = "mock-test-client",
                     Token = token ?? "test-token",
                     ProjectRoot = Directory.GetCurrentDirectory(),
-                    SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
+                    SchemaHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes)
                 };
                 hello.Features.AddRange(new[] { 
                     "assets.basic",
@@ -86,7 +88,11 @@ namespace Mcp.Unity.V1.Ipc.Tests
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MockIpcClient] Connection failed: {ex.Message}");
+                Debug.LogError($"[MockIpcClient] Connection failed: {ex.GetType().Name} - {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Debug.LogError($"[MockIpcClient] Inner exception: {ex.InnerException.GetType().Name} - {ex.InnerException.Message}");
+                }
                 return false;
             }
         }
@@ -109,7 +115,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     ClientName = "mock-test-client-version",
                     Token = token ?? "test-token",
                     ProjectRoot = Directory.GetCurrentDirectory(),
-                    SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
+                    SchemaHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes)
                 };
                 hello.Features.AddRange(new[] { 
                     "assets.basic",
@@ -164,7 +170,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     ClientName = "mock-test-client-path",
                     Token = token ?? "test-token",
                     ProjectRoot = projectRoot, // Use specified project root
-                    SchemaHash = Google.Protobuf.ByteString.CopyFromUtf8("mock-hash")
+                    SchemaHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes)
                 };
                 hello.Features.AddRange(new[] { 
                     "assets.basic",
