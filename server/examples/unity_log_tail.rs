@@ -53,16 +53,29 @@ async fn main() -> anyhow::Result<()> {
     let mut n_trace = 0usize;
     let mut n_total_logs = 0usize;
 
+    // Tail duration: env MCP_TAIL_SECS or first CLI arg (seconds), default 10s
+    let tail_secs: u64 = std::env::var("MCP_TAIL_SECS")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .or_else(|| std::env::args().nth(1).and_then(|s| s.parse().ok()))
+        .unwrap_or(10);
+
     println!(
-        "[unity_log_tail] Tailing logs for ~10s. Interact with the Editor to generate logs..."
+        "[unity_log_tail] Tailing logs for ~{}s. Interact with the Editor to generate logs...",
+        tail_secs
     );
 
-    let until = time::Instant::now() + Duration::from_secs(10);
+    let until = time::Instant::now() + Duration::from_secs(tail_secs);
+    let mut hb_interval = time::interval(Duration::from_secs(3));
     loop {
         tokio::select! {
             biased;
             _ = time::sleep_until(until) => {
                 break;
+            }
+            _ = hb_interval.tick() => {
+                // Lightweight heartbeat to help reconnection supervisor detect dead connections
+                let _ = client.health(Duration::from_secs(1)).await;
             }
             msg = rx.recv() => {
                 match msg {

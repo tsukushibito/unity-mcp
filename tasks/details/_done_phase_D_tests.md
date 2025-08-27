@@ -53,8 +53,18 @@
     - `LoadTokenFromPrefs()` が常に値Aを返し、B/Cを参照しないことを検証。
 
 ### D3: （任意）再接続の仕上げ
-- D3-1: `spawn_supervisor` の writer 差し替えを実装
+- D3-1: `spawn_supervisor` の writer 差し替えを実装（実装済）
+  - 変更: `Inner.tx` を `tokio::sync::Mutex<mpsc::Sender<Bytes>>` に変更し、再接続成功時に新しい `Sender` を差し替え。
+  - 切断検知: `mpsc::Sender::is_closed()` を用いて非破壊に検知（空フレームを送らない）。
+  - 初回/再接続: `spawn_supervisor()` が `spawn_io()` を呼び、接続ごとに新たな `writer_rx` を紐付けて writer/reader タスクを起動。
+
 - D3-2: 手動検証（Unity再起動→自動再接続）
+  - 手順例:
+    - Unity を起動し、`bridge/` プロジェクトで EditorIpcServer が待受けていることを確認。
+    - Rust サンプルを起動（例: `cargo run --example unity_log_tail`）。ログ受信を開始する。
+    - Unity Editor を再起動（もしくは EditorIpcServer を停止→再起動）。
+    - 数秒～十数秒で Rust 側が自動再接続し、再びログを受信することを確認（エラーで終了しない）。
+  - 期待: 断続的な切断でも supervisor がエクスポネンシャルバックオフで再接続を継続、成功時に新しい writer に差し替えられる。
 
 ## 受け入れ条件（DoD）
 - 上記テストが追加・更新され、`cargo test` とUnity EditModeテストがグリーン

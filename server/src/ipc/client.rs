@@ -72,7 +72,7 @@ struct Inner {
     pending: Mutex<HashMap<String, oneshot::Sender<pb::IpcResponse>>>,
     events_tx: broadcast::Sender<pb::IpcEvent>,
     // Write side: we use an mpsc channel to serialize outgoing frames
-    tx: mpsc::Sender<Bytes>,
+    tx: Mutex<mpsc::Sender<Bytes>>,
     negotiated_features: Mutex<FeatureSet>,
 }
 
@@ -91,7 +91,7 @@ impl IpcClient {
             corr: AtomicU64::new(rand::random()),
             pending: Mutex::new(HashMap::new()),
             events_tx,
-            tx: writer_tx,
+            tx: Mutex::new(writer_tx),
             negotiated_features: Mutex::new(FeatureSet::new()),
         });
 
@@ -123,11 +123,9 @@ impl IpcClient {
 
         let (tx, rx) = oneshot::channel();
         self.inner.pending.lock().await.insert(cid.clone(), tx);
-        self.inner
-            .tx
-            .send(bytes)
-            .await
-            .map_err(|_| IpcError::Closed)?;
+        // Clone sender under lock so we don't hold the mutex across await
+        let tx_clone = { self.inner.tx.lock().await.clone() };
+        tx_clone.send(bytes).await.map_err(|_| IpcError::Closed)?;
 
         match time::timeout(timeout, rx).await {
             Ok(Ok(resp)) => Ok(resp),
@@ -446,8 +444,9 @@ impl IpcClient {
                 // Wait for connection to be lost (indicated by writer channel closure)
                 tokio::time::sleep(Duration::from_millis(1000)).await;
 
-                // Check if we need to reconnect by trying to send an empty frame
-                if inner_clone.tx.send(Bytes::new()).await.is_err() {
+                // Check if writer channel is closed (connection likely lost)
+                let is_closed = { inner_clone.tx.lock().await.is_closed() };
+                if is_closed {
                     tracing::warn!("IPC connection lost, attempting reconnect...");
 
                     // Clear all pending requests
@@ -466,7 +465,7 @@ impl IpcClient {
                         tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
 
                         // Create new writer channel for reconnection
-                        let (_new_writer_tx, new_writer_rx) = mpsc::channel::<Bytes>(1024);
+                        let (new_writer_tx, new_writer_rx) = mpsc::channel::<Bytes>(1024);
 
                         match Self::spawn_io(inner_clone.clone(), endpoint.clone(), new_writer_rx)
                             .await
@@ -476,9 +475,11 @@ impl IpcClient {
                                 // Reset backoff on successful connection
                                 backoff_ms = 200;
 
-                                // Update the writer channel in inner
-                                // Note: This requires modifying Inner to have a mutable tx field
-                                // For now, we'll log the successful reconnection
+                                // Update the writer channel in inner so future sends go to the new connection
+                                {
+                                    let mut guard = inner_clone.tx.lock().await;
+                                    *guard = new_writer_tx;
+                                }
                                 break;
                             }
                             Err(e) => {
@@ -761,7 +762,7 @@ mod tests {
             corr: AtomicU64::new(100),
             pending: Mutex::new(HashMap::new()),
             events_tx: broadcast::channel(1).0,
-            tx: mpsc::channel(1).0,
+            tx: Mutex::new(mpsc::channel(1).0),
             negotiated_features: Mutex::new(FeatureSet::new()),
         });
         let client = IpcClient { inner };
@@ -783,7 +784,7 @@ mod tests {
             corr: AtomicU64::new(0x123456789abcdef0),
             pending: Mutex::new(HashMap::new()),
             events_tx: broadcast::channel(1).0,
-            tx: mpsc::channel(1).0,
+            tx: Mutex::new(mpsc::channel(1).0),
             negotiated_features: Mutex::new(FeatureSet::new()),
         });
         let client = IpcClient { inner };
@@ -815,7 +816,7 @@ mod tests {
             corr: AtomicU64::new(0),
             pending: Mutex::new(HashMap::new()),
             events_tx: broadcast::channel(1).0,
-            tx: mpsc::channel(1).0,
+            tx: Mutex::new(mpsc::channel(1).0),
             negotiated_features: Mutex::new(FeatureSet::new()),
         });
         let client = IpcClient { inner };
