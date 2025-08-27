@@ -38,7 +38,6 @@ impl FeatureFlag {
         }
     }
 
-
     pub fn is_supported_by_client() -> Vec<Self> {
         vec![
             Self::AssetsBasic,
