@@ -54,7 +54,9 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
                 if hello.schema_hash != codec::schema_hash() {
                     let reject = pb::IpcReject {
                         code: pb::ipc_reject::Code::FailedPrecondition as i32,
-                        message: "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI).".to_string(),
+                        message:
+                            "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI)."
+                                .to_string(),
                     };
                     let reject_control = pb::IpcControl {
                         kind: Some(pb::ipc_control::Kind::Reject(reject)),
@@ -357,11 +359,13 @@ impl MockUnityServer {
                     } else {
                         codec::schema_hash().to_vec()
                     };
-                    
+
                     if hello.schema_hash != expected_schema_hash {
                         let reject = pb::IpcReject {
                             code: pb::ipc_reject::Code::FailedPrecondition as i32,
-                            message: "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI).".to_string(),
+                            message:
+                                "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI)."
+                                    .to_string(),
                         };
                         let reject_control = pb::IpcControl {
                             kind: Some(pb::ipc_control::Kind::Reject(reject)),
@@ -532,10 +536,11 @@ async fn test_schema_hash_mismatch_rejection() -> anyhow::Result<()> {
     let port = 18806;
 
     // Create fake schema hash - different from expected
-    let fake_hash = vec![0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 
-                         0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
-                         0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                         0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff];
+    let fake_hash = vec![
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
+        0xff, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd,
+        0xee, 0xff,
+    ];
 
     // Start mock server with fake schema hash for test
     let server = MockUnityServer::new().with_fake_schema_hash_for_test(fake_hash);
@@ -561,7 +566,9 @@ async fn test_schema_hash_mismatch_rejection() -> anyhow::Result<()> {
     if let Err(e) = result {
         // Should get a FAILED_PRECONDITION error for schema mismatch
         let error_msg = e.to_string();
-        assert!(error_msg.contains("Schema hash mismatch") || error_msg.contains("FAILED_PRECONDITION"));
+        assert!(
+            error_msg.contains("Schema hash mismatch") || error_msg.contains("FAILED_PRECONDITION")
+        );
     }
 
     Ok(())
