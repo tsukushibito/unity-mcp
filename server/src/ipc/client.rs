@@ -538,12 +538,13 @@ impl IpcClient {
 
         // 3) Read welcome/reject response with timeout
         let welcome = time::timeout(Duration::from_secs(2), async {
-            while let Some(frame) = framed.next().await {
+            if let Some(frame) = framed.next().await {
                 let bytes = frame.map_err(IpcError::Io)?;
                 let control = codec::decode_control(bytes.freeze())?;
-                return Self::handle_handshake_response(control).await;
+                Self::handle_handshake_response(control).await
+            } else {
+                Err(IpcError::Handshake("no welcome response".into()))
             }
-            Err(IpcError::Handshake("no welcome response".into()))
         })
         .await
         .map_err(|_| IpcError::ConnectTimeout)??;

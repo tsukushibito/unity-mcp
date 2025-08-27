@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum FeatureFlag {
@@ -37,18 +38,6 @@ impl FeatureFlag {
         }
     }
 
-    pub fn to_string(&self) -> String {
-        match self {
-            Self::AssetsBasic => "assets.basic".to_string(),
-            Self::BuildMin => "build.min".to_string(),
-            Self::EventsLog => "events.log".to_string(),
-            Self::OpsProgress => "ops.progress".to_string(),
-            Self::AssetsAdvanced => "assets.advanced".to_string(),
-            Self::BuildFull => "build.full".to_string(),
-            Self::EventsFull => "events.full".to_string(),
-            Self::Unknown(s) => s.clone(),
-        }
-    }
 
     pub fn is_supported_by_client() -> Vec<Self> {
         vec![
@@ -62,6 +51,22 @@ impl FeatureFlag {
     /// Normalize feature string (lowercase, trim)
     pub fn normalize_string(s: &str) -> String {
         s.trim().to_lowercase()
+    }
+}
+
+impl fmt::Display for FeatureFlag {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Self::AssetsBasic => "assets.basic",
+            Self::BuildMin => "build.min",
+            Self::EventsLog => "events.log",
+            Self::OpsProgress => "ops.progress",
+            Self::AssetsAdvanced => "assets.advanced",
+            Self::BuildFull => "build.full",
+            Self::EventsFull => "events.full",
+            Self::Unknown(s) => s,
+        };
+        write!(f, "{}", s)
     }
 }
 

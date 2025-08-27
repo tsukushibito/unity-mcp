@@ -627,14 +627,12 @@ async fn test_multiple_build_progress() -> anyhow::Result<()> {
     loop {
         tokio::select! {
             event_result = events.recv() => {
-                if let Ok(event) = event_result {
-                    if let Some(pb::ipc_event::Payload::Op(op)) = event.payload {
-                        if op.message.to_lowercase().contains("build") {
-                            build_operations.insert(op.op_id.clone());
-                            println!("Build operation {}: {} - {}", op.op_id, op.kind, op.message);
-                        }
+                if let Ok(event) = event_result
+                    && let Some(pb::ipc_event::Payload::Op(op)) = event.payload
+                    && op.message.to_lowercase().contains("build") {
+                        build_operations.insert(op.op_id.clone());
+                        println!("Build operation {}: {} - {}", op.op_id, op.kind, op.message);
                     }
-                }
             }
             _ = &mut timeout => break,
         }
@@ -806,7 +804,7 @@ async fn test_memory_usage_during_build() -> anyhow::Result<()> {
 
     // ベースライン メモリ使用量
     let process = std::process::Command::new("ps")
-        .args(&["-o", "rss=", "-p", &std::process::id().to_string()])
+        .args(["-o", "rss=", "-p", &std::process::id().to_string()])
         .output();
 
     let baseline_memory = if let Ok(output) = process {
@@ -835,7 +833,7 @@ async fn test_memory_usage_during_build() -> anyhow::Result<()> {
 
     // ビルド後のメモリ使用量
     let process = std::process::Command::new("ps")
-        .args(&["-o", "rss=", "-p", &std::process::id().to_string()])
+        .args(["-o", "rss=", "-p", &std::process::id().to_string()])
         .output();
 
     let post_build_memory = if let Ok(output) = process {
