@@ -1,7 +1,7 @@
 // Tail Unity log events (~10s) via Direct IPC
 // Run with: cargo run --example unity_log_tail
-use server::ipc::{client::IpcClient, features::FeatureFlag, path::IpcConfig};
 use server::generated::mcp::unity::v1 as pb;
+use server::ipc::{client::IpcClient, features::FeatureFlag, path::IpcConfig};
 use std::time::Duration;
 use tokio::time;
 
@@ -52,7 +52,9 @@ async fn main() -> anyhow::Result<()> {
     let mut n_trace = 0usize;
     let mut n_total_logs = 0usize;
 
-    println!("[unity_log_tail] Tailing logs for ~10s. Interact with the Editor to generate logs...");
+    println!(
+        "[unity_log_tail] Tailing logs for ~10s. Interact with the Editor to generate logs..."
+    );
 
     let until = time::Instant::now() + Duration::from_secs(10);
     loop {
@@ -88,11 +90,15 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    println!("\n[summary] total_logs={n_total_logs} info={n_info} warn={n_warn} error={n_error} debug={n_debug} trace={n_trace}");
+    println!(
+        "\n[summary] total_logs={n_total_logs} info={n_info} warn={n_warn} error={n_error} debug={n_debug} trace={n_trace}"
+    );
     if n_total_logs == 0 {
         println!("[WARN] No logs received in the sampling window");
     }
-    if n_error > 0 { std::process::exit(1); }
+    if n_error > 0 {
+        std::process::exit(1);
+    }
 
     Ok(())
 }
