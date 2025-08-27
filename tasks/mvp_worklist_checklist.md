@@ -4,7 +4,7 @@ Purpose: Track remaining high-level work to reach the MVP DoD. Keep progress her
 
 ## Handshake & Schema
 - [ ] Implement schema hash validation on Unity bridge
-  - [ ] Generate/ship `SCHEMA_HASH` for C# (CI-generated constant)
+  - [ ] Generate/ship `SCHEMA_HASH_HEX` for C# (via `bridge/Tools/generate-csharp.sh`; pre-generated, committed; no manual edits)
   - [ ] Compare `hello.schema_hash` vs server hash; mismatch → `FAILED_PRECONDITION` Reject
   - [ ] Rust integration test: schema mismatch → `IpcError::SchemaMismatch`
 
@@ -19,7 +19,7 @@ Purpose: Track remaining high-level work to reach the MVP DoD. Keep progress her
 ## CI & Proto Parity
 - [ ] Add proto regeneration + diff check to CI (Rust side)
   - [ ] Fail CI on drift with actionable message
-- [ ] Generate C# `SchemaHash` from Rust `SCHEMA_HASH_HEX` in CI to keep a single source of truth
+- [ ] Parity check: ensure C# `SCHEMA_HASH_HEX` matches Rust `SCHEMA_HASH` (fail with regen instructions: `cd bridge && ./Tools/generate-csharp.sh`)
 - [ ] Document the CI steps in a brief developer note
 
 ## Developer Experience

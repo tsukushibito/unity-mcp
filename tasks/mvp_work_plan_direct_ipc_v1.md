@@ -14,7 +14,7 @@
 ## 実施順序（フェーズ）
 1) フェーズA — ハンドシェイク不変条件の確立（最優先）
 - A1: スキーマハッシュ検証（Unity側）
-  - C#側に `SCHEMA_HASH` 定数をCI生成で配置。
+  - C#側に `SCHEMA_HASH` 定数を事前生成してリポジトリに配置（Git管理）。
   - `IpcHello.schema_hash` と一致判定。相違は `FAILED_PRECONDITION` でReject。
   - Rust統合テストに「不一致→SchemaMismatch」を追加。
 - A2: トークン必須（No Dev Mode）
@@ -25,7 +25,7 @@
 
 2) フェーズB — CIとSSoTの固定化
 - B1: Rust側 proto 再生成＋差分検出をCIへ追加（失敗時に明快なメッセージ）。
-- B2: C#の `SchemaHash` をRust `SCHEMA_HASH_HEX` からCIで生成し、ハッシュの単一SOT化。
+- B2: C#の `SCHEMA_HASH_HEX` はRust `SCHEMA_HASH` から事前生成してGit管理。CIはRust↔C#のパリティチェックで不整合を検出し、再生成手順を提示。
 
 3) フェーズC — 開発者体験（DX）
 - C1: Quickstart作成（Unity起動→`cargo run --example test_unity_ipc`）。
@@ -78,3 +78,9 @@
 リンク
 - チェックリスト: `tasks/mvp_worklist_checklist.md`
 - ロードマップ（凍結）: `tasks/direct_ipc_unity_mcp_server_mvp_task_list.md`
+ - 詳細作業書（フェーズ別）:
+   - フェーズA — ハンドシェイク不変条件: `tasks/details/phase_A_handshake.md`
+   - フェーズB — CIとSSoTの固定化: `tasks/details/phase_B_ci_ssot.md`
+   - フェーズC — 開発者体験（DX）: `tasks/details/phase_C_dx.md`
+   - フェーズD — テスト強化と最終仕上げ: `tasks/details/phase_D_tests.md`
+   - フェーズE — マイルストーン検証（ゲート）: `tasks/details/phase_E_gate.md`
