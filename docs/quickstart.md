@@ -54,7 +54,41 @@ public static class SetIpcToken
 確認:
 - `EditorIpcServer` 実装上、未設定/空のトークンや不一致は `UNAUTHENTICATED` で拒否されます。
 
-## 4) Rust 例を実行
+## 4) `MCP_PROJECT_ROOT` を設定（推奨）
+Rust クライアントは `IpcHello.project_root` を Unity のプロジェクトルートの絶対パスと一致させる必要があります。サンプルは `MCP_PROJECT_ROOT` が設定されていればそれを使用し、未設定時はカレントディレクトリ（`.`）を正規化して送信します。
+
+- 典型的には、Unity で開いているのはリポジトリ内の `bridge/` フォルダです。絶対パスを指定してください。
+
+Windows (PowerShell):
+
+```powershell
+$env:MCP_PROJECT_ROOT = 'C:\path\to\unity-mcp\bridge'
+# or, safer (resolves absolute path):
+$env:MCP_PROJECT_ROOT = (Resolve-Path ..\bridge).Path
+```
+
+macOS/Linux (bash/zsh):
+
+```sh
+export MCP_PROJECT_ROOT="/path/to/unity-mcp/bridge"
+```
+
+Note (Windows): PowerShell ではバックスラッシュはエスケープではありません（エスケープはバッククォート ` ）。`C:\path\to` のように通常の 1 本の `\` を使ってください。Rust クライアント側でパスは正規化され、必要に応じて `\\?\` プレフィックスも除去されます。
+
+代替（環境変数なしで実行）:
+- `bridge/` をカレントにして `--manifest-path` でサンプルを実行すると、`.` がプロジェクトルートになります。
+
+```powershell
+cd bridge
+cargo run --manifest-path ..\server\Cargo.toml --example test_unity_ipc
+```
+
+```sh
+cd bridge
+cargo run --manifest-path ../server/Cargo.toml --example test_unity_ipc
+```
+
+## 5) Rust 例を実行
 
 ターミナルで以下を実行:
 
@@ -78,8 +112,11 @@ cargo run --example unity_log_tail
 
 ## トラブルシュート
 - `UNAUTHENTICATED: Missing or empty token` → `EditorUserSettings["MCP.IpcToken"]` を設定（上記参照）。
-- `FAILED_PRECONDITION: schema mismatch` → C# 側の SCHEMA_HASH がRustと一致していません。CI/再生成手順を参照し更新してください。
-- `FAILED_PRECONDITION: project_root mismatch` → Rust 側 `IpcHello.project_root` が Unity プロジェクト直下の絶対パスと一致しているか確認してください。
+- `FAILED_PRECONDITION: schema mismatch` → C# 側の SCHEMA_HASH が Rust と一致していません。CI/再生成手順を参照し更新してください。
+- `FAILED_PRECONDITION: project_root mismatch` → 以下を確認してください。
+  - `MCP_PROJECT_ROOT` が Unity で開いているプロジェクト（例: `bridge/`）の絶対パスになっている
+  - または `bridge/` をカレントにして `--manifest-path` で実行している
+  - シンボリックリンク/ショートカットではなく実パスで一致している（内部で正規化・大文字小文字無視で比較）
 - `UNAVAILABLE: editor compiling/updating` → Unity のコンパイル/更新完了後に再試行。
 - `tcp://127.0.0.1:7777` に接続不可 → Editor が起動しているか、ポートの占有/Firewallを確認。
 

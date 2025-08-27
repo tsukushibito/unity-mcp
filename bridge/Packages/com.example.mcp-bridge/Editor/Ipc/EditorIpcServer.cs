@@ -46,7 +46,7 @@ namespace Mcp.Unity.V1.Ipc
 
                     // Start the server automatically when Unity Editor loads
                     await StartAsync();
-                    
+
                     Debug.Log("[EditorIpcServer] Main thread initialization completed");
                 }
                 catch (System.Exception ex)
@@ -208,20 +208,20 @@ namespace Mcp.Unity.V1.Ipc
                         // Unity API: Get expected token on main thread
                         MainThreadGuard.AssertMainThread();
                         var expectedToken = UnityEditor.EditorUserSettings.GetConfigValue("MCP.IpcToken");
-                        
+
                         // BG-safe validation: Pure comparison (Unity API non-dependent)
                         var tokenValidation = ValidateToken(expectedToken, hello.Token);
-                        
+
                         // Early reject decisions
                         if (!tokenValidation.IsValid)
                             return new IpcControl { Reject = new IpcReject { Code = tokenValidation.ErrorCode, Message = tokenValidation.ErrorMessage } };
-                        
+
                         if (!versionValidation.IsValid)
                             return new IpcControl { Reject = new IpcReject { Code = versionValidation.ErrorCode, Message = versionValidation.ErrorMessage } };
-                        
+
                         if (!pathValidation.IsValid)
                             return new IpcControl { Reject = new IpcReject { Code = pathValidation.ErrorCode, Message = pathValidation.ErrorMessage } };
-                        
+
                         if (!schemaValidation.IsValid)
                             return new IpcControl { Reject = new IpcReject { Code = schemaValidation.ErrorCode, Message = schemaValidation.ErrorMessage } };
 
@@ -636,21 +636,21 @@ namespace Mcp.Unity.V1.Ipc
             // A2-2: No development mode - always require token
             if (string.IsNullOrEmpty(expectedToken))
             {
-                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated, 
+                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated,
                     "Missing or empty token. Set EditorUserSettings: MCP.IpcToken");
             }
-            
+
             // Check if client provided token is empty
             if (string.IsNullOrEmpty(clientToken))
             {
-                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated, 
+                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated,
                     "Missing or empty token. Set EditorUserSettings: MCP.IpcToken");
             }
-            
+
             // Exact match required
             if (clientToken != expectedToken)
             {
-                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated, 
+                return ValidationResult.Error(IpcReject.Types.Code.Unauthenticated,
                     "Invalid token. Check EditorUserSettings: MCP.IpcToken");
             }
 
@@ -663,18 +663,18 @@ namespace Mcp.Unity.V1.Ipc
         private static ValidationResult ValidateSchemaHash(Google.Protobuf.ByteString clientSchemaHash)
         {
             var expectedHash = Mcp.Unity.V1.Generated.Schema.SchemaHashBytes;
-            
+
             if (clientSchemaHash == null || clientSchemaHash.IsEmpty)
             {
-                return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition, 
+                return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition,
                     "Schema hash missing. Regenerate C# SCHEMA_HASH from server (CI).");
             }
 
             var clientHashBytes = clientSchemaHash.ToByteArray();
-            
+
             if (clientHashBytes.Length != expectedHash.Length)
             {
-                return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition, 
+                return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition,
                     "Schema hash length mismatch. Regenerate C# SCHEMA_HASH from server (CI).");
             }
 
@@ -682,7 +682,7 @@ namespace Mcp.Unity.V1.Ipc
             {
                 if (clientHashBytes[i] != expectedHash[i])
                 {
-                    return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition, 
+                    return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition,
                         "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI).");
                 }
             }
@@ -805,11 +805,11 @@ namespace Mcp.Unity.V1.Ipc
         private static string LoadTokenFromPrefs()
         {
             MainThreadGuard.AssertMainThread();
-            
+
             // Unity Editor only: Get token from EditorUserSettings exclusively
             // Environment variables and EditorPrefs are explicitly ignored per A2-1 requirements
             var token = UnityEditor.EditorUserSettings.GetConfigValue("MCP.IpcToken");
-            
+
             if (string.IsNullOrEmpty(token))
             {
                 // Explicitly return null for missing/empty tokens (no development mode fallback)

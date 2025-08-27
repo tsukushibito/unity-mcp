@@ -690,23 +690,31 @@ fn create_default_meta() -> std::collections::HashMap<String, String> {
 
 fn normalize_project_root(path: &str) -> Result<String, std::io::Error> {
     let canonical = std::fs::canonicalize(path)?;
-    let normalized = canonical.to_string_lossy();
+    let mut s = canonical.to_string_lossy().to_string();
 
     #[cfg(windows)]
     {
-        let normalized = normalized
-            .to_uppercase()
-            .chars()
-            .take(1)
-            .chain(normalized.chars().skip(1))
-            .collect::<String>()
-            .replace('/', "\\");
-        Ok(normalized.trim_end_matches('\\').to_string())
+        // Strip extended-length path prefix (\\?\ or \\?\UNC\) so it matches Unity's GetFullPath format
+        if let Some(rest) = s.strip_prefix(r"\\?\UNC\") {
+            s = format!(r"\\{}", rest);
+        } else if let Some(rest) = s.strip_prefix(r"\\?\") {
+            s = rest.to_string();
+        }
+
+        // Normalize separators and trim trailing backslashes (but keep e.g. "C:\")
+        s = s.replace('/', "\\");
+        while s.len() > 3 && s.ends_with('\\') {
+            s.pop();
+        }
+        return Ok(s);
     }
 
     #[cfg(unix)]
     {
-        Ok(normalized.trim_end_matches('/').to_string())
+        while s.len() > 1 && s.ends_with('/') {
+            s.pop();
+        }
+        Ok(s)
     }
 }
 
