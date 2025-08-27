@@ -202,6 +202,54 @@ namespace Bridge.Editor.Ipc.Tests
         }
 
         /// <summary>
+        /// Token 必須および取得経路（EditorUserSettingsのみ有効）を検証
+        /// </summary>
+        [Test]
+        public void TestTokenRequiredAndSource()
+        {
+#if UNITY_EDITOR && DEBUG
+            Diag.Log("Testing token required and source policy (EditorUserSettings only)");
+#endif
+
+            // Backup current token and clear
+            var saved = UnityEditor.EditorUserSettings.GetConfigValue("MCP.IpcToken");
+            try
+            {
+                UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", string.Empty);
+
+                // 1) expected token missing
+                var vr1 = EditorIpcServerAccessor.TestValidateToken(null, null);
+                Assert.IsFalse(EditorIpcServerAccessor.IsValidationResultValid(vr1));
+                Assert.AreEqual(IpcReject.Types.Code.Unauthenticated, EditorIpcServerAccessor.GetValidationResultErrorCode(vr1));
+                StringAssert.Contains("Missing or empty token", EditorIpcServerAccessor.GetValidationResultErrorMessage(vr1));
+
+                // 2) set EditorUserSettings token; set env and EditorPrefs to different values
+                UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", "from-user-settings");
+                System.Environment.SetEnvironmentVariable("MCP_IPC_TOKEN", "from-env");
+                UnityEditor.EditorPrefs.SetString("MCP.IpcToken", "from-editor-prefs");
+
+                var loaded = EditorIpcServerAccessor.TestLoadTokenFromPrefs();
+                Assert.AreEqual("from-user-settings", loaded, "Only EditorUserSettings should be used");
+
+                // 3) mismatch token
+                var vr2 = EditorIpcServerAccessor.TestValidateToken("correct", "wrong");
+                Assert.IsFalse(EditorIpcServerAccessor.IsValidationResultValid(vr2));
+                Assert.AreEqual(IpcReject.Types.Code.Unauthenticated, EditorIpcServerAccessor.GetValidationResultErrorCode(vr2));
+                StringAssert.Contains("Invalid token", EditorIpcServerAccessor.GetValidationResultErrorMessage(vr2));
+
+                // 4) match token
+                var vr3 = EditorIpcServerAccessor.TestValidateToken("secret", "secret");
+                Assert.IsTrue(EditorIpcServerAccessor.IsValidationResultValid(vr3));
+            }
+            finally
+            {
+                UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", saved);
+                System.Environment.SetEnvironmentVariable("MCP_IPC_TOKEN", null);
+                if (UnityEditor.EditorPrefs.HasKey("MCP.IpcToken")) UnityEditor.EditorPrefs.DeleteKey("MCP.IpcToken");
+            }
+        }
+
+        /// <summary>
         /// Test that handshake methods would fail if called from background thread
         /// Note: This test runs on main thread, so it verifies the guard would work
         /// </summary>
@@ -362,6 +410,42 @@ namespace Bridge.Editor.Ipc.Tests
             }
             
             return method.Invoke(null, new object[] { schemaHash });
+        }
+
+        /// <summary>
+        /// Test access to ValidateToken(expected, client)
+        /// </summary>
+        public static object TestValidateToken(string expected, string client)
+        {
+            var method = typeof(EditorIpcServer).GetMethod("ValidateToken",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            if (method == null)
+                throw new System.InvalidOperationException("ValidateToken method not found");
+            return method.Invoke(null, new object[] { expected, client });
+        }
+
+        /// <summary>
+        /// Test access to ValidateProjectRoot(projectRoot)
+        /// </summary>
+        public static object TestValidateProjectRoot(string projectRoot)
+        {
+            var method = typeof(EditorIpcServer).GetMethod("ValidateProjectRoot",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            if (method == null)
+                throw new System.InvalidOperationException("ValidateProjectRoot method not found");
+            return method.Invoke(null, new object[] { projectRoot });
+        }
+
+        /// <summary>
+        /// Test access to LoadTokenFromPrefs()
+        /// </summary>
+        public static string TestLoadTokenFromPrefs()
+        {
+            var method = typeof(EditorIpcServer).GetMethod("LoadTokenFromPrefs",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            if (method == null)
+                throw new System.InvalidOperationException("LoadTokenFromPrefs method not found");
+            return (string)method.Invoke(null, new object[] { });
         }
         
         /// <summary>

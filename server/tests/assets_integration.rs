@@ -39,8 +39,10 @@ async fn test_assets_operations_end_to_end() {
     match p2g_result {
         Ok(response) => {
             println!("Path to GUID conversion successful");
-            assert!(response.map.contains_key("Assets"));
-            let assets_guid = response.map.get("Assets").unwrap();
+            let assets_guid = response
+                .map
+                .get("Assets")
+                .expect("Expected 'Assets' key in P2G response");
             assert!(!assets_guid.is_empty());
             println!("Assets folder GUID: {}", assets_guid);
 
