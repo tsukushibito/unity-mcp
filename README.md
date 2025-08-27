@@ -28,6 +28,7 @@ Unity MCP Server
 
 1) Unity で `bridge/` を開く（Editor 起動）
 2) `MCP.IpcToken` を設定（例: `test-token`）
+   - Unity: `Edit > Project Settings... > MCP Bridge` で Token を入力（または `MCP Bridge/Setup/Open Project Settings`）
 3) Rust 例を実行
 
 ```sh

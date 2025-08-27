@@ -21,7 +21,12 @@ cd unity-mcp
 ## 3) `MCP.IpcToken` を設定（必須）
 Unity 側は `EditorUserSettings["MCP.IpcToken"]` のみを参照します（環境変数や `EditorPrefs` は無視されます）。
 
-方法A: 一時エディタスクリプトを実行（推奨）
+方法A: Project Settings から設定（推奨）
+
+- Unity メニューから `MCP Bridge/Setup/Open Project Settings` を選択、または `Edit > Project Settings... > MCP Bridge` を開きます。
+- `Token` フィールドに値（例: `test-token`）を入力して保存されます（自動）。
+
+方法B: 一時エディタスクリプトを実行
 
 1. 任意のエディタスクリプト（例）を作成して実行します。
 
@@ -43,7 +48,7 @@ public static class SetIpcToken
 
 2. Unity のメニューから `MCP Bridge/Setup/Set Test Token` を実行します。
 
-方法B: スクリプト実行せずにC#コンソールから設定（任意）
+方法C: スクリプト実行せずにC#コンソールから設定（任意）
 - `EditorUserSettings.SetConfigValue("MCP.IpcToken", "test-token")` を実行します。
 
 確認:
@@ -82,4 +87,3 @@ cargo run --example unity_log_tail
 - 例コード: `server/examples/test_unity_ipc.rs`、`server/examples/unity_log_tail.rs`
 - 機能フラグ: `server/src/ipc/features.rs`（`events.log` を含む）
 - 追加の背景とタスク計画: `tasks/details/phase_C_dx.md`
-
