@@ -25,6 +25,8 @@
 ### パリティCIの詳細（GitHub Actions想定）
 - ジョブ名: `proto-and-schema-parity`
 - トリガ: `pull_request`, `push` (main)
+- 配置: `.github/workflows/ci.yml` に新規ジョブとして追加（推奨）
+- 代替: 既存 `build-test` ジョブの末尾にパリティ比較の3ステップ（Rust計算/ C#抽出/ 比較）を追加し、`if: matrix.os == 'ubuntu-latest'` で単一OSのみ実行
 - 主要ステップ（擬似YAML）
   - `actions/checkout@v4`
   - Rustツールチェーンセットアップ（stable）
@@ -39,6 +41,41 @@
 
 ### 開発者ノート（短）
 - 生成・コミットの標準手順を `docs/` に簡単に記載（追加のビルド要件なし）
+
+### 参考YAML（抜粋・差し込み用）
+```
+  parity-check:
+    name: Proto & Schema Parity Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-protoc@v3
+        with: { version: "31.1", repo-token: ${{ secrets.GITHUB_TOKEN }} }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { cache-on-failure: true }
+      - name: Regenerate Rust proto and detect drift
+        run: |
+          cd server && ./scripts/generate-rust-proto.sh
+          git diff --exit-code src/generated || {
+            echo "::error ::Rust proto drift detected. Run: cd server && ./scripts/generate-rust-proto.sh && git add src/generated && git commit -m 'chore: regen rust proto'"; exit 1; }
+      - name: Compute Rust schema hash (hex)
+        id: rust_hash
+        run: |
+          HEX=$(sha256sum server/src/generated/schema.pb | cut -d' ' -f1 | tr 'A-Z' 'a-z'); echo "hex=$HEX" >> "$GITHUB_OUTPUT"
+      - name: Extract C# schema hash (hex)
+        id: csharp_hash
+        run: |
+          FILE="bridge/Packages/com.example.mcp-bridge/Editor/Generated/SchemaHash.cs"
+          HEX=$(sed -n 's/.*SCHEMA_HASH_HEX\s*=\s*"\([0-9a-fA-F]\{64\}\)".*/\1/p' "$FILE" | head -n1 | tr 'A-Z' 'a-z')
+          [ -n "$HEX" ] || { echo "::error ::Failed to extract SCHEMA_HASH_HEX from $FILE"; exit 1; }
+          echo "hex=$HEX" >> "$GITHUB_OUTPUT"
+      - name: Compare Rust vs C# schema hash
+        run: |
+          echo "Rust  : ${{ steps.rust_hash.outputs.hex }}"; echo "CSharp: ${{ steps.csharp_hash.outputs.hex }}"
+          [ "${{ steps.rust_hash.outputs.hex }}" = "${{ steps.csharp_hash.outputs.hex }}" ] || {
+            echo "::error ::Schema hash parity check failed. Run: cd bridge && ./Tools/generate-csharp.sh && commit changes"; exit 1; }
+```
 
 ## 受け入れ条件（DoD）
 - Protoが更新されていればCIが失敗し、修正方法がメッセージで提示される

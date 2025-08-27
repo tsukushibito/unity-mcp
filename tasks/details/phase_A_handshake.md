@@ -108,6 +108,12 @@
 - トークン未設定/空で必ず`UNAUTHENTICATED`。Unity側ログに設定手順が出力される
 - トークン取得経路はEditorUserSettingsのみ（Env/EditorPrefsは無視）
 
+## CI連携（ゲート条件）
+- `.github/workflows/ci.yml` に追加する `parity-check` ジョブで、以下を満たすことをゲートとする:
+  - Rustの生成物ドリフトが無い（`server/scripts/generate-rust-proto.sh` 実行後に `git diff --exit-code server/src/generated/` が空）
+  - `sha256sum server/src/generated/schema.pb` で得たHEXと、C# `SchemaHash.cs` 内の `SCHEMA_HASH_HEX` が一致
+- 不一致時はCIを失敗させ、開発者へ `cd bridge && ./Tools/generate-csharp.sh` の再生成とコミットを促すメッセージを出力
+
 ## テスト
 - 自動: `server/tests/**` 統合テスト（schema mismatch, tokenなし）
 - 自動: Unity EditModeテスト（トークン必須、ハッピーパス確認）
