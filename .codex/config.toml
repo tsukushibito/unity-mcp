@@ -17,10 +17,8 @@ args = [
     "codex",
 ]
 
-[mcp_servers.brave-search]
-command = "npx"
-args = ["-y", "@brave/brave-search-mcp-server", "--transport", "stdio"]
-# env = {}
+[tools]
+web_search = true
 
 # NOTE: Codex currently supports only stdio-launched MCP servers.
 # The `.mcp.json` entry `github` uses HTTP transport and cannot be

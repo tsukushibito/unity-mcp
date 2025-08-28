@@ -68,7 +68,8 @@
 				"gruntfuggly.todo-tree",
 				// Code quality
 				"streetsidesoftware.code-spell-checker",
-				"editorconfig.editorconfig"
+				"editorconfig.editorconfig",
+				"openai.chatgpt"
 			],
 			"settings": {
 				// Reduce file watching & search load from Unity caches
