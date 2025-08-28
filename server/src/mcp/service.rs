@@ -1,10 +1,14 @@
 use crate::ipc::{client::IpcClient, path::IpcConfig};
 use rmcp::{
-    ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_router,
+    handler::server::tool::ToolRouter,
+    model::*,
+    tool_router,
     transport::stdio,
+    ServerHandler,
+    ServiceExt,
 };
-use std::{collections::HashMap, sync::Arc};
-use tokio::sync::Mutex;
+use std::{collections::HashMap, sync::Arc, time::Duration};
+use tokio::sync::{Mutex, RwLock};
 
 #[derive(Debug, Clone)]
 pub struct OperationState {
@@ -17,26 +21,44 @@ pub struct OperationState {
     pub last_updated: std::time::Instant,
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct BridgeState {
+    pub connected: bool,
+    pub attempt: u32,
+    pub last_error: Option<String>,
+    pub next_retry_ms: Option<u64>,
+    pub endpoint: String,
+    pub project_root: String,
+}
+
 #[derive(Clone)]
 pub struct McpService {
     #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
-    ipc: IpcClient,
+    ipc: Arc<RwLock<Option<IpcClient>>>,
+    bridge_state: Arc<RwLock<BridgeState>>,
     operations: Arc<Mutex<HashMap<String, OperationState>>>,
 }
 
 #[tool_router]
 impl McpService {
     pub async fn new() -> anyhow::Result<Self> {
-        let ipc = IpcClient::connect(IpcConfig::default()).await?;
         let operations = Arc::new(Mutex::new(HashMap::new()));
+        let ipc_cell: Arc<RwLock<Option<IpcClient>>> = Arc::new(RwLock::new(None));
+        let bridge_state = Arc::new(RwLock::new(BridgeState::default()));
 
-        // Spawn event processing task
-        Self::spawn_event_processor(ipc.clone(), operations.clone()).await;
+        // 接続スーパーバイザを起動（初回未接続でもMCPは起動継続）
+        Self::spawn_bridge_connector(
+            ipc_cell.clone(),
+            bridge_state.clone(),
+            operations.clone(),
+        )
+        .await;
 
         Ok(Self {
             tool_router: Self::tool_router(),
-            ipc,
+            ipc: ipc_cell,
+            bridge_state,
             operations,
         })
     }
@@ -87,6 +109,101 @@ impl McpService {
             }
 
             tracing::warn!("Unity event processor stopped");
+        });
+    }
+
+    async fn spawn_bridge_connector(
+        ipc_cell: Arc<RwLock<Option<IpcClient>>>,
+        bridge_state: Arc<RwLock<BridgeState>>,
+        operations: Arc<Mutex<HashMap<String, OperationState>>>,
+    ) {
+        tokio::spawn(async move {
+            let mut backoff_ms: u64 = 200;
+            const MAX_BACKOFF_MS: u64 = 5_000;
+            let mut attempt: u32 = 0;
+
+            loop {
+                // 現在の設定から接続先を解決
+                let cfg = IpcConfig::default();
+                let endpoint_resolved = cfg
+                    .endpoint
+                    .as_deref()
+                    .map(super::super::ipc::path::parse_endpoint)
+                    .unwrap_or_else(super::super::ipc::path::default_endpoint);
+                let endpoint_str = match endpoint_resolved {
+                    #[cfg(unix)]
+                    super::super::ipc::path::Endpoint::Unix(ref p) => {
+                        format!("unix://{}", p.display())
+                    }
+                    #[cfg(windows)]
+                    super::super::ipc::path::Endpoint::Pipe(ref name) => {
+                        format!("pipe://{}", name)
+                    }
+                    super::super::ipc::path::Endpoint::Tcp(ref addr) => {
+                        format!("tcp://{}", addr)
+                    }
+                };
+                let project_root = cfg
+                    .project_root
+                    .clone()
+                    .unwrap_or_else(|| ".".to_string());
+
+                attempt = attempt.saturating_add(1);
+                {
+                    let mut s = bridge_state.write().await;
+                    s.connected = false;
+                    s.attempt = attempt;
+                    s.next_retry_ms = None;
+                    s.endpoint = endpoint_str.clone();
+                    s.project_root = project_root.clone();
+                }
+
+                match IpcClient::connect(cfg).await {
+                    Ok(ipc) => {
+                        {
+                            let mut s = bridge_state.write().await;
+                            s.connected = true;
+                            s.last_error = None;
+                            s.next_retry_ms = None;
+                            s.endpoint = endpoint_str.clone();
+                            s.project_root = project_root.clone();
+                        }
+                        {
+                            let mut guard = ipc_cell.write().await;
+                            *guard = Some(ipc.clone());
+                        }
+
+                        // Unityイベント処理を起動
+                        Self::spawn_event_processor(ipc.clone(), operations.clone()).await;
+
+                        // IpcClient内部のリコネクト監視に委譲。ここでは待機。
+                        tracing::info!("Unity Bridge connected. MCP tools are fully available.");
+                        return; // 初回接続後は終了（内部で切断検出→自動再接続）
+                    }
+                    Err(e) => {
+                        let msg = e.to_string();
+                        {
+                            let mut s = bridge_state.write().await;
+                            s.last_error = Some(msg.clone());
+                        }
+                        tracing::warn!(
+                            attempt,
+                            backoff_ms,
+                            "Unity Bridge connect failed (attempt {attempt}): {msg}. Retrying in {backoff_ms}ms"
+                        );
+
+                        // 次回リトライ予定を公開
+                        {
+                            let mut s = bridge_state.write().await;
+                            s.next_retry_ms = Some(backoff_ms);
+                        }
+
+                        tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
+                        let jitter = rand::random::<u64>() % (backoff_ms / 4 + 1);
+                        backoff_ms = std::cmp::min(backoff_ms.saturating_mul(2), MAX_BACKOFF_MS) + jitter;
+                    }
+                }
+            }
         });
     }
 
@@ -259,9 +376,21 @@ impl McpService {
         Ok(())
     }
 
-    // 内部アクセサー
-    pub(crate) fn ipc(&self) -> &IpcClient {
-        &self.ipc
+    // 接続必須の内部アクセサー（未接続時はMCPエラー相当の説明文を返すためにResult化）
+    pub async fn require_ipc(&self) -> Result<IpcClient, rmcp::ErrorData> {
+        if let Some(c) = self.ipc.read().await.clone() {
+            Ok(c)
+        } else {
+            let s = self.bridge_state.read().await.clone();
+            let mut msg = String::from("Unity Bridge not connected yet. Waiting for Unity Editor to start.");
+            if let Some(err) = &s.last_error { msg.push_str(&format!(" last_error={}", err)); }
+            if let Some(ms) = s.next_retry_ms { msg.push_str(&format!(" next_retry_ms={}", ms)); }
+            Err(rmcp::ErrorData::internal_error(msg, None))
+        }
+    }
+
+    pub async fn get_bridge_state(&self) -> BridgeState {
+        self.bridge_state.read().await.clone()
     }
 }
 

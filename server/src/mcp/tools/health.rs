@@ -5,11 +5,13 @@ use std::time::Duration;
 impl McpService {
     #[tool(description = "Unity Bridge health check")]
     pub async fn unity_health(&self) -> Result<CallToolResult, McpError> {
-        // IPCクライアント使用
+        // IPCクライアント（未接続時は待機状態のエラーを返す）
+        let ipc = self.require_ipc().await?;
         let timeout = Duration::from_millis(1500);
-        let health_response = self.ipc().health(timeout).await.map_err(|e| {
-            McpError::internal_error(format!("Unity Bridge IPC error: {}", e), None)
-        })?;
+        let health_response =
+            ipc.health(timeout)
+                .await
+                .map_err(|e| McpError::internal_error(format!("Unity Bridge IPC error: {}", e), None))?;
 
         // IPC HealthResponse から HealthOut に変換
         let health = HealthOut {

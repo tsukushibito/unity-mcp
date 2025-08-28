@@ -15,8 +15,8 @@ impl McpService {
         timeout_secs: Option<u64>,
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
-        let response = self
-            .ipc()
+        let ipc = self.require_ipc().await?;
+        let response = ipc
             .assets_import(
                 paths,
                 recursive.unwrap_or(false),
@@ -62,8 +62,8 @@ impl McpService {
         timeout_secs: Option<u64>,
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
-        let response = self
-            .ipc()
+        let ipc = self.require_ipc().await?;
+        let response = ipc
             .assets_move(from_path, to_path, timeout)
             .await
             .map_err(|e| McpError::internal_error(format!("Assets move IPC error: {}", e), None))?;
@@ -96,8 +96,8 @@ impl McpService {
         timeout_secs: Option<u64>,
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
-        let response = self
-            .ipc()
+        let ipc = self.require_ipc().await?;
+        let response = ipc
             .assets_delete(paths, soft.unwrap_or(true), timeout)
             .await
             .map_err(|e| {
@@ -122,8 +122,8 @@ impl McpService {
         timeout_secs: Option<u64>,
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
-        let response = self
-            .ipc()
+        let ipc = self.require_ipc().await?;
+        let response = ipc
             .assets_refresh(force.unwrap_or(false), timeout)
             .await
             .map_err(|e| {
@@ -145,8 +145,8 @@ impl McpService {
         timeout_secs: Option<u64>,
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
-        let response = self
-            .ipc()
+        let ipc = self.require_ipc().await?;
+        let response = ipc
             .assets_guid_to_path(guids, timeout)
             .await
             .map_err(|e| {
@@ -170,8 +170,8 @@ impl McpService {
         timeout_secs: Option<u64>,
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
-        let response = self
-            .ipc()
+        let ipc = self.require_ipc().await?;
+        let response = ipc
             .assets_path_to_guid(paths, timeout)
             .await
             .map_err(|e| {
