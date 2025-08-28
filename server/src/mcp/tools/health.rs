@@ -8,10 +8,9 @@ impl McpService {
         // IPCクライアント（未接続時は待機状態のエラーを返す）
         let ipc = self.require_ipc().await?;
         let timeout = Duration::from_millis(1500);
-        let health_response =
-            ipc.health(timeout)
-                .await
-                .map_err(|e| McpError::internal_error(format!("Unity Bridge IPC error: {}", e), None))?;
+        let health_response = ipc.health(timeout).await.map_err(|e| {
+            McpError::internal_error(format!("Unity Bridge IPC error: {}", e), None)
+        })?;
 
         // IPC HealthResponse から HealthOut に変換
         let health = HealthOut {

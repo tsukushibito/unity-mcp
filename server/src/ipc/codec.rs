@@ -85,7 +85,6 @@ mod tests {
             ipc_version: "1.0".to_string(),
             features: vec!["assets.basic".to_string()],
             schema_hash: vec![1, 2, 3, 4],
-            project_root: "/test/path".to_string(),
             client_name: "test-client".to_string(),
             client_version: "0.1.0".to_string(),
             meta: std::collections::HashMap::new(),
@@ -104,7 +103,6 @@ mod tests {
                 assert_eq!(hello.ipc_version, decoded_hello.ipc_version);
                 assert_eq!(hello.features, decoded_hello.features);
                 assert_eq!(hello.schema_hash, decoded_hello.schema_hash);
-                assert_eq!(hello.project_root, decoded_hello.project_root);
                 assert_eq!(hello.client_name, decoded_hello.client_name);
                 assert_eq!(hello.client_version, decoded_hello.client_version);
             }

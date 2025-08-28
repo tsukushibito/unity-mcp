@@ -19,11 +19,14 @@ message IpcHello {
 
   // Schema & environment
   bytes schema_hash = 4;               // SHA-256 of FileDescriptorSet (see §4)
-  string project_root = 5;             // absolute path; normalized
+  // Field 5 (project_root) has been removed and is reserved.
+  reserved 5;                          // do not reuse
   string client_name = 6;              // e.g. "unity-mcp-rs"
   string client_version = 7;           // semver of Rust server
 
-  map<string,string> meta = 8;         // optional free-form (OS, arch, etc.)
+  // Optional free-form client environment metadata (OS, arch, etc.).
+  // Clients may include additional context here if needed.
+  map<string,string> meta = 8;
 }
 
 message IpcWelcome {

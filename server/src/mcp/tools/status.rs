@@ -10,7 +10,6 @@ pub struct BridgeStatusOut {
     pub next_retry_ms: Option<u64>,
     pub negotiated_features: Option<Vec<String>>, // 接続済みなら公開
     pub endpoint: String,
-    pub project_root: String,
 }
 
 impl McpService {
@@ -25,16 +24,13 @@ impl McpService {
                 next_retry_ms: s.next_retry_ms,
                 negotiated_features: None,
                 endpoint: s.endpoint,
-                project_root: s.project_root,
             }
         };
 
         // 接続済みなら交渉済み機能も返す（情報価値向上）
-        if out.connected {
-            if let Ok(ipc) = self.require_ipc().await {
-                let features = ipc.get_negotiated_features().await.to_strings();
-                out.negotiated_features = Some(features);
-            }
+        if out.connected && let Ok(ipc) = self.require_ipc().await {
+            let features = ipc.get_negotiated_features().await.to_strings();
+            out.negotiated_features = Some(features);
         }
 
         let content = serde_json::to_string(&out)

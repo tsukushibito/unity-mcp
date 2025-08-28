@@ -518,14 +518,6 @@ impl IpcClient {
             ipc_version: "1.0".to_string(),
             features: desired_features.to_strings(),
             schema_hash: codec::schema_hash(),
-            project_root: normalize_project_root(
-                &inner
-                    .cfg
-                    .project_root
-                    .clone()
-                    .unwrap_or_else(|| ".".to_string()),
-            )
-            .unwrap_or_else(|_| inner.cfg.project_root.clone().unwrap_or_default()),
             client_name: "unity-mcp-rs".to_string(),
             client_version: env!("CARGO_PKG_VERSION").to_string(),
             meta: create_default_meta(),
@@ -689,35 +681,7 @@ fn create_default_meta() -> std::collections::HashMap<String, String> {
     meta
 }
 
-fn normalize_project_root(path: &str) -> Result<String, std::io::Error> {
-    let canonical = std::fs::canonicalize(path)?;
-    let mut s = canonical.to_string_lossy().to_string();
-
-    #[cfg(windows)]
-    {
-        // Strip extended-length path prefix (\\?\ or \\?\UNC\) so it matches Unity's GetFullPath format
-        if let Some(rest) = s.strip_prefix(r"\\?\UNC\") {
-            s = format!(r"\\{}", rest);
-        } else if let Some(rest) = s.strip_prefix(r"\\?\") {
-            s = rest.to_string();
-        }
-
-        // Normalize separators and trim trailing backslashes (but keep e.g. "C:\")
-        s = s.replace('/', "\\");
-        while s.len() > 3 && s.ends_with('\\') {
-            s.pop();
-        }
-        Ok(s)
-    }
-
-    #[cfg(unix)]
-    {
-        while s.len() > 1 && s.ends_with('/') {
-            s.pop();
-        }
-        Ok(s)
-    }
-}
+// normalize_project_root: obsolete (field removed from T01)
 
 async fn connect_endpoint(
     endpoint: &Endpoint,

@@ -128,8 +128,8 @@ message IpcEnvelope {
   }
 }
 
-message IpcHello   { string token = 1; string ipc_version = 2; string project_path = 3; repeated string features = 4; }
-message IpcWelcome { string server_version = 1; string schema_hash = 2; repeated string features = 3; }
+message IpcHello   { string token = 1; string ipc_version = 2; repeated string features = 3; bytes schema_hash = 4; }
+message IpcWelcome { string server_version = 1; bytes schema_hash = 2; repeated string features = 3; }
 ```
 
 **Request/Response & Events (example)**
@@ -301,4 +301,3 @@ static class EditorDispatcher {
 - **Simpler distribution**: one less process and runtime (no .NET server binary).
 - **Lower latency & fewer failure points**: no gRPC hop.
 - **Keeps doors open**: gRPC gateway can be added later if external access is needed; schema remains Proto‑based.
-

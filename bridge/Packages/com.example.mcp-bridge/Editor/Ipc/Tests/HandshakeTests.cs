@@ -42,8 +42,7 @@ namespace Bridge.Editor.Ipc.Tests
                 var hello = new IpcHello
                 {
                     ClientVersion = "1.0.0",
-                    Token = "test-token",
-                    ProjectRoot = Application.dataPath // Unity API access
+                    Token = "test-token"
                 };
 
 #if UNITY_EDITOR && DEBUG
@@ -174,32 +173,7 @@ namespace Bridge.Editor.Ipc.Tests
             });
         }
 
-        /// <summary>
-        /// Test project root path validation
-        /// </summary>
-        [Test]
-        public void TestProjectRootValidation()
-        {
-#if UNITY_EDITOR && DEBUG
-            Diag.Log("Testing project root path validation");
-#endif
-
-            Assert.DoesNotThrow(() =>
-            {
-                // Test valid project root (current Unity project)
-                var validProjectRoot = Application.dataPath;
-                Assert.IsNotEmpty(validProjectRoot, "Project root should not be empty");
-                Assert.IsTrue(System.IO.Directory.Exists(validProjectRoot), "Project root should exist");
-                
-                // Test invalid project root
-                var invalidProjectRoot = "/invalid/path/that/does/not/exist";
-                Assert.IsFalse(System.IO.Directory.Exists(invalidProjectRoot), "Invalid path should not exist");
-                
-#if UNITY_EDITOR && DEBUG
-                Diag.Log($"Valid project root: {validProjectRoot}");
-#endif
-            });
-        }
+        
 
         /// <summary>
         /// Token 必須および取得経路（EditorUserSettingsのみ有効）を検証
@@ -424,17 +398,7 @@ namespace Bridge.Editor.Ipc.Tests
             return method.Invoke(null, new object[] { expected, client });
         }
 
-        /// <summary>
-        /// Test access to ValidateProjectRoot(projectRoot)
-        /// </summary>
-        public static object TestValidateProjectRoot(string projectRoot)
-        {
-            var method = typeof(EditorIpcServer).GetMethod("ValidateProjectRoot",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            if (method == null)
-                throw new System.InvalidOperationException("ValidateProjectRoot method not found");
-            return method.Invoke(null, new object[] { projectRoot });
-        }
+        
 
         /// <summary>
         /// Test access to LoadTokenFromPrefs()

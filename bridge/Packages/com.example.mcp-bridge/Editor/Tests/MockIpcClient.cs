@@ -54,7 +54,6 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     IpcVersion = "1.0",
                     ClientName = "mock-test-client",
                     Token = token ?? "test-token",
-                    ProjectRoot = Directory.GetCurrentDirectory(),
                     SchemaHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes)
                 };
                 hello.Features.AddRange(new[] { 
@@ -114,7 +113,6 @@ namespace Mcp.Unity.V1.Ipc.Tests
                     IpcVersion = version, // Use specified version
                     ClientName = "mock-test-client-version",
                     Token = token ?? "test-token",
-                    ProjectRoot = Directory.GetCurrentDirectory(),
                     SchemaHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes)
                 };
                 hello.Features.AddRange(new[] { 
@@ -152,61 +150,7 @@ namespace Mcp.Unity.V1.Ipc.Tests
             }
         }
 
-        /// <summary>
-        /// Connect with specific project root for path testing
-        /// </summary>
-        public async Task<bool> ConnectWithProjectRootAsync(string token, string projectRoot, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                _tcpClient = new TcpClient();
-                await _tcpClient.ConnectAsync(_address, _port);
-                _stream = _tcpClient.GetStream();
-
-                // Send T01 handshake with specific project root
-                var hello = new Pb.IpcHello
-                {
-                    IpcVersion = "1.0",
-                    ClientName = "mock-test-client-path",
-                    Token = token ?? "test-token",
-                    ProjectRoot = projectRoot, // Use specified project root
-                    SchemaHash = Google.Protobuf.ByteString.CopyFrom(Mcp.Unity.V1.Generated.Schema.SchemaHashBytes)
-                };
-                hello.Features.AddRange(new[] { 
-                    "assets.basic",
-                    "build.min",
-                    "events.log"
-                });
-
-                var control = new Pb.IpcControl { Hello = hello };
-                await SendControlFrameAsync(control);
-
-                // Wait for welcome or reject
-                var responseFrame = await Framing.ReadFrameAsync(_stream);
-                if (responseFrame == null) return false;
-
-                var responseControl = Pb.IpcControl.Parser.ParseFrom(responseFrame);
-                
-                if (responseControl.Welcome != null)
-                {
-                    Debug.Log($"[MockIpcClient] Path handshake successful: {responseControl.Welcome.SessionId}");
-                    _lastWelcome = responseControl.Welcome; // Store for inspection
-                    return true;
-                }
-                else if (responseControl.Reject != null)
-                {
-                    Debug.LogWarning($"[MockIpcClient] Path handshake rejected: {responseControl.Reject.Code} - {responseControl.Reject.Message}");
-                    return false;
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MockIpcClient] Path connection failed: {ex.Message}");
-                return false;
-            }
-        }
+        
 
         /// <summary>
         /// Send Health request and return response

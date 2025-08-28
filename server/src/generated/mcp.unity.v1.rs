@@ -629,16 +629,14 @@ pub struct IpcHello {
     /// SHA-256 of FileDescriptorSet (see §4)
     #[prost(bytes = "vec", tag = "4")]
     pub schema_hash: ::prost::alloc::vec::Vec<u8>,
-    /// absolute path; normalized
-    #[prost(string, tag = "5")]
-    pub project_root: ::prost::alloc::string::String,
     /// e.g. "unity-mcp-rs"
     #[prost(string, tag = "6")]
     pub client_name: ::prost::alloc::string::String,
     /// semver of Rust server
     #[prost(string, tag = "7")]
     pub client_version: ::prost::alloc::string::String,
-    /// optional free-form (OS, arch, etc.)
+    /// Optional free-form client environment metadata (OS, arch, etc.).
+    /// Clients may include additional context here if needed.
     #[prost(map = "string, string", tag = "8")]
     pub meta: ::std::collections::HashMap<
         ::prost::alloc::string::String,

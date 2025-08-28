@@ -146,12 +146,9 @@ impl McpService {
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
         let ipc = self.require_ipc().await?;
-        let response = ipc
-            .assets_guid_to_path(guids, timeout)
-            .await
-            .map_err(|e| {
-                McpError::internal_error(format!("Assets GUID to path IPC error: {}", e), None)
-            })?;
+        let response = ipc.assets_guid_to_path(guids, timeout).await.map_err(|e| {
+            McpError::internal_error(format!("Assets GUID to path IPC error: {}", e), None)
+        })?;
 
         let output = GuidToPathOutput {
             mapping: response.map,
@@ -171,12 +168,9 @@ impl McpService {
     ) -> Result<CallToolResult, McpError> {
         let timeout = Duration::from_secs(timeout_secs.unwrap_or(DEFAULT_TIMEOUT_SECS));
         let ipc = self.require_ipc().await?;
-        let response = ipc
-            .assets_path_to_guid(paths, timeout)
-            .await
-            .map_err(|e| {
-                McpError::internal_error(format!("Assets path to GUID IPC error: {}", e), None)
-            })?;
+        let response = ipc.assets_path_to_guid(paths, timeout).await.map_err(|e| {
+            McpError::internal_error(format!("Assets path to GUID IPC error: {}", e), None)
+        })?;
 
         let output = PathToGuidOutput {
             mapping: response.map,

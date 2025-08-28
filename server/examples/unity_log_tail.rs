@@ -13,8 +13,6 @@ async fn main() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some("tcp://127.0.0.1:7777".to_string()),
         token: Some("test-token".to_string()),
-        // Prefer env MCP_PROJECT_ROOT if provided; otherwise use current directory
-        project_root: Some(std::env::var("MCP_PROJECT_ROOT").unwrap_or_else(|_| ".".to_string())),
         connect_timeout: Duration::from_secs(10),
         handshake_timeout: Duration::from_secs(5),
         total_handshake_timeout: Duration::from_secs(15),

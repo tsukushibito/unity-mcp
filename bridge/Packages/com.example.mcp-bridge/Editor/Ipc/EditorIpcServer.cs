@@ -199,7 +199,6 @@ namespace Mcp.Unity.V1.Ipc
 
                     // Phase 1: BG-safe validations (Unity API non-dependent)
                     var versionValidation = ValidateVersion(hello.IpcVersion);
-                    var pathValidation = ValidateProjectRoot(hello.ProjectRoot);
                     var schemaValidation = ValidateSchemaHash(hello.SchemaHash);
 
                     // Phase 2: Single main-thread block for Unity API access and final decision
@@ -218,9 +217,6 @@ namespace Mcp.Unity.V1.Ipc
 
                         if (!versionValidation.IsValid)
                             return new IpcControl { Reject = new IpcReject { Code = versionValidation.ErrorCode, Message = versionValidation.ErrorMessage } };
-
-                        if (!pathValidation.IsValid)
-                            return new IpcControl { Reject = new IpcReject { Code = pathValidation.ErrorCode, Message = pathValidation.ErrorMessage } };
 
                         if (!schemaValidation.IsValid)
                             return new IpcControl { Reject = new IpcReject { Code = schemaValidation.ErrorCode, Message = schemaValidation.ErrorMessage } };
@@ -756,40 +752,7 @@ namespace Mcp.Unity.V1.Ipc
             return ValidationResult.Success();
         }
 
-        /// <summary>
-        /// Validate project root path
-        /// </summary>
-        private static ValidationResult ValidateProjectRoot(string projectRoot)
-        {
-            if (string.IsNullOrEmpty(projectRoot))
-            {
-                return ValidationResult.Error(IpcReject.Types.Code.FailedPrecondition, "missing project_root");
-            }
-
-            try
-            {
-                var normalizedRoot = Path.GetFullPath(projectRoot);
-                var actualProjectPath = Path.GetFullPath(Directory.GetCurrentDirectory());
-
-                if (!normalizedRoot.Equals(actualProjectPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    return ValidationResult.Error(
-                        IpcReject.Types.Code.FailedPrecondition,
-                        "project_root mismatch"
-                    );
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
-                return ValidationResult.Error(
-                    IpcReject.Types.Code.FailedPrecondition,
-                    "invalid project_root path"
-                );
-            }
-
-            return ValidationResult.Success();
-        }
+        
 
         /// <summary>
         /// Get configured authentication token

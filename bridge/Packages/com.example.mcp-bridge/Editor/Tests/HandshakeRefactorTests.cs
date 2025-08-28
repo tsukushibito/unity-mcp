@@ -190,51 +190,7 @@ namespace Bridge.Editor.Tests
             }
         }
 
-        /// <summary>
-        /// Test project root path validation reject
-        /// </summary>
-        [UnityTest]
-        public IEnumerator TestHandshakeProjectRootReject()
-        {
-            var task = TestProjectRootRejectAsync();
-            yield return new WaitUntil(() => task.IsCompleted);
-
-            if (task.IsFaulted)
-            {
-                Debug.LogError($"Project root reject test failed: {task.Exception}");
-                Assert.Fail($"Project root reject test failed: {task.Exception?.GetBaseException().Message}");
-            }
-
-            Assert.IsTrue(task.Result, "Invalid project root should be rejected");
-        }
-
-        private async Task<bool> TestProjectRootRejectAsync()
-        {
-            try
-            {
-#if UNITY_EDITOR && DEBUG
-                Mcp.Unity.V1.Ipc.Infra.Diag.Log("Testing project root rejection path");
-#endif
-
-                // Test with invalid project root - should be rejected
-                var connected = await _mockClient.ConnectWithProjectRootAsync("test-token", "/invalid/path/that/does/not/exist");
-
-                // Connection should fail due to project root rejection
-                if (connected)
-                {
-                    Debug.LogError("Connection succeeded with invalid project root - this should not happen");
-                    return false;
-                }
-
-                Debug.Log("Project root reject test: Connection properly rejected with invalid project root");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Project root reject test exception: {ex}");
-                return false;
-            }
-        }
+        
 
         /// <summary>
         /// Test that handshake validation methods now require main thread execution

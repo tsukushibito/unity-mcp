@@ -15,7 +15,6 @@ pub enum Endpoint {
 pub struct IpcConfig {
     pub endpoint: Option<String>, // raw string like "unix:///...", "pipe://...", "tcp://host:port"
     pub token: Option<String>,
-    pub project_root: Option<String>,
     pub connect_timeout: Duration,
     pub handshake_timeout: Duration, // T01: hello送信後の応答待ち
     pub total_handshake_timeout: Duration, // T01: 全体制限時間
@@ -29,7 +28,6 @@ impl Default for IpcConfig {
         Self {
             endpoint: env::var("MCP_IPC_ENDPOINT").ok(),
             token: env::var("MCP_IPC_TOKEN").ok(),
-            project_root: env::var("MCP_PROJECT_ROOT").ok(),
             // T01 準拠のタイムアウト設定
             connect_timeout: Duration::from_millis(
                 env::var("MCP_IPC_CONNECT_TIMEOUT_MS")

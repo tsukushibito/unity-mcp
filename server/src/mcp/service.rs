@@ -1,11 +1,7 @@
 use crate::ipc::{client::IpcClient, path::IpcConfig};
 use rmcp::{
-    handler::server::tool::ToolRouter,
-    model::*,
-    tool_router,
+    ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_router,
     transport::stdio,
-    ServerHandler,
-    ServiceExt,
 };
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::{Mutex, RwLock};
@@ -28,7 +24,6 @@ pub struct BridgeState {
     pub last_error: Option<String>,
     pub next_retry_ms: Option<u64>,
     pub endpoint: String,
-    pub project_root: String,
 }
 
 #[derive(Clone)]
@@ -48,12 +43,8 @@ impl McpService {
         let bridge_state = Arc::new(RwLock::new(BridgeState::default()));
 
         // 接続スーパーバイザを起動（初回未接続でもMCPは起動継続）
-        Self::spawn_bridge_connector(
-            ipc_cell.clone(),
-            bridge_state.clone(),
-            operations.clone(),
-        )
-        .await;
+        Self::spawn_bridge_connector(ipc_cell.clone(), bridge_state.clone(), operations.clone())
+            .await;
 
         Ok(Self {
             tool_router: Self::tool_router(),
@@ -143,11 +134,6 @@ impl McpService {
                         format!("tcp://{}", addr)
                     }
                 };
-                let project_root = cfg
-                    .project_root
-                    .clone()
-                    .unwrap_or_else(|| ".".to_string());
-
                 attempt = attempt.saturating_add(1);
                 {
                     let mut s = bridge_state.write().await;
@@ -155,7 +141,6 @@ impl McpService {
                     s.attempt = attempt;
                     s.next_retry_ms = None;
                     s.endpoint = endpoint_str.clone();
-                    s.project_root = project_root.clone();
                 }
 
                 match IpcClient::connect(cfg).await {
@@ -166,7 +151,6 @@ impl McpService {
                             s.last_error = None;
                             s.next_retry_ms = None;
                             s.endpoint = endpoint_str.clone();
-                            s.project_root = project_root.clone();
                         }
                         {
                             let mut guard = ipc_cell.write().await;
@@ -200,7 +184,8 @@ impl McpService {
 
                         tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
                         let jitter = rand::random::<u64>() % (backoff_ms / 4 + 1);
-                        backoff_ms = std::cmp::min(backoff_ms.saturating_mul(2), MAX_BACKOFF_MS) + jitter;
+                        backoff_ms =
+                            std::cmp::min(backoff_ms.saturating_mul(2), MAX_BACKOFF_MS) + jitter;
                     }
                 }
             }
@@ -382,9 +367,14 @@ impl McpService {
             Ok(c)
         } else {
             let s = self.bridge_state.read().await.clone();
-            let mut msg = String::from("Unity Bridge not connected yet. Waiting for Unity Editor to start.");
-            if let Some(err) = &s.last_error { msg.push_str(&format!(" last_error={}", err)); }
-            if let Some(ms) = s.next_retry_ms { msg.push_str(&format!(" next_retry_ms={}", ms)); }
+            let mut msg =
+                String::from("Unity Bridge not connected yet. Waiting for Unity Editor to start.");
+            if let Some(err) = &s.last_error {
+                msg.push_str(&format!(" last_error={}", err));
+            }
+            if let Some(ms) = s.next_retry_ms {
+                msg.push_str(&format!(" next_retry_ms={}", ms));
+            }
             Err(rmcp::ErrorData::internal_error(msg, None))
         }
     }

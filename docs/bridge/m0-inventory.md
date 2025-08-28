@@ -78,7 +78,6 @@ Task.Run(AcceptConnectionsAsync)
       └─ Task.Run(HandleConnectionAsync) 
           └─ HandleConnectionAsync (BG スレッド)
               ├─ ValidateEditorState() → EditorApplication.isCompiling ❌
-              ├─ ValidateProjectRoot() → Directory.GetCurrentDirectory (安全)
               ├─ SendWelcomeAsync()
               │   └─ CreateWelcome() → Application.unityVersion ❌
               └─ ProcessRequestsAsync()

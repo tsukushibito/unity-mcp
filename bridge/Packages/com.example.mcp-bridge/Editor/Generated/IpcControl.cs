@@ -28,28 +28,28 @@ namespace Mcp.Unity.V1 {
             "MSKVAQoKSXBjQ29udHJvbBInCgVoZWxsbxgBIAEoCzIWLm1jcC51bml0eS52",
             "MS5JcGNIZWxsb0gAEisKB3dlbGNvbWUYAiABKAsyGC5tY3AudW5pdHkudjEu",
             "SXBjV2VsY29tZUgAEikKBnJlamVjdBgDIAEoCzIXLm1jcC51bml0eS52MS5J",
-            "cGNSZWplY3RIAEIGCgRraW5kIvUBCghJcGNIZWxsbxINCgV0b2tlbhgBIAEo",
+            "cGNSZWplY3RIAEIGCgRraW5kIuUBCghJcGNIZWxsbxINCgV0b2tlbhgBIAEo",
             "CRITCgtpcGNfdmVyc2lvbhgCIAEoCRIQCghmZWF0dXJlcxgDIAMoCRITCgtz",
-            "Y2hlbWFfaGFzaBgEIAEoDBIUCgxwcm9qZWN0X3Jvb3QYBSABKAkSEwoLY2xp",
-            "ZW50X25hbWUYBiABKAkSFgoOY2xpZW50X3ZlcnNpb24YByABKAkSLgoEbWV0",
-            "YRgIIAMoCzIgLm1jcC51bml0eS52MS5JcGNIZWxsby5NZXRhRW50cnkaKwoJ",
-            "TWV0YUVudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiiQIK",
-            "CklwY1dlbGNvbWUSEwoLaXBjX3ZlcnNpb24YASABKAkSGQoRYWNjZXB0ZWRf",
-            "ZmVhdHVyZXMYAiADKAkSEwoLc2NoZW1hX2hhc2gYAyABKAwSEwoLc2VydmVy",
-            "X25hbWUYBCABKAkSFgoOc2VydmVyX3ZlcnNpb24YBSABKAkSFgoOZWRpdG9y",
-            "X3ZlcnNpb24YBiABKAkSEgoKc2Vzc2lvbl9pZBgHIAEoCRIwCgRtZXRhGAgg",
-            "AygLMiIubWNwLnVuaXR5LnYxLklwY1dlbGNvbWUuTWV0YUVudHJ5GisKCU1l",
-            "dGFFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIsYBCglJ",
-            "cGNSZWplY3QSKgoEY29kZRgBIAEoDjIcLm1jcC51bml0eS52MS5JcGNSZWpl",
-            "Y3QuQ29kZRIPCgdtZXNzYWdlGAIgASgJInwKBENvZGUSEwoPVU5BVVRIRU5U",
-            "SUNBVEVEEAASFwoTRkFJTEVEX1BSRUNPTkRJVElPThABEhUKEVBFUk1JU1NJ",
-            "T05fREVOSUVEEAISEAoMT1VUX09GX1JBTkdFEAMSDAoISU5URVJOQUwQBBIP",
-            "CgtVTkFWQUlMQUJMRRAFYgZwcm90bzM="));
+            "Y2hlbWFfaGFzaBgEIAEoDBITCgtjbGllbnRfbmFtZRgGIAEoCRIWCg5jbGll",
+            "bnRfdmVyc2lvbhgHIAEoCRIuCgRtZXRhGAggAygLMiAubWNwLnVuaXR5LnYx",
+            "LklwY0hlbGxvLk1ldGFFbnRyeRorCglNZXRhRW50cnkSCwoDa2V5GAEgASgJ",
+            "Eg0KBXZhbHVlGAIgASgJOgI4AUoECAUQBiKJAgoKSXBjV2VsY29tZRITCgtp",
+            "cGNfdmVyc2lvbhgBIAEoCRIZChFhY2NlcHRlZF9mZWF0dXJlcxgCIAMoCRIT",
+            "CgtzY2hlbWFfaGFzaBgDIAEoDBITCgtzZXJ2ZXJfbmFtZRgEIAEoCRIWCg5z",
+            "ZXJ2ZXJfdmVyc2lvbhgFIAEoCRIWCg5lZGl0b3JfdmVyc2lvbhgGIAEoCRIS",
+            "CgpzZXNzaW9uX2lkGAcgASgJEjAKBG1ldGEYCCADKAsyIi5tY3AudW5pdHku",
+            "djEuSXBjV2VsY29tZS5NZXRhRW50cnkaKwoJTWV0YUVudHJ5EgsKA2tleRgB",
+            "IAEoCRINCgV2YWx1ZRgCIAEoCToCOAEixgEKCUlwY1JlamVjdBIqCgRjb2Rl",
+            "GAEgASgOMhwubWNwLnVuaXR5LnYxLklwY1JlamVjdC5Db2RlEg8KB21lc3Nh",
+            "Z2UYAiABKAkifAoEQ29kZRITCg9VTkFVVEhFTlRJQ0FURUQQABIXChNGQUlM",
+            "RURfUFJFQ09ORElUSU9OEAESFQoRUEVSTUlTU0lPTl9ERU5JRUQQAhIQCgxP",
+            "VVRfT0ZfUkFOR0UQAxIMCghJTlRFUk5BTBAEEg8KC1VOQVZBSUxBQkxFEAVi",
+            "BnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcControl), global::Mcp.Unity.V1.IpcControl.Parser, new[]{ "Hello", "Welcome", "Reject" }, new[]{ "Kind" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcHello), global::Mcp.Unity.V1.IpcHello.Parser, new[]{ "Token", "IpcVersion", "Features", "SchemaHash", "ProjectRoot", "ClientName", "ClientVersion", "Meta" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcHello), global::Mcp.Unity.V1.IpcHello.Parser, new[]{ "Token", "IpcVersion", "Features", "SchemaHash", "ClientName", "ClientVersion", "Meta" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcWelcome), global::Mcp.Unity.V1.IpcWelcome.Parser, new[]{ "IpcVersion", "AcceptedFeatures", "SchemaHash", "ServerName", "ServerVersion", "EditorVersion", "SessionId", "Meta" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcReject), global::Mcp.Unity.V1.IpcReject.Parser, new[]{ "Code", "Message" }, null, new[]{ typeof(global::Mcp.Unity.V1.IpcReject.Types.Code) }, null, null)
           }));
@@ -444,7 +444,6 @@ namespace Mcp.Unity.V1 {
       ipcVersion_ = other.ipcVersion_;
       features_ = other.features_.Clone();
       schemaHash_ = other.schemaHash_;
-      projectRoot_ = other.projectRoot_;
       clientName_ = other.clientName_;
       clientVersion_ = other.clientVersion_;
       meta_ = other.meta_.Clone();
@@ -516,21 +515,6 @@ namespace Mcp.Unity.V1 {
       }
     }
 
-    /// <summary>Field number for the "project_root" field.</summary>
-    public const int ProjectRootFieldNumber = 5;
-    private string projectRoot_ = "";
-    /// <summary>
-    /// absolute path; normalized
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public string ProjectRoot {
-      get { return projectRoot_; }
-      set {
-        projectRoot_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
     /// <summary>Field number for the "client_name" field.</summary>
     public const int ClientNameFieldNumber = 6;
     private string clientName_ = "";
@@ -567,7 +551,8 @@ namespace Mcp.Unity.V1 {
         = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForString(18, ""), 66);
     private readonly pbc::MapField<string, string> meta_ = new pbc::MapField<string, string>();
     /// <summary>
-    /// optional free-form (OS, arch, etc.)
+    /// Optional free-form client environment metadata (OS, arch, etc.).
+    /// Clients may include additional context here if needed.
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -594,7 +579,6 @@ namespace Mcp.Unity.V1 {
       if (IpcVersion != other.IpcVersion) return false;
       if(!features_.Equals(other.features_)) return false;
       if (SchemaHash != other.SchemaHash) return false;
-      if (ProjectRoot != other.ProjectRoot) return false;
       if (ClientName != other.ClientName) return false;
       if (ClientVersion != other.ClientVersion) return false;
       if (!Meta.Equals(other.Meta)) return false;
@@ -609,7 +593,6 @@ namespace Mcp.Unity.V1 {
       if (IpcVersion.Length != 0) hash ^= IpcVersion.GetHashCode();
       hash ^= features_.GetHashCode();
       if (SchemaHash.Length != 0) hash ^= SchemaHash.GetHashCode();
-      if (ProjectRoot.Length != 0) hash ^= ProjectRoot.GetHashCode();
       if (ClientName.Length != 0) hash ^= ClientName.GetHashCode();
       if (ClientVersion.Length != 0) hash ^= ClientVersion.GetHashCode();
       hash ^= Meta.GetHashCode();
@@ -644,10 +627,6 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(34);
         output.WriteBytes(SchemaHash);
       }
-      if (ProjectRoot.Length != 0) {
-        output.WriteRawTag(42);
-        output.WriteString(ProjectRoot);
-      }
       if (ClientName.Length != 0) {
         output.WriteRawTag(50);
         output.WriteString(ClientName);
@@ -680,10 +659,6 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(34);
         output.WriteBytes(SchemaHash);
       }
-      if (ProjectRoot.Length != 0) {
-        output.WriteRawTag(42);
-        output.WriteString(ProjectRoot);
-      }
       if (ClientName.Length != 0) {
         output.WriteRawTag(50);
         output.WriteString(ClientName);
@@ -713,9 +688,6 @@ namespace Mcp.Unity.V1 {
       if (SchemaHash.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeBytesSize(SchemaHash);
       }
-      if (ProjectRoot.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(ProjectRoot);
-      }
       if (ClientName.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(ClientName);
       }
@@ -744,9 +716,6 @@ namespace Mcp.Unity.V1 {
       features_.Add(other.features_);
       if (other.SchemaHash.Length != 0) {
         SchemaHash = other.SchemaHash;
-      }
-      if (other.ProjectRoot.Length != 0) {
-        ProjectRoot = other.ProjectRoot;
       }
       if (other.ClientName.Length != 0) {
         ClientName = other.ClientName;
@@ -788,10 +757,6 @@ namespace Mcp.Unity.V1 {
           }
           case 34: {
             SchemaHash = input.ReadBytes();
-            break;
-          }
-          case 42: {
-            ProjectRoot = input.ReadString();
             break;
           }
           case 50: {
@@ -839,10 +804,6 @@ namespace Mcp.Unity.V1 {
           }
           case 34: {
             SchemaHash = input.ReadBytes();
-            break;
-          }
-          case 42: {
-            ProjectRoot = input.ReadString();
             break;
           }
           case 50: {

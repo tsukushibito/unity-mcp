@@ -130,7 +130,6 @@ async fn test_t01_basic_handshake_success() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some(format!("tcp://127.0.0.1:{port}")),
         token: Some("test-token".to_string()),
-        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_secs(5),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
@@ -161,7 +160,6 @@ async fn test_t01_basic_token_rejection() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some(format!("tcp://127.0.0.1:{port}")),
         token: Some("".to_string()), // Empty token should trigger rejection
-        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_secs(5),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
@@ -189,7 +187,6 @@ async fn test_connection_timeout() {
         // 宛先は正しい形式だが応答しない（TEST-NET-3）
         endpoint: Some("tcp://203.0.113.1:12345".to_string()),
         token: None,
-        project_root: None,
         connect_timeout: Duration::from_millis(100),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(3),
@@ -217,7 +214,6 @@ async fn test_handshake_authentication_failure() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some(format!("tcp://127.0.0.1:{port}")),
         token: Some("wrong-token".to_string()),
-        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_secs(5),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
@@ -264,7 +260,6 @@ async fn test_connect_with_retry_success() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some(format!("tcp://127.0.0.1:{port}")),
         token: Some("test-token".to_string()),
-        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_millis(200),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
@@ -291,7 +286,6 @@ async fn test_connect_with_retry_permanent_failure() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some(format!("tcp://127.0.0.1:{port}")),
         token: Some("".to_string()), // Empty token will be permanently rejected
-        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_secs(5),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
@@ -314,7 +308,7 @@ async fn test_connect_with_retry_permanent_failure() -> anyhow::Result<()> {
 struct MockUnityServer {
     supported_features: Vec<String>,
     override_schema_hash_for_test: Option<Vec<u8>>,
-    expected_project_root: Option<String>,
+    // project_root removed from protocol; no expectation needed
 }
 
 impl MockUnityServer {
@@ -327,7 +321,7 @@ impl MockUnityServer {
                 "ops.progress".to_string(),
             ],
             override_schema_hash_for_test: None,
-            expected_project_root: None,
+            // no project_root expectation
         }
     }
 
@@ -341,10 +335,7 @@ impl MockUnityServer {
         self
     }
 
-    pub fn with_expected_project_root<S: Into<String>>(mut self, project_root: S) -> Self {
-        self.expected_project_root = Some(project_root.into());
-        self
-    }
+    // project_root expectation removed
 
     pub async fn start(&self, port: u16) -> anyhow::Result<()> {
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port)).await?;
@@ -355,7 +346,7 @@ impl MockUnityServer {
             let features_clone = supported_features.clone();
             let hash_override = override_schema_hash.clone();
             // Clone expected project_root per-connection to avoid moving a shared Option across iterations
-            let expected_project_root_for_conn = self.expected_project_root.clone();
+            // no project_root expectation
             tokio::spawn(async move {
                 let mut framed = framing::into_framed(stream);
 
@@ -364,21 +355,7 @@ impl MockUnityServer {
                     && let Ok(control) = codec::decode_control(bytes.freeze())
                     && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind
                 {
-                    // Optional project_root validation (to simulate Unity behavior)
-                    if let Some(expected_pr) = expected_project_root_for_conn
-                        && hello.project_root != expected_pr
-                    {
-                        let reject = pb::IpcReject {
-                            code: pb::ipc_reject::Code::FailedPrecondition as i32,
-                            message: "project_root mismatch".to_string(),
-                        };
-                        let reject_control = pb::IpcControl {
-                            kind: Some(pb::ipc_control::Kind::Reject(reject)),
-                        };
-                        let reject_bytes = codec::encode_control(&reject_control).unwrap();
-                        let _ = framed.send(reject_bytes).await;
-                        return;
-                    }
+                    // project_root no longer part of handshake
                     // Schema hash validation (responsibility separated from token)
                     let expected_schema_hash =
                         hash_override.unwrap_or_else(|| codec::schema_hash().to_vec());
@@ -435,7 +412,6 @@ fn test_config(port: u16) -> IpcConfig {
     IpcConfig {
         endpoint: Some(format!("tcp://127.0.0.1:{}", port)),
         token: Some("test-token".to_string()),
-        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_secs(5),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
@@ -575,7 +551,6 @@ async fn test_schema_hash_mismatch_rejection() -> anyhow::Result<()> {
     let cfg = IpcConfig {
         endpoint: Some(format!("tcp://127.0.0.1:{port}")),
         token: Some("test-token".to_string()), // Valid token - schema hash is the issue
-        project_root: Some(".".to_string()),
         connect_timeout: Duration::from_secs(5),
         handshake_timeout: Duration::from_secs(2),
         total_handshake_timeout: Duration::from_secs(8),
@@ -597,38 +572,4 @@ async fn test_schema_hash_mismatch_rejection() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-async fn test_project_root_mismatch_rejection() -> anyhow::Result<()> {
-    let port = 18903;
-
-    // Start mock server that expects a specific project_root different from what client will send
-    let server = MockUnityServer::new()
-        .with_expected_project_root("/__expected_project_root_that_will_not_match__");
-    tokio::spawn(async move {
-        let _ = server.start(port).await;
-    });
-    tokio::time::sleep(Duration::from_millis(100)).await;
-
-    // Client uses current directory (".") which should not match the server's expectation
-    let cfg = IpcConfig {
-        endpoint: Some(format!("tcp://127.0.0.1:{}", port)),
-        token: Some("test-token".to_string()),
-        project_root: Some(".".to_string()),
-        connect_timeout: Duration::from_secs(5),
-        handshake_timeout: Duration::from_secs(2),
-        total_handshake_timeout: Duration::from_secs(8),
-        call_timeout: Duration::from_secs(5),
-        max_reconnect_attempts: Some(1),
-    };
-
-    let result = IpcClient::connect(cfg).await;
-    assert!(result.is_err());
-
-    if let Err(e) = result {
-        assert!(matches!(e, IpcError::FailedPrecondition(_)));
-        let msg = e.to_string();
-        assert!(msg.contains("project_root mismatch"));
-    }
-
-    Ok(())
-}
+// project_root mismatch test removed: field no longer in protocol
