@@ -18,13 +18,24 @@ fi
 
 # Codex CLI setup
 echo "📦 Setting up Codex CLI configuration..."
-if [ -d /workspaces/unity-mcp/.codex ]; then
-    # Remove existing ~/.codex if it exists to avoid conflicts
-    rm -rf ~/.codex
-    ln -sf /workspaces/unity-mcp/.codex ~/.codex
-    echo "✅ Codex directory symlinked to ~/.codex"
+
+# Create ~/.codex directory
+mkdir -p ~/.codex
+
+# Link config.toml
+if [ -f /workspaces/unity-mcp/.codex/config.toml ]; then
+    ln -sf /workspaces/unity-mcp/.codex/config.toml ~/.codex/config.toml
+    echo "✅ config.toml symlinked"
 else
-    echo "ℹ️  .codex directory not found, skipping Codex setup"
+    echo "⚠️  config.toml not found"
+fi
+
+# Link prompts directory
+if [ -d /workspaces/unity-mcp/.codex/prompts ]; then
+    ln -sf /workspaces/unity-mcp/.codex/prompts ~/.codex/prompts
+    echo "✅ prompts directory symlinked"
+else
+    echo "⚠️  prompts directory not found"
 fi
 
 echo "🚀 DevContainer setup completed successfully!"
