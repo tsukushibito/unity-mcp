@@ -386,13 +386,17 @@ impl McpService {
 
 impl ServerHandler for McpService {
     fn get_info(&self) -> InitializeResult {
+        // 明示的に tools capability を公開
         InitializeResult {
             server_info: Implementation {
                 name: "unity-mcp-server".to_string(),
                 version: "0.1.0".to_string(),
             },
             protocol_version: ProtocolVersion::V_2024_11_05,
-            capabilities: ServerCapabilities::default(),
+            capabilities: ServerCapabilities {
+                tools: Some(ToolsCapability::default()),
+                ..Default::default()
+            },
             instructions: None,
         }
     }
