@@ -1,10 +1,9 @@
 use crate::{mcp::service::McpService, mcp_types::HealthOut};
-use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content, tool};
+use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content};
 use std::time::Duration;
 
 impl McpService {
-    #[tool(description = "Unity Bridge health check")]
-    pub async fn unity_health(&self) -> Result<CallToolResult, McpError> {
+    pub(super) async fn do_unity_health(&self) -> Result<CallToolResult, McpError> {
         // IPCクライアント（未接続時は待機状態のエラーを返す）
         let ipc = self.require_ipc().await?;
         let timeout = Duration::from_millis(1500);

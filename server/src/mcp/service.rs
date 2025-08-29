@@ -1,7 +1,6 @@
 use crate::ipc::{client::IpcClient, path::IpcConfig};
 use rmcp::{
-    ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_router,
-    transport::stdio,
+    ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, transport::stdio,
 };
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::{Mutex, RwLock};
@@ -35,7 +34,6 @@ pub struct McpService {
     operations: Arc<Mutex<HashMap<String, OperationState>>>,
 }
 
-#[tool_router]
 impl McpService {
     pub async fn new() -> anyhow::Result<Self> {
         let operations = Arc::new(Mutex::new(HashMap::new()));
@@ -47,7 +45,7 @@ impl McpService {
             .await;
 
         Ok(Self {
-            tool_router: Self::tool_router(),
+            tool_router: super::tools::make_tool_router(),
             ipc: ipc_cell,
             bridge_state,
             operations,

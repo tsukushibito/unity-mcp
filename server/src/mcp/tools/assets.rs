@@ -1,13 +1,12 @@
 use crate::mcp::service::McpService;
-use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content, tool};
+use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 const DEFAULT_TIMEOUT_SECS: u64 = 30;
 
 impl McpService {
-    #[tool(description = "Import Unity assets via Direct IPC")]
-    pub async fn unity_assets_import(
+    pub(super) async fn do_unity_assets_import(
         &self,
         paths: Vec<String>,
         recursive: Option<bool>,
@@ -54,8 +53,7 @@ impl McpService {
         Ok(CallToolResult::success(vec![Content::text(content)]))
     }
 
-    #[tool(description = "Move Unity asset via Direct IPC")]
-    pub async fn unity_assets_move(
+    pub(super) async fn do_unity_assets_move(
         &self,
         from_path: String,
         to_path: String,
@@ -88,8 +86,7 @@ impl McpService {
         Ok(CallToolResult::success(vec![Content::text(content)]))
     }
 
-    #[tool(description = "Delete Unity assets via Direct IPC")]
-    pub async fn unity_assets_delete(
+    pub(super) async fn do_unity_assets_delete(
         &self,
         paths: Vec<String>,
         soft: Option<bool>,
@@ -115,8 +112,7 @@ impl McpService {
         Ok(CallToolResult::success(vec![Content::text(content)]))
     }
 
-    #[tool(description = "Refresh Unity AssetDatabase via Direct IPC")]
-    pub async fn unity_assets_refresh(
+    pub(super) async fn do_unity_assets_refresh(
         &self,
         force: Option<bool>,
         timeout_secs: Option<u64>,
@@ -138,8 +134,7 @@ impl McpService {
         Ok(CallToolResult::success(vec![Content::text(content)]))
     }
 
-    #[tool(description = "Convert Unity asset GUIDs to paths via Direct IPC")]
-    pub async fn unity_assets_guid_to_path(
+    pub(super) async fn do_unity_assets_guid_to_path(
         &self,
         guids: Vec<String>,
         timeout_secs: Option<u64>,
@@ -160,8 +155,7 @@ impl McpService {
         Ok(CallToolResult::success(vec![Content::text(content)]))
     }
 
-    #[tool(description = "Convert Unity asset paths to GUIDs via Direct IPC")]
-    pub async fn unity_assets_path_to_guid(
+    pub(super) async fn do_unity_assets_path_to_guid(
         &self,
         paths: Vec<String>,
         timeout_secs: Option<u64>,

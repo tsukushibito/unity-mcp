@@ -1,5 +1,5 @@
 use crate::mcp::service::McpService;
-use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content, tool};
+use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,8 +13,7 @@ pub struct BridgeStatusOut {
 }
 
 impl McpService {
-    #[tool(description = "Unity Bridge connection status (always available)")]
-    pub async fn unity_bridge_status(&self) -> Result<CallToolResult, McpError> {
+    pub(super) async fn do_unity_bridge_status(&self) -> Result<CallToolResult, McpError> {
         let mut out = {
             let s = self.get_bridge_state().await;
             BridgeStatusOut {
