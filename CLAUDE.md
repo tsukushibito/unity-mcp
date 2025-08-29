@@ -22,6 +22,19 @@ Unity MCP Server combines a Rust MCP server with Unity Editor bridge components 
 
 This project is designed to work in VS Code workspaces or similar development environments. The current working directory should be `/workspaces/unity-mcp/server` for Rust development.
 
+**Initial Setup:**
+After cloning, enable Git Hooks for automatic format checking (rustfmt) and linting (clippy) on commit:
+
+```bash
+# Linux/macOS
+./scripts/bootstrap-hooks.sh
+
+# Windows (PowerShell)  
+.\scripts\bootstrap-hooks.ps1
+```
+
+This sets `git config core.hooksPath .githooks` and grants execution permissions on POSIX systems.
+
 ## Development Commands
 
 **Important: All Rust commands must be run from the `server/` directory.**
@@ -54,10 +67,23 @@ cargo build  # Fast build (no proto generation)
 
 # Run server locally
 cargo run
+
+# Run examples for testing Unity IPC integration
+export MCP_IPC_TOKEN=test-token  # Required for IPC authentication
+cargo run --example test_unity_ipc    # Test Unity IPC connection
+cargo run --example unity_log_tail    # Test Unity log reception
 ```
 
 **Unity Bridge (bridge/):**
 ```bash
+# Open Unity project
+# Unity Editor should be opened with bridge/ as project path
+
+# Configure MCP Bridge token (required for IPC)
+# In Unity: Edit > Project Settings... > MCP Bridge
+# Or: MCP Bridge/Setup/Open Project Settings
+# Set Token to: test-token (or your preferred token)
+
 # Tests (to be run via CI)
 Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -testPlatform EditMode
 ```
@@ -68,6 +94,7 @@ Unity -quit -batchmode -projectPath bridge -runTests -testResults results.xml -t
 - CI/CD requires protoc 3.21.12 and runs matrix testing on Ubuntu/macOS
 - IPC endpoints are OS-specific: Unix domain sockets on Unix-like systems, Named pipes on Windows
 - Use scripts/ directory for additional wrapper commands
+- For complete E2E testing setup, see `docs/quickstart.md` (15-minute guide)
 
 ## Code Conventions
 
