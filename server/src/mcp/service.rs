@@ -1,6 +1,7 @@
 use crate::ipc::{client::IpcClient, path::IpcConfig};
 use rmcp::{
     ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, transport::stdio,
+    tool_handler,
 };
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::{Mutex, RwLock};
@@ -382,6 +383,8 @@ impl McpService {
     }
 }
 
+// ToolRouter を `tools/list` / `tools/call` に配線
+#[tool_handler]
 impl ServerHandler for McpService {
     fn get_info(&self) -> InitializeResult {
         // 明示的に tools capability を公開
