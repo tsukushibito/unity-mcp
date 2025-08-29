@@ -97,6 +97,8 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
                             ready: true,
                             version: "test-unity-server".to_string(),
                             status: "ok".to_string(),
+                            project_name: String::new(),
+                            project_path: String::new(),
                         };
                         let cid = env.correlation_id.clone();
                         let mut resp_env = pb::IpcEnvelope {

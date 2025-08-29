@@ -1,7 +1,7 @@
 use crate::ipc::{client::IpcClient, path::IpcConfig};
 use rmcp::{
-    ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, transport::stdio,
-    tool_handler,
+    ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_handler,
+    transport::stdio,
 };
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::{Mutex, RwLock};

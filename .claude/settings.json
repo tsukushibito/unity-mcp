@@ -11,5 +11,9 @@
                 ]
             }
         ]
+    },
+    "statusLine": {
+        "type": "command",
+        "command": "input=$(cat); dir=$(echo \"$input\" | jq -r '.workspace.current_dir // .cwd'); model=$(echo \"$input\" | jq -r '.model.display_name'); platform=$(echo \"$input\" | jq -r '.platform'); branch=$(git -C \"$dir\" symbolic-ref --short HEAD 2>/dev/null || echo ''); printf '\\033[38;5;61m%s\\033[0m\\033[38;5;240m@\\033[38;5;136m%s\\033[0m \\033[38;5;33m➜\\033[0m \\033[38;5;37m%s\\033[0m%s \\033[38;5;240m[\\033[38;5;125m%s\\033[38;5;240m]\\033[0m' \"$(whoami)\" \"$platform\" \"$dir\" \"$([ -n \"$branch\" ] && printf ' \\033[38;5;64m(\\033[38;5;166m%s\\033[38;5;64m)\\033[0m' \"$branch\")\" \"$model\""
     }
 }

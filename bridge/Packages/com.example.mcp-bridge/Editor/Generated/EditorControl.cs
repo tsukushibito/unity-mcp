@@ -26,21 +26,22 @@ namespace Mcp.Unity.V1 {
           string.Concat(
             "CiFtY3AvdW5pdHkvdjEvZWRpdG9yX2NvbnRyb2wucHJvdG8SDG1jcC51bml0",
             "eS52MRoZbWNwL3VuaXR5L3YxL2NvbW1vbi5wcm90byIPCg1IZWFsdGhSZXF1",
-            "ZXN0IkAKDkhlYWx0aFJlc3BvbnNlEg0KBXJlYWR5GAEgASgIEg8KB3ZlcnNp",
-            "b24YAiABKAkSDgoGc3RhdHVzGAMgASgJIikKE0dldFBsYXlNb2RlUmVzcG9u",
-            "c2USEgoKaXNfcGxheWluZxgBIAEoCCIiChJTZXRQbGF5TW9kZVJlcXVlc3QS",
-            "DAoEcGxheRgBIAEoCCImChNTZXRQbGF5TW9kZVJlc3BvbnNlEg8KB2FwcGxp",
-            "ZWQYASABKAgy7wEKDUVkaXRvckNvbnRyb2wSQwoGSGVhbHRoEhsubWNwLnVu",
-            "aXR5LnYxLkhlYWx0aFJlcXVlc3QaHC5tY3AudW5pdHkudjEuSGVhbHRoUmVz",
-            "cG9uc2USRQoLR2V0UGxheU1vZGUSEy5tY3AudW5pdHkudjEuRW1wdHkaIS5t",
-            "Y3AudW5pdHkudjEuR2V0UGxheU1vZGVSZXNwb25zZRJSCgtTZXRQbGF5TW9k",
-            "ZRIgLm1jcC51bml0eS52MS5TZXRQbGF5TW9kZVJlcXVlc3QaIS5tY3AudW5p",
-            "dHkudjEuU2V0UGxheU1vZGVSZXNwb25zZWIGcHJvdG8z"));
+            "ZXN0ImwKDkhlYWx0aFJlc3BvbnNlEg0KBXJlYWR5GAEgASgIEg8KB3ZlcnNp",
+            "b24YAiABKAkSDgoGc3RhdHVzGAMgASgJEhQKDHByb2plY3RfbmFtZRgEIAEo",
+            "CRIUCgxwcm9qZWN0X3BhdGgYBSABKAkiKQoTR2V0UGxheU1vZGVSZXNwb25z",
+            "ZRISCgppc19wbGF5aW5nGAEgASgIIiIKElNldFBsYXlNb2RlUmVxdWVzdBIM",
+            "CgRwbGF5GAEgASgIIiYKE1NldFBsYXlNb2RlUmVzcG9uc2USDwoHYXBwbGll",
+            "ZBgBIAEoCDLvAQoNRWRpdG9yQ29udHJvbBJDCgZIZWFsdGgSGy5tY3AudW5p",
+            "dHkudjEuSGVhbHRoUmVxdWVzdBocLm1jcC51bml0eS52MS5IZWFsdGhSZXNw",
+            "b25zZRJFCgtHZXRQbGF5TW9kZRITLm1jcC51bml0eS52MS5FbXB0eRohLm1j",
+            "cC51bml0eS52MS5HZXRQbGF5TW9kZVJlc3BvbnNlElIKC1NldFBsYXlNb2Rl",
+            "EiAubWNwLnVuaXR5LnYxLlNldFBsYXlNb2RlUmVxdWVzdBohLm1jcC51bml0",
+            "eS52MS5TZXRQbGF5TW9kZVJlc3BvbnNlYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.HealthRequest), global::Mcp.Unity.V1.HealthRequest.Parser, null, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.HealthResponse), global::Mcp.Unity.V1.HealthResponse.Parser, new[]{ "Ready", "Version", "Status" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.HealthResponse), global::Mcp.Unity.V1.HealthResponse.Parser, new[]{ "Ready", "Version", "Status", "ProjectName", "ProjectPath" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.GetPlayModeResponse), global::Mcp.Unity.V1.GetPlayModeResponse.Parser, new[]{ "IsPlaying" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.SetPlayModeRequest), global::Mcp.Unity.V1.SetPlayModeRequest.Parser, new[]{ "Play" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.SetPlayModeResponse), global::Mcp.Unity.V1.SetPlayModeResponse.Parser, new[]{ "Applied" }, null, null, null, null)
@@ -249,6 +250,8 @@ namespace Mcp.Unity.V1 {
       ready_ = other.ready_;
       version_ = other.version_;
       status_ = other.status_;
+      projectName_ = other.projectName_;
+      projectPath_ = other.projectPath_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -297,6 +300,36 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "project_name" field.</summary>
+    public const int ProjectNameFieldNumber = 4;
+    private string projectName_ = "";
+    /// <summary>
+    /// Optional project metadata (one or both may be empty depending on environment)
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ProjectName {
+      get { return projectName_; }
+      set {
+        projectName_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "project_path" field.</summary>
+    public const int ProjectPathFieldNumber = 5;
+    private string projectPath_ = "";
+    /// <summary>
+    /// absolute path to Unity project root (parent of Assets)
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ProjectPath {
+      get { return projectPath_; }
+      set {
+        projectPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -315,6 +348,8 @@ namespace Mcp.Unity.V1 {
       if (Ready != other.Ready) return false;
       if (Version != other.Version) return false;
       if (Status != other.Status) return false;
+      if (ProjectName != other.ProjectName) return false;
+      if (ProjectPath != other.ProjectPath) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -325,6 +360,8 @@ namespace Mcp.Unity.V1 {
       if (Ready != false) hash ^= Ready.GetHashCode();
       if (Version.Length != 0) hash ^= Version.GetHashCode();
       if (Status.Length != 0) hash ^= Status.GetHashCode();
+      if (ProjectName.Length != 0) hash ^= ProjectName.GetHashCode();
+      if (ProjectPath.Length != 0) hash ^= ProjectPath.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -355,6 +392,14 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(26);
         output.WriteString(Status);
       }
+      if (ProjectName.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(ProjectName);
+      }
+      if (ProjectPath.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(ProjectPath);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -377,6 +422,14 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(26);
         output.WriteString(Status);
       }
+      if (ProjectName.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(ProjectName);
+      }
+      if (ProjectPath.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(ProjectPath);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -395,6 +448,12 @@ namespace Mcp.Unity.V1 {
       }
       if (Status.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Status);
+      }
+      if (ProjectName.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ProjectName);
+      }
+      if (ProjectPath.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ProjectPath);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -416,6 +475,12 @@ namespace Mcp.Unity.V1 {
       }
       if (other.Status.Length != 0) {
         Status = other.Status;
+      }
+      if (other.ProjectName.Length != 0) {
+        ProjectName = other.ProjectName;
+      }
+      if (other.ProjectPath.Length != 0) {
+        ProjectPath = other.ProjectPath;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -448,6 +513,14 @@ namespace Mcp.Unity.V1 {
             Status = input.ReadString();
             break;
           }
+          case 34: {
+            ProjectName = input.ReadString();
+            break;
+          }
+          case 42: {
+            ProjectPath = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -477,6 +550,14 @@ namespace Mcp.Unity.V1 {
           }
           case 26: {
             Status = input.ReadString();
+            break;
+          }
+          case 34: {
+            ProjectName = input.ReadString();
+            break;
+          }
+          case 42: {
+            ProjectPath = input.ReadString();
             break;
           }
         }

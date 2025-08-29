@@ -47,7 +47,7 @@
       ],
       "env": {
         "MCP_IPC_TOKEN": "test-token",
-        "MCP_IPC_ENDPOINT": "ipc://host.docker.internal:7777"
+        "MCP_IPC_ENDPOINT": "host.docker.internal:7777"
       }
     }
   }

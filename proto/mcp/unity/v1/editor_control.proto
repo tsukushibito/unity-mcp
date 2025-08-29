@@ -15,6 +15,9 @@ message HealthResponse {
   bool ready = 1;
   string version = 2;
   string status = 3; /* e.g., "OK" - kept for backward compatibility */
+  // Optional project metadata (one or both may be empty depending on environment)
+  string project_name = 4; // e.g., last directory name of project root
+  string project_path = 5; // absolute path to Unity project root (parent of Assets)
 }
 
 message GetPlayModeResponse { bool is_playing = 1; }

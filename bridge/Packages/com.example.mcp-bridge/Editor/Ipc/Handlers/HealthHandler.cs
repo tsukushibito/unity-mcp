@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Bridge.Editor.Ipc.Infra;
 using Mcp.Unity.V1;
@@ -23,6 +24,11 @@ namespace Bridge.Editor.Ipc.Handlers
             var ready = !snap.compiling && !snap.updating;
             var status = ready ? "OK" : "BUSY";
 
+            // Derive project path/name from Application.dataPath (Assets directory)
+            var assetsPath = UnityEngine.Application.dataPath; // .../<Project>/Assets
+            var projectRoot = Path.GetDirectoryName(assetsPath) ?? string.Empty;
+            var projectName = string.IsNullOrEmpty(projectRoot) ? string.Empty : Path.GetFileName(projectRoot);
+
             return new IpcResponse
             {
                 Health = new HealthResponse
@@ -30,6 +36,8 @@ namespace Bridge.Editor.Ipc.Handlers
                     Ready = ready,
                     Version = snap.version,
                     Status = status,
+                    ProjectName = projectName ?? string.Empty,
+                    ProjectPath = projectRoot ?? string.Empty,
                 }
             };
         }
@@ -42,6 +50,10 @@ namespace Bridge.Editor.Ipc.Handlers
             var ready = !EditorStateMirror.IsCompiling && !EditorStateMirror.IsUpdating;
             var status = ready ? "OK" : "BUSY";
 
+            var assetsPath = UnityEngine.Application.dataPath; // .../<Project>/Assets
+            var projectRoot = Path.GetDirectoryName(assetsPath) ?? string.Empty;
+            var projectName = string.IsNullOrEmpty(projectRoot) ? string.Empty : Path.GetFileName(projectRoot);
+
             var resp = new IpcResponse
             {
                 Health = new HealthResponse
@@ -49,6 +61,8 @@ namespace Bridge.Editor.Ipc.Handlers
                     Ready = ready,
                     Version = EditorStateMirror.UnityVersion,
                     Status = status,
+                    ProjectName = projectName ?? string.Empty,
+                    ProjectPath = projectRoot ?? string.Empty,
                 }
             };
             return Task.FromResult(resp);

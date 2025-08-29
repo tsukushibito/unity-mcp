@@ -17,6 +17,15 @@ args = [
     "codex",
 ]
 
+[mcp_servers.unity_mcp]
+command = "cargo"
+args = [
+    "run",
+    "--manifest-path",
+    "server/Cargo.toml",
+]
+env = { MCP_IPC_TOKEN = "test-token", MCP_IPC_ENDPOINT = "host.docker.internal:7777" }
+
 [tools]
 web_search = true
 

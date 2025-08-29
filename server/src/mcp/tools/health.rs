@@ -14,7 +14,17 @@ impl McpService {
         // IPC HealthResponse から HealthOut に変換
         let health = HealthOut {
             ready: health_response.ready,
-            version: health_response.version,
+            version: health_response.version.clone(),
+            project_name: if health_response.project_name.is_empty() {
+                None
+            } else {
+                Some(health_response.project_name)
+            },
+            project_path: if health_response.project_path.is_empty() {
+                None
+            } else {
+                Some(health_response.project_path)
+            },
         };
 
         let content = serde_json::to_string(&health)
@@ -34,6 +44,8 @@ mod tests {
         let health = HealthOut {
             ready: true,
             version: "stub-0.1.0".to_string(),
+            project_name: None,
+            project_path: None,
         };
 
         let content = serde_json::to_string(&health).expect("Serialization should succeed");

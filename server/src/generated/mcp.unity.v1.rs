@@ -20,6 +20,14 @@ pub struct HealthResponse {
     /// e.g., "OK" - kept for backward compatibility
     #[prost(string, tag = "3")]
     pub status: ::prost::alloc::string::String,
+    /// Optional project metadata (one or both may be empty depending on environment)
+    ///
+    /// e.g., last directory name of project root
+    #[prost(string, tag = "4")]
+    pub project_name: ::prost::alloc::string::String,
+    /// absolute path to Unity project root (parent of Assets)
+    #[prost(string, tag = "5")]
+    pub project_path: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct GetPlayModeResponse {
