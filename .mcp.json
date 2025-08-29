@@ -37,6 +37,17 @@
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
       ]
+    },
+    "unity-mcp": {
+      "command": "cargo",
+      "args": [
+        "run",
+        "--manifest-path",
+        "server/Cargo.toml"
+      ],
+      "env": {
+        "MCP_IPC_TOKEN": "test-token"
+      }
     }
   }
 }

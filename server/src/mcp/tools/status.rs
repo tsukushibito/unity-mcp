@@ -28,7 +28,9 @@ impl McpService {
         };
 
         // 接続済みなら交渉済み機能も返す（情報価値向上）
-        if out.connected && let Ok(ipc) = self.require_ipc().await {
+        if out.connected
+            && let Ok(ipc) = self.require_ipc().await
+        {
             let features = ipc.get_negotiated_features().await.to_strings();
             out.negotiated_features = Some(features);
         }

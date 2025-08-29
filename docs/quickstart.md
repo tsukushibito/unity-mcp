@@ -42,7 +42,38 @@ public static class SetIpcToken
 
 確認: 未設定/空のトークンや不一致は `UNAUTHENTICATED` で拒否されます。
 
-## 4) Rust サンプルを実行
+## 4) MCPサーバーのトークンを設定（必須）
+Rust 側（MCPサーバー/ツール）は環境変数 `MCP_IPC_TOKEN` を参照してトークンを送信します。
+
+- 値は Unity 側で設定した `EditorUserSettings["MCP.IpcToken"]` と一致させてください（例: `test-token`）。
+- 既定の接続先は `tcp://127.0.0.1:7777` です。変更が必要な場合のみ `MCP_IPC_ENDPOINT` で上書きできます。
+
+シェルで一時的に設定（推奨）:
+
+```bash
+# macOS/Linux (bash/zsh 等)
+export MCP_IPC_TOKEN=test-token
+
+# Windows (PowerShell)
+$env:MCP_IPC_TOKEN = "test-token"
+
+# Windows (cmd.exe)
+set MCP_IPC_TOKEN=test-token
+```
+
+プロジェクト内で固定したい場合（コミットには注意）:
+
+```toml
+# .cargo/config.toml （存在しない場合は作成）
+[env]
+MCP_IPC_TOKEN = "test-token"
+# 必要ならエンドポイントも
+# MCP_IPC_ENDPOINT = "tcp://127.0.0.1:7777"
+```
+
+注意: 機密トークンをリポジトリにコミットしないでください。開発用はシェルの環境変数や direnv の利用を推奨します。
+
+## 5) Rust サンプルを実行
 
 T01 ハンドシェイクから `project_root` は削除済みです。追加の環境変数設定は不要です。
 
@@ -77,4 +108,3 @@ cargo run --example unity_log_tail
 - 例コード: `server/examples/test_unity_ipc.rs`、`server/examples/unity_log_tail.rs`
 - 機能フラグ: `server/src/ipc/features.rs`（`events.log` を含む）
 - 追加の背景: `docs/unity_mcp_server_architecture_direct_ipc_variant.md`
-
