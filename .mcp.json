@@ -46,7 +46,8 @@
         "server/Cargo.toml"
       ],
       "env": {
-        "MCP_IPC_TOKEN": "test-token"
+        "MCP_IPC_TOKEN": "test-token",
+        "MCP_IPC_ENDPOINT": "ipc://host.docker.internal:7777"
       }
     }
   }

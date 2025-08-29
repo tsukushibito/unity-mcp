@@ -22,12 +22,14 @@
 		"type=volume,src=unity-obj,dst=/workspaces/unity-mcp/bridge/obj"
 	],
 	// Env-file and tmpfs for Temp (fast, ephemeral). Remove noexec if a tool needs to execute from Temp.
-	"runArgs": [
-		"--env-file",
-		".devcontainer/.env",
-		"--tmpfs",
-		"/workspaces/unity-mcp/bridge/Temp:rw,nosuid,size=2048m"
-	],
+    "runArgs": [
+        "--env-file",
+        ".devcontainer/.env",
+        "--tmpfs",
+        "/workspaces/unity-mcp/bridge/Temp:rw,nosuid,size=2048m",
+        // Allow container to reach host via host.docker.internal (Linux requires this)
+        "--add-host=host.docker.internal:host-gateway"
+    ],
 	// NOTE: Defining CLAUDE_CONFIG_DIR currently breaks IDE integration; keep commented until fixed.
 	// "containerEnv": {
 	//   "CLAUDE_CONFIG_DIR": "/workspaces/unity-mcp/.claude-config"
@@ -36,11 +38,19 @@
 	"features": {},
 	// Post-create bootstrap
 	"postCreateCommand": "/bin/sh .devcontainer/setup.sh",
-	"forwardPorts": [
-		24282,
-		24283,
-		24284
-	],
+    "forwardPorts": [
+        24282,
+        24283,
+        24284
+    ],
+    "portsAttributes": {
+        // These are container->host forwarded ports (currently unused by the IPC client).
+        // Unity Bridge runs on the HOST (default tcp://127.0.0.1:7777) and the server connects OUT to it,
+        // so no container port exposure is required. This block is informational only.
+        "24282": { "label": "Reserved A", "protocol": "tcp" },
+        "24283": { "label": "Reserved B", "protocol": "tcp" },
+        "24284": { "label": "Reserved C", "protocol": "tcp" }
+    },
 	// VS Code customizations (extensions + performance excludes)
 	"customizations": {
 		"vscode": {

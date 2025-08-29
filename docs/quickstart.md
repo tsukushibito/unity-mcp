@@ -73,6 +73,25 @@ MCP_IPC_TOKEN = "test-token"
 
 注意: 機密トークンをリポジトリにコミットしないでください。開発用はシェルの環境変数や direnv の利用を推奨します。
 
+### DevContainer（コンテナ内のserver ↔ ホストのUnity）
+
+コンテナからホスト上の Unity Editor に接続する場合は、以下を満たす必要があります。
+
+- `.devcontainer/devcontainer.json` に Linux 向けのホスト解決を追加済み（本リポジトリ既定）。
+  - `runArgs` に `--add-host=host.docker.internal:host-gateway` が含まれていること。
+- server 側の接続先を `host.docker.internal` に変更（ホスト解決用の特別名）。
+
+設定例（コンテナ内シェル）:
+
+```bash
+export MCP_IPC_TOKEN=test-token
+export MCP_IPC_ENDPOINT=tcp://host.docker.internal:7777
+```
+
+補足:
+- macOS/Windows の Docker 環境では `host.docker.internal` は既定で解決されます。
+- Linux では上記 `--add-host=...` が必要なため、DevContainer で対応済みです。
+
 ## 5) Rust サンプルを実行
 
 T01 ハンドシェイクから `project_root` は削除済みです。追加の環境変数設定は不要です。
