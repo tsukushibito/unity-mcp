@@ -30,6 +30,19 @@ namespace MCP.Editor
     }
 
     [Serializable]
+    public class CompilerMessageWithAssembly
+    {
+        public CompilerMessage message;
+        public string assemblyName;
+
+        public CompilerMessageWithAssembly(CompilerMessage message, string assemblyName)
+        {
+            this.message = message;
+            this.assemblyName = assemblyName;
+        }
+    }
+
+    [Serializable]
     public class Diagnostic
     {
         public string file_uri;
@@ -67,7 +80,7 @@ namespace MCP.Editor
     {
         private static readonly string OutputDirectory = Path.Combine(Application.dataPath, "../Temp/AI");
         private static readonly string LatestJsonPath = Path.Combine(OutputDirectory, "latest.json");
-        private static readonly List<CompilerMessage> CollectedMessages = new List<CompilerMessage>();
+        private static readonly List<CompilerMessageWithAssembly> CollectedMessages = new List<CompilerMessageWithAssembly>();
         
         static McpDiagnosticsReporter()
         {
@@ -99,6 +112,8 @@ namespace MCP.Editor
             // Clear previous diagnostics when compilation starts
             try
             {
+                // Ensure no residue from previous compilations
+                CollectedMessages.Clear();
                 if (File.Exists(LatestJsonPath))
                 {
                     // Keep backup for comparison if needed
@@ -122,12 +137,9 @@ namespace MCP.Editor
         {
             // 集約: アセンブリごとのメッセージを貯めて、終了時に一括でJSON化
             if (messages == null || messages.Length == 0) return;
-            CollectedMessages.AddRange(messages.Select(m =>
-            {
-                // assemblyName が CompilerMessage に含まれないため、message.text の後段で設定
-                // ここではそのまま返却
-                return m;
-            }));
+            CollectedMessages.AddRange(messages.Select(m => 
+                new CompilerMessageWithAssembly(m, assemblyName)
+            ));
         }
 
         private static void CollectAndOutputDiagnostics()
@@ -138,11 +150,11 @@ namespace MCP.Editor
                 var diagnostics = new List<Diagnostic>();
                 var assemblyNames = new HashSet<string>();
 
-                foreach (var msg in CollectedMessages)
+                foreach (var msgWithAssembly in CollectedMessages)
                 {
-                    if (string.IsNullOrEmpty(msg.file)) continue;
+                    if (string.IsNullOrEmpty(msgWithAssembly.message.file)) continue;
 
-                    var diagnostic = CreateDiagnostic(msg);
+                    var diagnostic = CreateDiagnostic(msgWithAssembly.message, msgWithAssembly.assemblyName);
                     if (diagnostic != null)
                     {
                         diagnostics.Add(diagnostic);
@@ -180,7 +192,7 @@ namespace MCP.Editor
             }
         }
 
-        private static Diagnostic CreateDiagnostic(CompilerMessage msg)
+        private static Diagnostic CreateDiagnostic(CompilerMessage msg, string assemblyName)
         {
             try
             {
@@ -196,8 +208,8 @@ namespace MCP.Editor
                     _ => "info"
                 };
 
-                // Extract assembly name from file path (simplified)
-                var assembly = ExtractAssemblyName(filePath);
+                // Use the actual assembly name passed from assemblyCompilationFinished
+                var assembly = assemblyName;
 
                 // Create range (line is 1-based in Unity, 0-based in LSP)
                 var line = Math.Max(0, msg.line - 1);
@@ -227,16 +239,6 @@ namespace MCP.Editor
                 Debug.LogError($"[McpDiagnosticsReporter] Failed to create diagnostic: {e.Message}");
                 return null;
             }
-        }
-
-        private static string ExtractAssemblyName(string filePath)
-        {
-            // Simplified assembly detection
-            if (filePath.Contains("/Assets/"))
-                return "Assembly-CSharp";
-            if (filePath.Contains("/Editor/"))
-                return "Assembly-CSharp-Editor";
-            return "Unknown";
         }
 
         private static string ExtractErrorCode(string message)

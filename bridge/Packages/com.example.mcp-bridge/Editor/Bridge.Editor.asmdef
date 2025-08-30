@@ -1,11 +1,7 @@
 {
     "name": "Bridge.Editor",
     "rootNamespace": "",
-    "references": [
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
-        "nunit.framework"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -14,8 +10,7 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "Google.Protobuf.dll",
-        "System.Runtime.CompilerServices.Unsafe.dll",
-        "nunit.framework.dll"
+        "System.Runtime.CompilerServices.Unsafe.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

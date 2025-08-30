@@ -38,3 +38,42 @@ cargo run --example unity_log_tail
 ```
 
 詳細手順、トラブルシュート、期待される出力は Quickstart を参照してください。
+
+## Unity C# コンパイル診断機能
+
+Unity の C# コンパイル結果（エラー、警告、情報）を MCP ツールで取得できます。
+
+### 基本動作
+
+1. Unity でスクリプトを変更・保存してコンパイルを実行
+2. 診断結果が `bridge/Temp/AI/latest.json` に JSON 形式で出力
+3. MCP クライアントから `unity.get_compile_diagnostics` ツールで取得・フィルタ
+
+### 環境変数設定（オプション）
+
+診断ファイルのパスをカスタマイズできます：
+
+```bash
+# デフォルトパスを変更したい場合
+export UNITY_MCP_DIAG_PATH="/custom/path/to/diagnostics.json"
+cd server && cargo run
+```
+
+### ツール使用例
+
+```json
+{
+  "name": "unity.get_compile_diagnostics",
+  "arguments": {
+    "severity": "error",
+    "max_items": 100,
+    "assembly": "Assembly-CSharp"
+  }
+}
+```
+
+パラメータ:
+- `severity`: `"error"`, `"warning"`, `"info"`, `"all"` (デフォルト: `"all"`)
+- `max_items`: 取得件数上限 (デフォルト: 500)
+- `assembly`: アセンブリ名でフィルタ (例: `"Assembly-CSharp"`)
+- `changed_only`: 直近変化分のみ (将来実装予定)

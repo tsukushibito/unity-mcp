@@ -35,3 +35,21 @@
 ## セキュリティ・設定のヒント
 - 設定: デフォルト設定は `server/config/` 下に保存（TOML/YAML）。実装に応じてフラグ/env でオーバーライド
 - ログ: `RUST_LOG` で詳細度を制御。例：`RUST_LOG=server=debug cargo run`
+
+## 利用可能な MCP ツール
+
+### Unity Bridge Tools
+- `unity_bridge_status`: Bridge接続状態を取得
+- `unity_health`: Unity Editorのヘルスチェック
+- `unity_assets_import`: アセットインポート
+- `unity_assets_move`: アセット移動
+- `unity_assets_delete`: アセット削除
+- `unity_assets_refresh`: AssetDatabase更新
+- `unity_assets_guid_to_path`: GUID → パス変換
+- `unity_assets_path_to_guid`: パス → GUID変換
+
+### Unity C# Compile Diagnostics
+- `unity_get_compile_diagnostics`: C#コンパイル診断結果を取得
+  - パラメータ: `severity` (error/warning/info/all), `max_items`, `assembly`, `changed_only`
+  - Unity側で `bridge/Temp/AI/latest.json` に診断データを出力
+  - 環境変数 `UNITY_MCP_DIAG_PATH` でパスカスタマイズ可能

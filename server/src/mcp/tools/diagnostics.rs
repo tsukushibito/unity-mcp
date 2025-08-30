@@ -156,9 +156,15 @@ impl McpService {
     }
 
     fn get_diagnostics_path(&self) -> std::path::PathBuf {
-        // Use bridge/Temp/AI/latest.json relative to workspace root
-        std::env::current_dir()
-            .unwrap_or_else(|_| std::path::PathBuf::from("."))
+        // Use environment variable override if provided
+        if let Ok(env_path) = std::env::var("UNITY_MCP_DIAG_PATH") {
+            return std::path::PathBuf::from(env_path);
+        }
+
+        // Default: Use CARGO_MANIFEST_DIR/../bridge/Temp/AI/latest.json
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."))
             .join("bridge")
             .join("Temp")
             .join("AI")
@@ -175,10 +181,17 @@ impl McpService {
 
         // Security check: ensure the path is within our allowed directory
         let canonical_path = path.canonicalize()?;
-        let bridge_path = std::env::current_dir()?
+        let bridge_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."))
             .join("bridge")
             .canonicalize()
-            .unwrap_or_else(|_| std::path::PathBuf::from("bridge"));
+            .unwrap_or_else(|_| {
+                std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                    .parent()
+                    .unwrap_or_else(|| std::path::Path::new("."))
+                    .join("bridge")
+            });
 
         if !canonical_path.starts_with(&bridge_path) {
             return Err(anyhow::anyhow!(
@@ -352,8 +365,16 @@ mod tests {
     #[tokio::test]
     async fn test_file_size_limit() {
         let service = create_test_service().await;
-        let temp_dir = TempDir::new().unwrap();
-        let large_file_path = temp_dir.path().join("large.json");
+
+        // Create test directory within bridge/Temp/AI
+        let bridge_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("bridge");
+        let test_dir = bridge_path.join("Temp").join("AI").join("test");
+        tokio::fs::create_dir_all(&test_dir).await.unwrap();
+
+        let large_file_path = test_dir.join("large.json");
 
         // Create a file larger than 2MB
         let large_content = "a".repeat(3 * 1024 * 1024);
@@ -364,15 +385,42 @@ mod tests {
         let result = service.read_diagnostics_file(&large_file_path).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("too large"));
+
+        // Cleanup
+        tokio::fs::remove_file(&large_file_path).await.ok();
     }
 
     #[tokio::test]
     async fn test_file_not_exists() {
         let service = create_test_service().await;
-        let non_existent_path = std::path::Path::new("/non/existent/path.json");
 
-        let result = service.read_diagnostics_file(non_existent_path).await;
+        // Use a path within bridge directory but that doesn't exist
+        let bridge_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("bridge");
+        let non_existent_path = bridge_path.join("non_existent_path.json");
+
+        let result = service.read_diagnostics_file(&non_existent_path).await;
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("does not exist"));
+    }
+
+    #[tokio::test]
+    async fn test_security_path_outside_bridge() {
+        let service = create_test_service().await;
+
+        // Create a temporary file outside bridge directory
+        let temp_dir = TempDir::new().unwrap();
+        let outside_path = temp_dir.path().join("test.json");
+        tokio::fs::write(&outside_path, "{}").await.unwrap();
+
+        let result = service.read_diagnostics_file(&outside_path).await;
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(
+            error_msg.contains("Access denied")
+                || error_msg.contains("path outside bridge directory")
+        );
     }
 }
