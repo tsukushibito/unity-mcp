@@ -87,11 +87,9 @@ namespace MCP.Editor
 
         static McpTestRunner()
         {
-            testRunnerApi = TestRunnerApi.Instance;
-            testRunnerApi.testStarted += OnTestStarted;
-            testRunnerApi.testFinished += OnTestFinished;
-            testRunnerApi.runStarted += OnRunStarted;
-            testRunnerApi.runFinished += OnRunFinished;
+            // Instantiate API and register callbacks (no static Instance in UTF)
+            testRunnerApi = ScriptableObject.CreateInstance<TestRunnerApi>();
+            testRunnerApi.RegisterCallbacks(new CallbackReceiver());
             
             EditorApplication.update += Update;
             
@@ -251,21 +249,29 @@ namespace MCP.Editor
             };
         }
 
-        private static void OnRunStarted(ITestRunStarted runStarted)
+        private static void OnRunStarted(ITestAdaptor runStarted)
         {
-            Debug.Log($"[McpTestRunner] Test run started with {runStarted.executedTests.Count} tests");
+            try
+            {
+                // ITestAdaptor may represent a suite; children count may not be loaded yet
+                Debug.Log($"[McpTestRunner] Test run started: {runStarted.FullName}");
+            }
+            catch (Exception)
+            {
+                Debug.Log("[McpTestRunner] Test run started");
+            }
         }
 
-        private static void OnTestStarted(ITestStarted testStarted)
+        private static void OnTestStarted(ITestAdaptor testStarted)
         {
             // Test started - could log here if needed
         }
 
-        private static void OnTestFinished(ITestFinished testFinished)
+        private static void OnTestFinished(ITestResultAdaptor testFinished)
         {
             try
             {
-                var result = CreateTestResult(testFinished.test, testFinished.result);
+                var result = CreateTestResult(testFinished.Test, testFinished);
                 if (result != null)
                 {
                     collectedResults.Add(result);
@@ -277,7 +283,7 @@ namespace MCP.Editor
             }
         }
 
-        private static void OnRunFinished(ITestRunFinished runFinished)
+        private static void OnRunFinished(ITestResultAdaptor runFinished)
         {
             try
             {
@@ -327,11 +333,11 @@ namespace MCP.Editor
             }
         }
 
-        private static TestResult CreateTestResult(ITest test, ITestResult result)
+        private static TestResult CreateTestResult(ITestAdaptor test, ITestResultAdaptor result)
         {
             try
             {
-                var status = result.testStatus switch
+                var status = result.TestStatus switch
                 {
                     TestStatus.Passed => "passed",
                     TestStatus.Failed => "failed",
@@ -341,28 +347,67 @@ namespace MCP.Editor
                 };
 
                 // Extract file and line from stack trace
-                var (file, line) = ExtractFileAndLine(result.stackTrace);
+                var (file, line) = ExtractFileAndLine(result.StackTrace);
                 
                 return new TestResult
                 {
-                    assembly = ExtractAssemblyName(test.fullName),
-                    suite = ExtractSuiteName(test.fullName),
-                    name = test.name,
-                    fullName = test.fullName,
+                    assembly = ExtractAssemblyName(test.FullName),
+                    suite = ExtractSuiteName(test.FullName),
+                    name = test.Name,
+                    fullName = test.FullName,
                     status = status,
-                    durationSec = (float)result.duration,
-                    message = result.message ?? "",
-                    stackTrace = result.stackTrace ?? "",
-                    categories = test.categories?.ToArray() ?? new string[0],
-                    owner = test.properties?.Get("Owner") as string ?? "",
+                    durationSec = (float)result.Duration,
+                    message = result.Message ?? "",
+                    stackTrace = result.StackTrace ?? "",
+                    categories = GetCategories(test),
+                    owner = "",
                     file = file ?? "",
                     line = line
                 };
             }
             catch (Exception e)
             {
-                Debug.LogError($"[McpTestRunner] Failed to create test result for {test?.name}: {e.Message}");
+                Debug.LogError($"[McpTestRunner] Failed to create test result for {test?.Name}: {e.Message}");
                 return null;
+            }
+        }
+
+        private static string[] GetCategories(ITestAdaptor test)
+        {
+            try
+            {
+                var cats = test.Categories;
+                if (cats == null) return new string[0];
+                // Categories may be IEnumerable<string> or string[] depending on Unity version
+                return cats.ToArray();
+            }
+            catch
+            {
+                return new string[0];
+            }
+        }
+
+        // Callback receiver bridging Unity Test Framework callbacks to our static handlers
+        private class CallbackReceiver : ICallbacks
+        {
+            public void RunStarted(ITestAdaptor tests)
+            {
+                OnRunStarted(tests);
+            }
+
+            public void RunFinished(ITestResultAdaptor result)
+            {
+                OnRunFinished(result);
+            }
+
+            public void TestStarted(ITestAdaptor test)
+            {
+                OnTestStarted(test);
+            }
+
+            public void TestFinished(ITestResultAdaptor result)
+            {
+                OnTestFinished(result);
             }
         }
 
