@@ -77,3 +77,81 @@ cd server && cargo run
 - `max_items`: 取得件数上限 (デフォルト: 500)
 - `assembly`: アセンブリ名でフィルタ (例: `"Assembly-CSharp"`)
 - `changed_only`: 直近変化分のみ (将来実装予定)
+
+## Unity TestRunner 実行機能
+
+Unity の EditMode/PlayMode テストを MCP ツールで実行し、結果を取得できます。
+
+**最小対応 Unity バージョン**: Unity 2019.4 LTS 以降（Unity Test Framework 1.1.0 以降）
+
+### 基本動作
+
+1. Rust MCP サーバーから `unity_run_tests` でテスト実行をトリガ
+2. Unity Editor の `McpTestRunner` がリクエストを検知し、`TestRunnerApi` でテスト実行
+3. 結果が `bridge/Temp/AI/tests/latest.json` に JSON 形式で出力
+4. MCP クライアントから結果取得・フィルタ
+
+### 環境変数設定（オプション）
+
+テストリクエスト・結果ファイルのパスをカスタマイズできます：
+
+```bash
+# リクエストファイルの配置先
+export UNITY_MCP_REQ_PATH="/custom/path/to/requests"
+
+# テスト結果ファイルの配置先  
+export UNITY_MCP_TESTS_PATH="/custom/path/to/tests"
+
+cd server && cargo run
+```
+
+### ツール使用例
+
+**テスト実行:**
+```json
+{
+  "name": "unity_run_tests",
+  "arguments": {
+    "mode": "edit",
+    "test_filter": "PlayerService*",
+    "categories": ["fast"],
+    "timeout_sec": 300,
+    "max_items": 1000,
+    "include_passed": true
+  }
+}
+```
+
+**結果取得:**
+```json
+{
+  "name": "unity_get_test_results", 
+  "arguments": {
+    "run_id": "2025-08-30T12:00:00Z-abc12345",
+    "max_items": 500,
+    "include_passed": false
+  }
+}
+```
+
+パラメータ:
+
+**unity_run_tests:**
+- `mode`: `"edit"`, `"play"`, `"all"` (デフォルト: `"edit"`)
+- `test_filter`: テスト名フィルタ (任意)
+  - **注意**: Unity TestRunnerApi は完全一致のみサポート。部分一致は将来対応予定
+- `categories`: カテゴリ配列 (任意, OR条件)  
+- `timeout_sec`: タイムアウト時間 (デフォルト: 180)
+- `max_items`: 結果件数上限 (デフォルト: 2000)
+- `include_passed`: 成功テストも含める (デフォルト: true)
+
+**unity_get_test_results:**
+- `run_id`: 特定の実行IDを指定 (省略時は `latest.json`)
+- `max_items`: 結果件数上限 (デフォルト: 2000) 
+- `include_passed`: 成功テストも含める (デフォルト: true)
+
+### 実装上の注意
+
+- **assembly名**: テスト結果のassembly名は完全な名前から推定したものです。参考情報として扱ってください
+- **file/line情報**: スタックトレースから抽出。取得できない場合は空欄になります
+- **通知機能**: MVP版ではログ出力のみ。将来的に実際のMCP通知に対応予定

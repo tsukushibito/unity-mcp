@@ -8,6 +8,7 @@ anyhow = "1.0.99"
 async-stream = "0.3.6"
 bytes = "1.10.1"
 cfg-if = "1.0.0"
+chrono = { version = "0.4.38", features = ["serde"] }
 futures = "0.3.31"
 prost = "0.14.1"
 rand = "0.9.0"
@@ -21,6 +22,7 @@ tokio-stream = { version = "0.1.17", features = ["sync"] }
 tokio-util = { version = "0.7.16", features = ["codec"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
 
 [features]
 default = ["transport-ipc"]
@@ -30,4 +32,5 @@ transport-ipc = []
 [dev-dependencies]
 tokio-stream = "0.1.17"
 tempfile = "3.14.0"
+regex = "1.10.6"
 

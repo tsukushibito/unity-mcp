@@ -1,0 +1,16 @@
+- [ ] 仕様: ツール/API/スキーマの最終確認（本PRで固定）
+- [ ] Unity: `McpTestRunner.cs` を `Packages/com.example.mcp-bridge/Editor/` に追加
+- [ ] Unity: `Bridge.Editor.asmdef` に TestRunner 参照（Editor のみ）
+- [ ] Unity: `EditorApplication.update` ポーリングで `requests/` を監視
+- [ ] Unity: `TestRunnerApi` で実行・リスナーで集約
+- [ ] Unity: 実行開始でバッファ初期化・キュー直列処理
+- [ ] Unity: `JsonUtility` で `tests/run-<id>.json` と `latest.json` を保存
+- [ ] Unity: 失敗時の例外/エラー整形（メッセージ/スタック）
+- [ ] Unity: スタックから `file`/`line` 推定（任意）
+- [ ] Rust: `server/src/mcp/tools/tests.rs` 追加（`unity_run_tests`/`unity_get_test_results`）
+- [ ] Rust: ツール登録/ルーティング/シリアライズ型を追加
+- [ ] Rust: パス/サイズ/タイムアウト/bridge 配下チェック
+- [ ] Rust: リクエスト作成→結果待機→通知送出のフロー実装
+- [ ] Rust: 単体テスト（既定値/上限/例外/通知）
+- [ ] ドキュメント: README に使い方/環境変数/最小 Unity 版本記載
+- [ ] 動作確認: 失敗/成功/スキップ混在ケースで AC を満たす

@@ -53,3 +53,12 @@
   - パラメータ: `severity` (error/warning/info/all), `max_items`, `assembly`, `changed_only`
   - Unity側で `bridge/Temp/AI/latest.json` に診断データを出力
   - 環境変数 `UNITY_MCP_DIAG_PATH` でパスカスタマイズ可能
+
+### Unity TestRunner Execution
+- `unity_run_tests`: Unity EditMode/PlayMode テストを実行
+  - パラメータ: `mode` (edit/play/all), `test_filter`, `categories`, `timeout_sec`, `max_items`, `include_passed`
+  - Unity側で `bridge/Temp/AI/tests/latest.json` にテスト結果を出力
+  - 環境変数 `UNITY_MCP_REQ_PATH`, `UNITY_MCP_TESTS_PATH` でパスカスタマイズ可能
+- `unity_get_test_results`: テスト実行結果を取得
+  - パラメータ: `run_id`, `max_items`, `include_passed`
+  - 特定の実行IDまたは最新結果を取得可能

@@ -3,9 +3,11 @@ pub mod build;
 pub mod diagnostics;
 pub mod health;
 pub mod status;
+pub mod tests;
 
 use crate::mcp::service::McpService;
 use crate::mcp::tools::diagnostics::UnityGetCompileDiagnosticsRequest;
+use crate::mcp::tools::tests::{UnityGetTestResultsRequest, UnityRunTestsRequest};
 use rmcp::{
     ErrorData as McpError, handler::server::tool::Parameters, model::CallToolResult, tool,
     tool_router,
@@ -92,6 +94,31 @@ impl McpService {
         )
         .await
     }
+
+    #[tool(description = "Run Unity tests (EditMode/PlayMode) and get results")]
+    pub async fn unity_run_tests(
+        &self,
+        Parameters(req): Parameters<UnityRunTestsRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_run_tests(
+            req.mode,
+            req.test_filter,
+            req.categories,
+            req.timeout_sec,
+            req.max_items,
+            req.include_passed,
+        )
+        .await
+    }
+
+    #[tool(description = "Get Unity test results from previous runs")]
+    pub async fn unity_get_test_results(
+        &self,
+        Parameters(req): Parameters<UnityGetTestResultsRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_get_test_results(req.run_id, req.max_items, req.include_passed)
+            .await
+    }
 }
 
 // Helper to expose router across modules while the generated
@@ -141,7 +168,7 @@ pub struct UnityAssetsPathToGuidRequest {
 }
 
 #[cfg(test)]
-mod tests {
+mod tool_tests {
     use super::*;
 
     #[test]
@@ -156,5 +183,7 @@ mod tests {
         assert!(router.has_route("unity_assets_guid_to_path"));
         assert!(router.has_route("unity_assets_path_to_guid"));
         assert!(router.has_route("unity_get_compile_diagnostics"));
+        assert!(router.has_route("unity_run_tests"));
+        assert!(router.has_route("unity_get_test_results"));
     }
 }
