@@ -3,8 +3,16 @@ use rmcp::{
     ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_handler,
     transport::stdio,
 };
-use std::{collections::HashMap, sync::Arc, time::Duration};
-use tokio::sync::{Mutex, RwLock};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+    time::Duration,
+};
+use tokio::sync::{Mutex, RwLock, mpsc};
+
+// Type aliases to keep public struct types readable
+type NotificationPayload = (String, serde_json::Value);
+type NotificationSender = mpsc::UnboundedSender<NotificationPayload>;
 
 #[derive(Debug, Clone)]
 pub struct OperationState {
@@ -33,6 +41,8 @@ pub struct McpService {
     ipc: Arc<RwLock<Option<IpcClient>>>,
     bridge_state: Arc<RwLock<BridgeState>>,
     operations: Arc<Mutex<HashMap<String, OperationState>>>,
+    notification_sender: Arc<Mutex<Option<NotificationSender>>>,
+    pub sent_finished_notifications: Arc<Mutex<HashSet<String>>>,
 }
 
 impl McpService {
@@ -50,6 +60,8 @@ impl McpService {
             ipc: ipc_cell,
             bridge_state,
             operations,
+            notification_sender: Arc::new(Mutex::new(None)),
+            sent_finished_notifications: Arc::new(Mutex::new(HashSet::new())),
         })
     }
 
@@ -355,7 +367,34 @@ impl McpService {
     }
 
     pub async fn serve_stdio(self) -> anyhow::Result<()> {
+        // Set up notification channel BEFORE moving `self` into `serve(..)`
+        let (tx, mut rx) = mpsc::unbounded_channel::<(String, serde_json::Value)>();
+        {
+            let mut sender = self.notification_sender.lock().await;
+            *sender = Some(tx);
+        }
+
         let service = self.serve(stdio()).await?;
+
+        // Spawn notification processor task
+        let service_clone = service.clone();
+        tokio::spawn(async move {
+            while let Some((method, payload)) = rx.recv().await {
+                if let Err(e) = service_clone
+                    .notify_logging_message(LoggingMessageNotificationParam {
+                        level: LoggingLevel::Info,
+                        logger: Some("unity-tests".into()),
+                        data: payload,
+                    })
+                    .await
+                {
+                    tracing::warn!("Failed to send MCP notification {}: {}", method, e);
+                } else {
+                    tracing::info!("MCP notification sent: {}", method);
+                }
+            }
+        });
+
         service.waiting().await?;
         Ok(())
     }
@@ -396,9 +435,41 @@ impl ServerHandler for McpService {
             protocol_version: ProtocolVersion::V_2024_11_05,
             capabilities: ServerCapabilities {
                 tools: Some(ToolsCapability::default()),
+                logging: Some(Default::default()),
                 ..Default::default()
             },
             instructions: None,
         }
+    }
+}
+
+impl McpService {
+    // Utility method to send MCP notifications via logging
+    pub async fn notify(
+        &self,
+        method: &str,
+        payload: serde_json::Value,
+    ) -> Result<(), anyhow::Error> {
+        // Check if notifications are enabled (default: on)
+        let notifications_enabled = std::env::var("UNITY_MCP_NOTIFICATIONS")
+            .unwrap_or_else(|_| "on".to_string())
+            .to_lowercase()
+            == "on";
+
+        if !notifications_enabled {
+            tracing::debug!("MCP notifications disabled via UNITY_MCP_NOTIFICATIONS=off");
+            return Ok(());
+        }
+
+        // Send via background channel if available
+        if let Some(sender) = self.notification_sender.lock().await.as_ref() {
+            if let Err(e) = sender.send((method.to_string(), payload)) {
+                tracing::warn!("Failed to enqueue MCP notification {}: {}", method, e);
+            }
+        } else {
+            tracing::warn!("Notification sender not initialized; dropped: {}", method);
+        }
+
+        Ok(())
     }
 }

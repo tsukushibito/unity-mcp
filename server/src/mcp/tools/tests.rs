@@ -196,8 +196,13 @@ impl McpService {
                 );
 
                 // Send MCP notification for test finished
-                self.send_test_finished_notification(&run_id, &results.summary, results.truncated)
-                    .await;
+                self.send_test_finished_notification(
+                    &run_id,
+                    &mode,
+                    &results.summary,
+                    results.truncated,
+                )
+                .await;
 
                 // Apply filters and limits
                 let filtered_tests =
@@ -470,34 +475,66 @@ impl McpService {
         filter: &Option<String>,
         categories: &Option<Vec<String>>,
     ) {
-        // Log notification instead of actual MCP notification for MVP
-        // TODO: Implement actual MCP notification in future version
-        tracing::info!(
-            "[MCP Notification] unity.tests.started: run_id={}, mode={}, filter={:?}, categories={:?}",
-            run_id,
-            mode,
-            filter,
-            categories
-        );
+        let started_at = chrono::Utc::now().to_rfc3339();
+
+        let payload = serde_json::json!({
+            "event": "unity.tests.started",
+            "eventVersion": 1,
+            "runId": run_id,
+            "mode": mode,
+            "testFilter": filter.as_deref().unwrap_or(""),
+            "categories": categories.as_ref().unwrap_or(&vec![]),
+            "startedAt": started_at
+        });
+
+        if let Err(e) = self.notify("unity.tests.started", payload).await {
+            tracing::warn!("Failed to send unity.tests.started notification: {}", e);
+        }
     }
 
     async fn send_test_finished_notification(
         &self,
         run_id: &str,
+        mode: &str,
         summary: &TestSummary,
         truncated: bool,
     ) {
-        // Log notification instead of actual MCP notification for MVP
-        // TODO: Implement actual MCP notification in future version
-        tracing::info!(
-            "[MCP Notification] unity.tests.finished: run_id={}, total={}, passed={}, failed={}, skipped={}, truncated={}",
-            run_id,
-            summary.total,
-            summary.passed,
-            summary.failed,
-            summary.skipped,
-            truncated
-        );
+        // Idempotency guard: ensure finished notification is sent only once per runId
+        {
+            let mut sent_notifications = self.sent_finished_notifications.lock().await;
+            if sent_notifications.contains(run_id) {
+                tracing::debug!("Finished notification already sent for runId: {}", run_id);
+                return;
+            }
+            sent_notifications.insert(run_id.to_string());
+        }
+
+        let finished_at = chrono::Utc::now().to_rfc3339();
+
+        // resultsPath format: <ProjectName>/Temp/AI/tests/run-<runId>.json
+        // For now, use a placeholder project name - in real implementation, this would be derived from project context
+        let results_path = format!("UnityProject/Temp/AI/tests/run-{}.json", run_id);
+
+        let payload = serde_json::json!({
+            "event": "unity.tests.finished",
+            "eventVersion": 1,
+            "runId": run_id,
+            "mode": mode,
+            "finishedAt": finished_at,
+            "summary": {
+                "total": summary.total,
+                "passed": summary.passed,
+                "failed": summary.failed,
+                "skipped": summary.skipped,
+                "durationSec": summary.duration_sec
+            },
+            "truncated": truncated,
+            "resultsPath": results_path
+        });
+
+        if let Err(e) = self.notify("unity.tests.finished", payload).await {
+            tracing::warn!("Failed to send unity.tests.finished notification: {}", e);
+        }
     }
 }
 
