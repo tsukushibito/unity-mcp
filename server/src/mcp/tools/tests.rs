@@ -402,6 +402,9 @@ impl McpService {
         timeout_sec: u32,
     ) -> anyhow::Result<TestResults> {
         let status_path = self.get_tests_path().join("status.json");
+        let per_run_status_path = self
+            .get_tests_path()
+            .join(format!("status-{}.json", run_id));
         let results_path = self.get_tests_path().join("latest.json");
 
         let timeout_duration = tokio::time::Duration::from_secs(timeout_sec as u64);
@@ -417,14 +420,20 @@ impl McpService {
                 ));
             }
 
-            // Check status file
-            if status_path.exists()
+            // Prefer per-run status file when available (helps when multiple runs occur)
+            if per_run_status_path.exists()
+                && let Ok(status_content) = tokio::fs::read_to_string(&per_run_status_path).await
+                && let Ok(status) = serde_json::from_str::<StatusFile>(&status_content)
+                && status.status == "finished"
+                && status.run_id == run_id
+            {
+                return self.read_test_results_file(&results_path).await;
+            } else if status_path.exists()
                 && let Ok(status_content) = tokio::fs::read_to_string(&status_path).await
                 && let Ok(status) = serde_json::from_str::<StatusFile>(&status_content)
                 && status.run_id == run_id
                 && status.status == "finished"
             {
-                // Test completed, read results
                 return self.read_test_results_file(&results_path).await;
             }
 

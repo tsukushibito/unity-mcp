@@ -84,6 +84,9 @@ namespace MCP.Editor
         private static List<TestResult> collectedResults = new List<TestResult>();
         private static DateTime testStartTime;
         private static TestRequest currentRequest;
+        // For sequential execution when mode == "all"
+        private static Queue<TestMode> phaseQueue;
+        private static bool multiPhase;
 
         static McpTestRunner()
         {
@@ -186,36 +189,26 @@ namespace MCP.Editor
                 
                 collectedResults.Clear();
                 
-                // Create execution settings
-                var executionSettings = new ExecutionSettings();
-                
-                // Set test mode
-                if (request.mode == "play" || request.mode == "all")
+                // Decide phases
+                multiPhase = request.mode == "all";
+                phaseQueue = new Queue<TestMode>();
+                if (multiPhase)
                 {
-                    executionSettings.runSynchronously = true;
-                    // Note: targetPlatform removed for cross-platform compatibility
-                    // Unity will use the default platform settings
+                    phaseQueue.Enqueue(TestMode.EditMode);
+                    phaseQueue.Enqueue(TestMode.PlayMode);
                 }
-                
-                // Apply filters
-                var filter = new Filter
+                else
                 {
-                    testMode = GetTestMode(request.mode),
-                    testNames = !string.IsNullOrEmpty(request.testFilter) ? 
-                        new[] { request.testFilter } : null,
-                    categoryNames = request.categories
-                };
-
-                // Set filters on execution settings
-                executionSettings.filters = new[] { filter };
+                    phaseQueue.Enqueue(GetTestMode(request.mode));
+                }
 
                 // Write status file to indicate test started
                 WriteStatusFile("started", currentResults);
-                
+
                 Debug.Log($"[McpTestRunner] Starting test run: {request.runId} (mode: {request.mode})");
-                
-                // Execute tests
-                testRunnerApi.Execute(executionSettings);
+
+                // Kick off first phase
+                ExecuteNextPhase();
             }
             catch (Exception e)
             {
@@ -247,6 +240,36 @@ namespace MCP.Editor
                 "all" => TestMode.EditMode | TestMode.PlayMode,
                 _ => TestMode.EditMode
             };
+        }
+
+        private static void ExecuteNextPhase()
+        {
+            if (phaseQueue == null || phaseQueue.Count == 0)
+            {
+                Debug.Log("[McpTestRunner] No more phases to execute.");
+                return;
+            }
+
+            var phase = phaseQueue.Dequeue();
+
+            var executionSettings = new ExecutionSettings();
+            // For play mode execution, run synchronously for determinism
+            if ((phase & TestMode.PlayMode) == TestMode.PlayMode)
+            {
+                executionSettings.runSynchronously = true;
+            }
+
+            var filter = new Filter
+            {
+                testMode = phase,
+                testNames = !string.IsNullOrEmpty(currentRequest?.testFilter) ?
+                    new[] { currentRequest.testFilter } : null,
+                categoryNames = currentRequest?.categories
+            };
+            executionSettings.filters = new[] { filter };
+
+            Debug.Log($"[McpTestRunner] Executing phase: {phase}");
+            testRunnerApi.Execute(executionSettings);
         }
 
         private static void OnRunStarted(ITestAdaptor runStarted)
@@ -287,25 +310,32 @@ namespace MCP.Editor
         {
             try
             {
-                Debug.Log($"[McpTestRunner] Test run finished");
-                
-                // Calculate final results
+                Debug.Log($"[McpTestRunner] Test phase finished");
+
+                // If multi-phase and there are remaining phases, continue accumulating and start next phase
+                if (multiPhase && phaseQueue != null && phaseQueue.Count > 0)
+                {
+                    // Just keep accumulating results; do not finalize yet
+                    Debug.Log("[McpTestRunner] Starting next phase...");
+                    ExecuteNextPhase();
+                    return;
+                }
+
+                // Finalize combined results
                 var finishTime = DateTime.UtcNow;
                 var duration = (float)(finishTime - testStartTime).TotalSeconds;
-                
+
                 currentResults.finishedAt = finishTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                 currentResults.summary = CalculateSummary(collectedResults, duration);
-                
+
                 // Apply result limits and filters
                 var filteredResults = collectedResults.AsEnumerable();
-                
-                // Apply includePassed filter
+
                 if (currentRequest != null && !currentRequest.includePassed)
                 {
                     filteredResults = filteredResults.Where(r => r.status != "passed");
                 }
-                
-                // Apply max items limit from request
+
                 var maxItems = currentRequest?.maxItems ?? 2000;
                 var totalCount = filteredResults.Count();
                 currentResults.truncated = totalCount > maxItems;
@@ -313,13 +343,13 @@ namespace MCP.Editor
                 {
                     filteredResults = filteredResults.Take(maxItems);
                 }
-                
+
                 currentResults.tests = filteredResults.ToArray();
-                
-                // Save results
+
+                // Save results and mark finished
                 SaveResults(currentResults);
                 WriteStatusFile("finished", currentResults);
-                
+
                 Debug.Log($"[McpTestRunner] Results saved: {currentResults.summary.passed} passed, " +
                          $"{currentResults.summary.failed} failed, {currentResults.summary.skipped} skipped");
             }
@@ -330,6 +360,9 @@ namespace MCP.Editor
             finally
             {
                 isRunning = false;
+                // Reset phase state
+                phaseQueue = null;
+                multiPhase = false;
             }
         }
 
@@ -519,6 +552,10 @@ namespace MCP.Editor
                 };
                 var statusJson = JsonUtility.ToJson(statusData, false);
                 File.WriteAllText(statusPath, statusJson);
+
+                // Also write per-run status to ease debugging parallel runs
+                var statusPerRunPath = Path.Combine(OutputDirectory, $"status-{results.runId}.json");
+                File.WriteAllText(statusPerRunPath, statusJson);
             }
             catch (Exception e)
             {

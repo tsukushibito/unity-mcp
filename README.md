@@ -91,6 +91,10 @@ Unity の EditMode/PlayMode テストを MCP ツールで実行し、結果を�
 3. 結果が `bridge/Temp/AI/tests/latest.json` に JSON 形式で出力
 4. MCP クライアントから結果取得・フィルタ
 
+補足:
+- `mode = "all"` の場合、EditMode → PlayMode を直列に実行し、結果を結合して1つのランとして保存します。
+- ステータスファイルは `status.json` に加えて、デバッグ容易化のため `status-<runId>.json` も併置します。
+
 ### 環境変数設定（オプション）
 
 テストリクエスト・結果ファイルのパスをカスタマイズできます：
@@ -154,4 +158,4 @@ cd server && cargo run
 
 - **assembly名**: テスト結果のassembly名は完全な名前から推定したものです。参考情報として扱ってください
 - **file/line情報**: スタックトレースから抽出。取得できない場合は空欄になります
-- **通知機能**: MVP版ではログ出力のみ。将来的に実際のMCP通知に対応予定
+- **通知機能**: 現状はログ出力のみ。必要に応じて `unity.tests.started` / `unity.tests.finished` のMCP通知を追加予定
