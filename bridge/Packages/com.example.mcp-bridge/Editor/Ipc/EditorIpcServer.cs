@@ -331,6 +331,10 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleHealthRequest(stream, correlationId, request.Health);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.GetCompileDiagnostics:
+                        await HandleGetCompileDiagnosticsRequest(stream, correlationId, request.GetCompileDiagnostics);
+                        break;
+
                     case IpcRequest.PayloadOneofCase.Assets:
                         await HandleAssetsRequest(stream, correlationId, request.Assets);
                         break;
@@ -365,6 +369,30 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent health response: ready={response.Health.Ready}, version={response.Health.Version}");
+        }
+
+        /// <summary>
+        /// Handle GetCompileDiagnostics request
+        /// </summary>
+        private static async Task HandleGetCompileDiagnosticsRequest(Stream stream, string correlationId, GetCompileDiagnosticsRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing compile diagnostics request");
+
+            // Diagnostics operations must run on the main thread to access Unity APIs
+            var diagnosticsResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                return DiagnosticsHandler.Handle(request);
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                GetCompileDiagnostics = diagnosticsResponse
+            };
+
+            await SendResponseAsync(stream, response);
+            Debug.Log($"[EditorIpcServer] Sent diagnostics response: success={diagnosticsResponse.Success}, diagnostics_count={diagnosticsResponse.Diagnostics.Count}");
         }
 
         /// <summary>

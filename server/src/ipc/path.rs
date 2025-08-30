@@ -27,7 +27,10 @@ impl Default for IpcConfig {
         let is_ci = env::var("CI").is_ok();
         Self {
             endpoint: env::var("MCP_IPC_ENDPOINT").ok(),
-            token: env::var("MCP_IPC_TOKEN").ok(),
+            // 正式: MCP_IPC_TOKEN。後方互換として誤記の MCP_IPC_TOKE も許容
+            token: env::var("MCP_IPC_TOKEN")
+                .ok()
+                .or_else(|| env::var("MCP_IPC_TOKE").ok()),
             // T01 準拠のタイムアウト設定
             connect_timeout: Duration::from_millis(
                 env::var("MCP_IPC_CONNECT_TIMEOUT_MS")

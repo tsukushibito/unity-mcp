@@ -44,6 +44,100 @@ pub struct SetPlayModeResponse {
     #[prost(bool, tag = "1")]
     pub applied: bool,
 }
+/// Compile diagnostics messages
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetCompileDiagnosticsRequest {
+    /// Maximum number of diagnostics to return
+    #[prost(uint32, tag = "1")]
+    pub max_items: u32,
+    /// Filter by severity: "all", "error", "warning", "info"
+    #[prost(string, tag = "2")]
+    pub severity: ::prost::alloc::string::String,
+    /// Return only changed diagnostics since last query
+    #[prost(bool, tag = "3")]
+    pub changed_only: bool,
+    /// Filter by assembly name
+    #[prost(string, tag = "4")]
+    pub assembly: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CompileDiagnostic {
+    /// URI of the file containing the diagnostic
+    #[prost(string, tag = "1")]
+    pub file_uri: ::prost::alloc::string::String,
+    /// Location in the file
+    #[prost(message, optional, tag = "2")]
+    pub range: ::core::option::Option<DiagnosticRange>,
+    /// "error", "warning", "info"
+    #[prost(string, tag = "3")]
+    pub severity: ::prost::alloc::string::String,
+    /// Diagnostic message
+    #[prost(string, tag = "4")]
+    pub message: ::prost::alloc::string::String,
+    /// Error code (e.g., "CS0103")
+    #[prost(string, tag = "5")]
+    pub code: ::prost::alloc::string::String,
+    /// Assembly name
+    #[prost(string, tag = "6")]
+    pub assembly: ::prost::alloc::string::String,
+    /// Source system (e.g., "Unity")
+    #[prost(string, tag = "7")]
+    pub source: ::prost::alloc::string::String,
+    /// Unique fingerprint for deduplication
+    #[prost(string, tag = "8")]
+    pub fingerprint: ::prost::alloc::string::String,
+    /// ISO timestamp when first seen
+    #[prost(string, tag = "9")]
+    pub first_seen: ::prost::alloc::string::String,
+    /// ISO timestamp when last seen
+    #[prost(string, tag = "10")]
+    pub last_seen: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DiagnosticRange {
+    /// Line number (0-based)
+    #[prost(uint32, tag = "1")]
+    pub line: u32,
+    /// Column number (0-based)
+    #[prost(uint32, tag = "2")]
+    pub column: u32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DiagnosticSummary {
+    /// Count of error diagnostics
+    #[prost(uint32, tag = "1")]
+    pub errors: u32,
+    /// Count of warning diagnostics
+    #[prost(uint32, tag = "2")]
+    pub warnings: u32,
+    /// Count of info diagnostics
+    #[prost(uint32, tag = "3")]
+    pub infos: u32,
+    /// List of assemblies with diagnostics
+    #[prost(string, repeated, tag = "4")]
+    pub assemblies: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetCompileDiagnosticsResponse {
+    /// Whether the request was successful
+    #[prost(bool, tag = "1")]
+    pub success: bool,
+    /// Error message if success is false
+    #[prost(string, tag = "2")]
+    pub error_message: ::prost::alloc::string::String,
+    /// Unique ID for this compilation
+    #[prost(string, tag = "3")]
+    pub compile_id: ::prost::alloc::string::String,
+    /// Summary statistics
+    #[prost(message, optional, tag = "4")]
+    pub summary: ::core::option::Option<DiagnosticSummary>,
+    /// List of diagnostics
+    #[prost(message, repeated, tag = "5")]
+    pub diagnostics: ::prost::alloc::vec::Vec<CompileDiagnostic>,
+    /// Whether results were truncated due to max_items
+    #[prost(bool, tag = "6")]
+    pub truncated: bool,
+}
 /// Import/Export operations for Unity assets
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ImportAssetRequest {
@@ -520,7 +614,7 @@ pub mod ipc_envelope {
 /// Request message with typed payloads
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcRequest {
-    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 20, 30, 40, 41")]
+    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 12, 20, 30, 40, 41")]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
 /// Nested message and enum types in `IpcRequest`.
@@ -535,6 +629,8 @@ pub mod ipc_request {
         GetPlayMode(super::Empty),
         #[prost(message, tag = "11")]
         SetPlayMode(super::SetPlayModeRequest),
+        #[prost(message, tag = "12")]
+        GetCompileDiagnostics(super::GetCompileDiagnosticsRequest),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsRequest),
@@ -554,7 +650,7 @@ pub struct IpcResponse {
     /// Matches the request correlation_id
     #[prost(string, tag = "1")]
     pub correlation_id: ::prost::alloc::string::String,
-    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 20, 30, 40, 41")]
+    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 12, 20, 30, 40, 41")]
     pub payload: ::core::option::Option<ipc_response::Payload>,
 }
 /// Nested message and enum types in `IpcResponse`.
@@ -569,6 +665,8 @@ pub mod ipc_response {
         GetPlayMode(super::GetPlayModeResponse),
         #[prost(message, tag = "11")]
         SetPlayMode(super::SetPlayModeResponse),
+        #[prost(message, tag = "12")]
+        GetCompileDiagnostics(super::GetCompileDiagnosticsResponse),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsResponse),

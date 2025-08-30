@@ -3,7 +3,6 @@ use rmcp::{ErrorData as McpError, model::CallToolResult};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct UnityGetCompileDiagnosticsRequest {
@@ -93,45 +92,26 @@ impl McpService {
             assembly
         );
 
-        // Read diagnostics from latest.json
-        let diagnostics_path = self.get_diagnostics_path();
-        let compile_diagnostics = match self.read_diagnostics_file(&diagnostics_path).await {
+        // Request diagnostics via IPC
+        let compile_diagnostics = match self
+            .request_diagnostics_via_ipc(max_items, &severity, changed_only, &assembly)
+            .await
+        {
             Ok(diagnostics) => diagnostics,
             Err(e) => {
-                tracing::warn!("Failed to read diagnostics file: {}", e);
+                tracing::warn!("Failed to get diagnostics via IPC: {}", e);
                 return Ok(CallToolResult::success(vec![rmcp::model::Content::text(
                     format!(
-                        "Unity compile diagnostics not available. Please save a script file in Unity Editor to trigger compilation and generate diagnostics.\n\nError: {}",
+                        "Unity compile diagnostics not available. Please trigger a compilation in Unity Editor first.\n\nError: {}",
                         e
                     ),
                 )]));
             }
         };
 
-        // Apply filters
-        let mut filtered_diagnostics = compile_diagnostics.diagnostics;
-
-        // Filter by severity
-        if severity != "all" {
-            filtered_diagnostics.retain(|d| d.severity == severity);
-        }
-
-        // Filter by assembly
-        if let Some(ref assembly_filter) = assembly {
-            filtered_diagnostics.retain(|d| d.assembly == *assembly_filter);
-        }
-
-        // TODO: Implement changed_only filter when we have historical data
-        if changed_only {
-            tracing::warn!("changed_only filter not yet implemented in MVP");
-        }
-
-        // Apply max_items limit and set truncated flag
-        let total_count = filtered_diagnostics.len();
-        let truncated = total_count > max_items as usize;
-        if truncated {
-            filtered_diagnostics.truncate(max_items as usize);
-        }
+        // Diagnostics are already filtered and limited by Unity Bridge
+        let filtered_diagnostics = compile_diagnostics.diagnostics;
+        let truncated = compile_diagnostics.truncated;
 
         // Recalculate summary for filtered results
         let summary = self.calculate_summary(&filtered_diagnostics);
@@ -155,66 +135,136 @@ impl McpService {
         Ok(CallToolResult::structured(json_value))
     }
 
-    fn get_diagnostics_path(&self) -> std::path::PathBuf {
-        // Use environment variable override if provided
-        if let Ok(env_path) = std::env::var("UNITY_MCP_DIAG_PATH") {
-            return std::path::PathBuf::from(env_path);
-        }
+    /// Request compile diagnostics from Unity Bridge via IPC
+    async fn request_diagnostics_via_ipc(
+        &self,
+        max_items: u32,
+        severity: &str,
+        changed_only: bool,
+        assembly: &Option<String>,
+    ) -> anyhow::Result<CompileDiagnostics> {
+        use crate::generated::mcp::unity::v1::{GetCompileDiagnosticsRequest, ipc_request};
 
-        // Default: Use CARGO_MANIFEST_DIR/../bridge/Temp/AI/latest.json
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap_or_else(|| std::path::Path::new("."))
-            .join("bridge")
-            .join("Temp")
-            .join("AI")
-            .join("latest.json")
-    }
+        // Get IPC client
+        let client = self
+            .require_ipc()
+            .await
+            .map_err(|e| anyhow::anyhow!("IPC client not available: {}", e.message))?;
 
-    async fn read_diagnostics_file(&self, path: &Path) -> anyhow::Result<CompileDiagnostics> {
-        if !path.exists() {
+        // Create request
+        let request = GetCompileDiagnosticsRequest {
+            max_items,
+            severity: severity.to_string(),
+            changed_only,
+            assembly: assembly.clone().unwrap_or_default(),
+        };
+
+        // Send IPC request
+        let ipc_request = crate::generated::mcp::unity::v1::IpcRequest {
+            payload: Some(ipc_request::Payload::GetCompileDiagnostics(request)),
+        };
+
+        tracing::debug!(
+            "Sending GetCompileDiagnostics request via IPC: max_items={}, severity={}, assembly={:?}",
+            max_items,
+            severity,
+            assembly
+        );
+
+        let response = client
+            .request(ipc_request, std::time::Duration::from_secs(30))
+            .await
+            .map_err(|e| anyhow::anyhow!("IPC request failed: {}", e))?;
+
+        // Extract diagnostics response
+        let diagnostics_response = match response.payload {
+            Some(
+                crate::generated::mcp::unity::v1::ipc_response::Payload::GetCompileDiagnostics(
+                    resp,
+                ),
+            ) => resp,
+            _ => return Err(anyhow::anyhow!("Unexpected IPC response type")),
+        };
+
+        // Check if request was successful
+        if !diagnostics_response.success {
             return Err(anyhow::anyhow!(
-                "Diagnostics file does not exist: {}. Run a Unity compilation first.",
-                path.display()
+                "Unity Bridge error: {}",
+                diagnostics_response.error_message
             ));
         }
 
-        // Security check: ensure the path is within our allowed directory
-        let canonical_path = path.canonicalize()?;
-        let bridge_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap_or_else(|| std::path::Path::new("."))
-            .join("bridge")
-            .canonicalize()
-            .unwrap_or_else(|_| {
-                std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                    .parent()
-                    .unwrap_or_else(|| std::path::Path::new("."))
-                    .join("bridge")
-            });
+        // Convert protobuf response to internal format
+        let diagnostics: Vec<Diagnostic> = diagnostics_response
+            .diagnostics
+            .into_iter()
+            .map(|pb_diag| {
+                let range = pb_diag.range.as_ref();
+                Diagnostic {
+                    file_uri: pb_diag.file_uri,
+                    range: DiagnosticRange {
+                        start: DiagnosticPosition {
+                            line: range.map(|r| r.line).unwrap_or(0),
+                            character: range.map(|r| r.column).unwrap_or(0),
+                        },
+                        end: DiagnosticPosition {
+                            line: range.map(|r| r.line).unwrap_or(0),
+                            character: range.map(|r| r.column).unwrap_or(0),
+                        },
+                    },
+                    severity: pb_diag.severity,
+                    message: pb_diag.message,
+                    code: if pb_diag.code.is_empty() {
+                        None
+                    } else {
+                        Some(pb_diag.code)
+                    },
+                    assembly: pb_diag.assembly,
+                    source: pb_diag.source,
+                    fingerprint: pb_diag.fingerprint,
+                    first_seen: if pb_diag.first_seen.is_empty() {
+                        None
+                    } else {
+                        Some(pb_diag.first_seen)
+                    },
+                    last_seen: if pb_diag.last_seen.is_empty() {
+                        None
+                    } else {
+                        Some(pb_diag.last_seen)
+                    },
+                }
+            })
+            .collect();
 
-        if !canonical_path.starts_with(&bridge_path) {
-            return Err(anyhow::anyhow!(
-                "Access denied: path outside bridge directory: {}",
-                canonical_path.display()
-            ));
-        }
+        let summary = DiagnosticSummary {
+            errors: diagnostics_response
+                .summary
+                .as_ref()
+                .map(|s| s.errors)
+                .unwrap_or(0),
+            warnings: diagnostics_response
+                .summary
+                .as_ref()
+                .map(|s| s.warnings)
+                .unwrap_or(0),
+            infos: diagnostics_response
+                .summary
+                .as_ref()
+                .map(|s| s.infos)
+                .unwrap_or(0),
+            assemblies: diagnostics_response
+                .summary
+                .as_ref()
+                .map(|s| s.assemblies.clone())
+                .unwrap_or_default(),
+        };
 
-        let content = tokio::fs::read_to_string(path).await?;
-
-        // Check file size (limit to ~2MB)
-        const MAX_FILE_SIZE: usize = 2 * 1024 * 1024;
-        if content.len() > MAX_FILE_SIZE {
-            return Err(anyhow::anyhow!(
-                "Diagnostics file too large ({} bytes). Use filters to reduce the result set.",
-                content.len()
-            ));
-        }
-
-        let diagnostics: CompileDiagnostics = serde_json::from_str(&content)
-            .map_err(|e| anyhow::anyhow!("Invalid JSON in diagnostics file: {}", e))?;
-
-        Ok(diagnostics)
+        Ok(CompileDiagnostics {
+            compile_id: diagnostics_response.compile_id,
+            summary,
+            diagnostics,
+            truncated: diagnostics_response.truncated,
+        })
     }
 
     fn calculate_summary(&self, diagnostics: &[Diagnostic]) -> DiagnosticSummary {
@@ -245,7 +295,6 @@ impl McpService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use tokio;
 
     async fn create_test_service() -> McpService {
@@ -360,67 +409,5 @@ mod tests {
         assert_eq!(req.severity, "all");
         assert!(!req.changed_only);
         assert!(req.assembly.is_none());
-    }
-
-    #[tokio::test]
-    async fn test_file_size_limit() {
-        let service = create_test_service().await;
-
-        // Create test directory within bridge/Temp/AI
-        let bridge_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("bridge");
-        let test_dir = bridge_path.join("Temp").join("AI").join("test");
-        tokio::fs::create_dir_all(&test_dir).await.unwrap();
-
-        let large_file_path = test_dir.join("large.json");
-
-        // Create a file larger than 2MB
-        let large_content = "a".repeat(3 * 1024 * 1024);
-        tokio::fs::write(&large_file_path, large_content)
-            .await
-            .unwrap();
-
-        let result = service.read_diagnostics_file(&large_file_path).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("too large"));
-
-        // Cleanup
-        tokio::fs::remove_file(&large_file_path).await.ok();
-    }
-
-    #[tokio::test]
-    async fn test_file_not_exists() {
-        let service = create_test_service().await;
-
-        // Use a path within bridge directory but that doesn't exist
-        let bridge_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("bridge");
-        let non_existent_path = bridge_path.join("non_existent_path.json");
-
-        let result = service.read_diagnostics_file(&non_existent_path).await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("does not exist"));
-    }
-
-    #[tokio::test]
-    async fn test_security_path_outside_bridge() {
-        let service = create_test_service().await;
-
-        // Create a temporary file outside bridge directory
-        let temp_dir = TempDir::new().unwrap();
-        let outside_path = temp_dir.path().join("test.json");
-        tokio::fs::write(&outside_path, "{}").await.unwrap();
-
-        let result = service.read_diagnostics_file(&outside_path).await;
-        assert!(result.is_err());
-        let error_msg = result.unwrap_err().to_string();
-        assert!(
-            error_msg.contains("Access denied")
-                || error_msg.contains("path outside bridge directory")
-        );
     }
 }
