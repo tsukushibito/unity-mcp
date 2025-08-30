@@ -1,9 +1,11 @@
 pub mod assets;
 pub mod build;
+pub mod diagnostics;
 pub mod health;
 pub mod status;
 
 use crate::mcp::service::McpService;
+use crate::mcp::tools::diagnostics::UnityGetCompileDiagnosticsRequest;
 use rmcp::{
     ErrorData as McpError, handler::server::tool::Parameters, model::CallToolResult, tool,
     tool_router,
@@ -76,6 +78,20 @@ impl McpService {
         self.do_unity_assets_path_to_guid(req.paths, req.timeout_secs)
             .await
     }
+
+    #[tool(description = "Get Unity C# compile diagnostics (errors, warnings, info)")]
+    pub async fn unity_get_compile_diagnostics(
+        &self,
+        Parameters(req): Parameters<UnityGetCompileDiagnosticsRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_get_compile_diagnostics(
+            req.max_items,
+            req.severity,
+            req.changed_only,
+            req.assembly,
+        )
+        .await
+    }
 }
 
 // Helper to expose router across modules while the generated
@@ -139,5 +155,6 @@ mod tests {
         assert!(router.has_route("unity_assets_refresh"));
         assert!(router.has_route("unity_assets_guid_to_path"));
         assert!(router.has_route("unity_assets_path_to_guid"));
+        assert!(router.has_route("unity_get_compile_diagnostics"));
     }
 }
