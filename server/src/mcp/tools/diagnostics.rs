@@ -129,7 +129,7 @@ impl McpService {
             .take(max_items as usize)
             .collect();
 
-        let truncated = filtered_diagnostics.len() < total_before;
+        let truncated = compile_diagnostics.truncated || filtered_diagnostics.len() < total_before;
 
         // Recalculate summary for filtered results
         let summary = self.calculate_summary(&filtered_diagnostics);
