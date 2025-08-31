@@ -46,7 +46,7 @@ Unity の C# コンパイル結果（エラー、警告、情報）を MCP ツ�
 ### 基本動作
 
 1. Unity でスクリプトを変更・保存してコンパイルを実行
-2. 診断結果が `bridge/Temp/AI/latest.json` に JSON 形式で出力
+2. 診断結果が Unityプロジェクト直下の `Temp/AI/latest.json` に JSON 形式で出力
 3. MCP クライアントから `unity.get_compile_diagnostics` ツールで取得・フィルタ
 
 ### 環境変数設定（オプション）
@@ -54,7 +54,7 @@ Unity の C# コンパイル結果（エラー、警告、情報）を MCP ツ�
 診断ファイルのパスをカスタマイズできます：
 
 ```bash
-# デフォルトパスを変更したい場合
+# デフォルトパスを変更したい場合（プロジェクトルートからの相対パスも可）
 export UNITY_MCP_DIAG_PATH="/custom/path/to/diagnostics.json"
 cd server && cargo run
 ```

@@ -2,7 +2,10 @@ use crate::mcp::service::McpService;
 use rmcp::{ErrorData as McpError, model::CallToolResult};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct UnityGetCompileDiagnosticsRequest {
@@ -92,14 +95,12 @@ impl McpService {
             assembly
         );
 
-        // Request diagnostics via IPC
-        let compile_diagnostics = match self
-            .request_diagnostics_via_ipc(max_items, &severity, changed_only, &assembly)
-            .await
-        {
+        // Read diagnostics from file
+        let diagnostics_path = self.get_diagnostics_path().await;
+        let compile_diagnostics = match self.read_diagnostics_file(&diagnostics_path).await {
             Ok(diagnostics) => diagnostics,
             Err(e) => {
-                tracing::warn!("Failed to get diagnostics via IPC: {}", e);
+                tracing::warn!("Failed to read diagnostics file: {}", e);
                 return Ok(CallToolResult::success(vec![rmcp::model::Content::text(
                     format!(
                         "Unity compile diagnostics not available. Please trigger a compilation in Unity Editor first.\n\nError: {}",
@@ -109,9 +110,26 @@ impl McpService {
             }
         };
 
-        // Diagnostics are already filtered and limited by Unity Bridge
-        let filtered_diagnostics = compile_diagnostics.diagnostics;
-        let truncated = compile_diagnostics.truncated;
+        // Apply filters
+        let total_before = compile_diagnostics.diagnostics.len();
+        let filtered_diagnostics: Vec<Diagnostic> = compile_diagnostics
+            .diagnostics
+            .into_iter()
+            .filter(|d| {
+                if severity != "all" {
+                    d.severity == severity
+                } else {
+                    true
+                }
+            })
+            .filter(|d| match &assembly {
+                Some(a) => &d.assembly == a,
+                None => true,
+            })
+            .take(max_items as usize)
+            .collect();
+
+        let truncated = filtered_diagnostics.len() < total_before;
 
         // Recalculate summary for filtered results
         let summary = self.calculate_summary(&filtered_diagnostics);
@@ -135,136 +153,25 @@ impl McpService {
         Ok(CallToolResult::structured(json_value))
     }
 
-    /// Request compile diagnostics from Unity Bridge via IPC
-    async fn request_diagnostics_via_ipc(
-        &self,
-        max_items: u32,
-        severity: &str,
-        changed_only: bool,
-        assembly: &Option<String>,
-    ) -> anyhow::Result<CompileDiagnostics> {
-        use crate::generated::mcp::unity::v1::{GetCompileDiagnosticsRequest, ipc_request};
+    async fn get_diagnostics_path(&self) -> PathBuf {
+        let project_root = { self.unity_project_path.read().await.clone() };
 
-        // Get IPC client
-        let client = self
-            .require_ipc()
-            .await
-            .map_err(|e| anyhow::anyhow!("IPC client not available: {}", e.message))?;
-
-        // Create request
-        let request = GetCompileDiagnosticsRequest {
-            max_items,
-            severity: severity.to_string(),
-            changed_only,
-            assembly: assembly.clone().unwrap_or_default(),
-        };
-
-        // Send IPC request
-        let ipc_request = crate::generated::mcp::unity::v1::IpcRequest {
-            payload: Some(ipc_request::Payload::GetCompileDiagnostics(request)),
-        };
-
-        tracing::debug!(
-            "Sending GetCompileDiagnostics request via IPC: max_items={}, severity={}, assembly={:?}",
-            max_items,
-            severity,
-            assembly
-        );
-
-        let response = client
-            .request(ipc_request, std::time::Duration::from_secs(30))
-            .await
-            .map_err(|e| anyhow::anyhow!("IPC request failed: {}", e))?;
-
-        // Extract diagnostics response
-        let diagnostics_response = match response.payload {
-            Some(
-                crate::generated::mcp::unity::v1::ipc_response::Payload::GetCompileDiagnostics(
-                    resp,
-                ),
-            ) => resp,
-            _ => return Err(anyhow::anyhow!("Unexpected IPC response type")),
-        };
-
-        // Check if request was successful
-        if !diagnostics_response.success {
-            return Err(anyhow::anyhow!(
-                "Unity Bridge error: {}",
-                diagnostics_response.error_message
-            ));
+        if let Ok(env_path) = std::env::var("UNITY_MCP_DIAG_PATH") {
+            let custom = PathBuf::from(env_path);
+            if custom.is_absolute() {
+                return custom;
+            } else {
+                return project_root.join(custom);
+            }
         }
 
-        // Convert protobuf response to internal format
-        let diagnostics: Vec<Diagnostic> = diagnostics_response
-            .diagnostics
-            .into_iter()
-            .map(|pb_diag| {
-                let range = pb_diag.range.as_ref();
-                Diagnostic {
-                    file_uri: pb_diag.file_uri,
-                    range: DiagnosticRange {
-                        start: DiagnosticPosition {
-                            line: range.map(|r| r.line).unwrap_or(0),
-                            character: range.map(|r| r.column).unwrap_or(0),
-                        },
-                        end: DiagnosticPosition {
-                            line: range.map(|r| r.line).unwrap_or(0),
-                            character: range.map(|r| r.column).unwrap_or(0),
-                        },
-                    },
-                    severity: pb_diag.severity,
-                    message: pb_diag.message,
-                    code: if pb_diag.code.is_empty() {
-                        None
-                    } else {
-                        Some(pb_diag.code)
-                    },
-                    assembly: pb_diag.assembly,
-                    source: pb_diag.source,
-                    fingerprint: pb_diag.fingerprint,
-                    first_seen: if pb_diag.first_seen.is_empty() {
-                        None
-                    } else {
-                        Some(pb_diag.first_seen)
-                    },
-                    last_seen: if pb_diag.last_seen.is_empty() {
-                        None
-                    } else {
-                        Some(pb_diag.last_seen)
-                    },
-                }
-            })
-            .collect();
+        project_root.join("Temp").join("AI").join("latest.json")
+    }
 
-        let summary = DiagnosticSummary {
-            errors: diagnostics_response
-                .summary
-                .as_ref()
-                .map(|s| s.errors)
-                .unwrap_or(0),
-            warnings: diagnostics_response
-                .summary
-                .as_ref()
-                .map(|s| s.warnings)
-                .unwrap_or(0),
-            infos: diagnostics_response
-                .summary
-                .as_ref()
-                .map(|s| s.infos)
-                .unwrap_or(0),
-            assemblies: diagnostics_response
-                .summary
-                .as_ref()
-                .map(|s| s.assemblies.clone())
-                .unwrap_or_default(),
-        };
-
-        Ok(CompileDiagnostics {
-            compile_id: diagnostics_response.compile_id,
-            summary,
-            diagnostics,
-            truncated: diagnostics_response.truncated,
-        })
+    async fn read_diagnostics_file(&self, path: &Path) -> anyhow::Result<CompileDiagnostics> {
+        let content = tokio::fs::read_to_string(path).await?;
+        let diagnostics: CompileDiagnostics = serde_json::from_str(&content)?;
+        Ok(diagnostics)
     }
 
     fn calculate_summary(&self, diagnostics: &[Diagnostic]) -> DiagnosticSummary {
@@ -409,5 +316,38 @@ mod tests {
         assert_eq!(req.severity, "all");
         assert!(!req.changed_only);
         assert!(req.assembly.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_read_diagnostics_file_success() {
+        let service = create_test_service().await;
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("diag.json");
+        let diags = create_test_diagnostics();
+        tokio::fs::write(&path, serde_json::to_string(&diags).unwrap())
+            .await
+            .unwrap();
+
+        let read = service.read_diagnostics_file(&path).await.unwrap();
+        assert_eq!(read.compile_id, diags.compile_id);
+    }
+
+    #[tokio::test]
+    async fn test_read_diagnostics_file_missing() {
+        let service = create_test_service().await;
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("missing.json");
+        let result = service.read_diagnostics_file(&path).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_read_diagnostics_file_parse_error() {
+        let service = create_test_service().await;
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("invalid.json");
+        tokio::fs::write(&path, "not json").await.unwrap();
+        let result = service.read_diagnostics_file(&path).await;
+        assert!(result.is_err());
     }
 }

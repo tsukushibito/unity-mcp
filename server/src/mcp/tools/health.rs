@@ -12,6 +12,11 @@ impl McpService {
         })?;
 
         // IPC HealthResponse から HealthOut に変換
+        if !health_response.project_path.is_empty() {
+            let mut path_lock = self.unity_project_path.write().await;
+            *path_lock = std::path::PathBuf::from(&health_response.project_path);
+        }
+
         let health = HealthOut {
             ready: health_response.ready,
             version: health_response.version.clone(),

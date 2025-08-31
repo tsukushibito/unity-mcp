@@ -5,6 +5,7 @@ use rmcp::{
 };
 use std::{
     collections::{HashMap, HashSet},
+    path::PathBuf,
     sync::Arc,
     time::Duration,
 };
@@ -43,6 +44,7 @@ pub struct McpService {
     operations: Arc<Mutex<HashMap<String, OperationState>>>,
     notification_sender: Arc<Mutex<Option<NotificationSender>>>,
     pub sent_finished_notifications: Arc<Mutex<HashSet<String>>>,
+    pub(crate) unity_project_path: Arc<RwLock<PathBuf>>,
 }
 
 impl McpService {
@@ -50,6 +52,12 @@ impl McpService {
         let operations = Arc::new(Mutex::new(HashMap::new()));
         let ipc_cell: Arc<RwLock<Option<IpcClient>>> = Arc::new(RwLock::new(None));
         let bridge_state = Arc::new(RwLock::new(BridgeState::default()));
+        let project_path = Arc::new(RwLock::new(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap_or_else(|| std::path::Path::new("."))
+                .join("bridge"),
+        ));
 
         // 接続スーパーバイザを起動（初回未接続でもMCPは起動継続）
         Self::spawn_bridge_connector(ipc_cell.clone(), bridge_state.clone(), operations.clone())
@@ -62,6 +70,7 @@ impl McpService {
             operations,
             notification_sender: Arc::new(Mutex::new(None)),
             sent_finished_notifications: Arc::new(Mutex::new(HashSet::new())),
+            unity_project_path: project_path,
         })
     }
 

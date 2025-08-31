@@ -627,12 +627,14 @@ async fn test_multiple_build_progress() -> anyhow::Result<()> {
     loop {
         tokio::select! {
             event_result = events.recv() => {
-                if let Ok(event) = event_result
-                    && let Some(pb::ipc_event::Payload::Op(op)) = event.payload
-                    && op.message.to_lowercase().contains("build") {
-                        build_operations.insert(op.op_id.clone());
-                        println!("Build operation {}: {} - {}", op.op_id, op.kind, op.message);
+                if let Ok(event) = event_result {
+                    if let Some(pb::ipc_event::Payload::Op(op)) = event.payload {
+                        if op.message.to_lowercase().contains("build") {
+                            build_operations.insert(op.op_id.clone());
+                            println!("Build operation {}: {} - {}", op.op_id, op.kind, op.message);
+                        }
                     }
+                }
             }
             _ = &mut timeout => break,
         }

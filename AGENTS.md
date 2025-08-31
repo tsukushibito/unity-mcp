@@ -51,8 +51,8 @@
 ### Unity C# Compile Diagnostics
 - `unity_get_compile_diagnostics`: C#コンパイル診断結果を取得
   - パラメータ: `severity` (error/warning/info/all), `max_items`, `assembly`, `changed_only`
-  - Unity側で `bridge/Temp/AI/latest.json` に診断データを出力
-  - 環境変数 `UNITY_MCP_DIAG_PATH` でパスカスタマイズ可能
+  - Unity側で Unityプロジェクト直下の `Temp/AI/latest.json` に診断データを出力
+  - 環境変数 `UNITY_MCP_DIAG_PATH` でプロジェクトルートからの相対パスを上書き可能
 
 ### Unity TestRunner Execution
 - `unity_run_tests`: Unity EditMode/PlayMode テストを実行

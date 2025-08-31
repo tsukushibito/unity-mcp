@@ -426,20 +426,22 @@ impl McpService {
             }
 
             // Prefer per-run status file when available (helps when multiple runs occur)
-            if per_run_status_path.exists()
-                && let Ok(status_content) = tokio::fs::read_to_string(&per_run_status_path).await
-                && let Ok(status) = serde_json::from_str::<StatusFile>(&status_content)
-                && status.status == "finished"
-                && status.run_id == run_id
-            {
-                return self.read_test_results_file(&results_path).await;
-            } else if status_path.exists()
-                && let Ok(status_content) = tokio::fs::read_to_string(&status_path).await
-                && let Ok(status) = serde_json::from_str::<StatusFile>(&status_content)
-                && status.run_id == run_id
-                && status.status == "finished"
-            {
-                return self.read_test_results_file(&results_path).await;
+            if per_run_status_path.exists() {
+                if let Ok(status_content) = tokio::fs::read_to_string(&per_run_status_path).await {
+                    if let Ok(status) = serde_json::from_str::<StatusFile>(&status_content) {
+                        if status.status == "finished" && status.run_id == run_id {
+                            return self.read_test_results_file(&results_path).await;
+                        }
+                    }
+                }
+            } else if status_path.exists() {
+                if let Ok(status_content) = tokio::fs::read_to_string(&status_path).await {
+                    if let Ok(status) = serde_json::from_str::<StatusFile>(&status_content) {
+                        if status.run_id == run_id && status.status == "finished" {
+                            return self.read_test_results_file(&results_path).await;
+                        }
+                    }
+                }
             }
 
             // Wait before next poll

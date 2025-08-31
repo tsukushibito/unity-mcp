@@ -17,100 +17,106 @@ async fn mock_unity_server(port: u16) -> anyhow::Result<()> {
             let mut framed = framing::into_framed(stream);
 
             // T01: Handle handshake with IpcControl
-            if let Some(Ok(bytes)) = framed.next().await
-                && let Ok(control) = codec::decode_control(bytes.freeze())
-                && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind
-            {
-                // Basic validation
-                if hello.token.is_empty() {
-                    // Send reject
-                    let reject = pb::IpcReject {
-                        code: pb::ipc_reject::Code::Unauthenticated as i32,
-                        message: "missing token".to_string(),
-                    };
-                    let reject_control = pb::IpcControl {
-                        kind: Some(pb::ipc_control::Kind::Reject(reject)),
-                    };
-                    let reject_bytes = codec::encode_control(&reject_control).unwrap();
-                    let _ = framed.send(reject_bytes).await;
-                    return;
-                }
+            if let Some(Ok(bytes)) = framed.next().await {
+                if let Ok(control) = codec::decode_control(bytes.freeze()) {
+                    if let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind {
+                        // Basic validation
+                        if hello.token.is_empty() {
+                            // Send reject
+                            let reject = pb::IpcReject {
+                                code: pb::ipc_reject::Code::Unauthenticated as i32,
+                                message: "missing token".to_string(),
+                            };
+                            let reject_control = pb::IpcControl {
+                                kind: Some(pb::ipc_control::Kind::Reject(reject)),
+                            };
+                            let reject_bytes = codec::encode_control(&reject_control).unwrap();
+                            let _ = framed.send(reject_bytes).await;
+                            return;
+                        }
 
-                // For test purposes, reject "wrong-token"
-                if hello.token == "wrong-token" {
-                    let reject = pb::IpcReject {
-                        code: pb::ipc_reject::Code::Unauthenticated as i32,
-                        message: "invalid token".to_string(),
-                    };
-                    let reject_control = pb::IpcControl {
-                        kind: Some(pb::ipc_control::Kind::Reject(reject)),
-                    };
-                    let reject_bytes = codec::encode_control(&reject_control).unwrap();
-                    let _ = framed.send(reject_bytes).await;
-                    return;
-                }
+                        // For test purposes, reject "wrong-token"
+                        if hello.token == "wrong-token" {
+                            let reject = pb::IpcReject {
+                                code: pb::ipc_reject::Code::Unauthenticated as i32,
+                                message: "invalid token".to_string(),
+                            };
+                            let reject_control = pb::IpcControl {
+                                kind: Some(pb::ipc_control::Kind::Reject(reject)),
+                            };
+                            let reject_bytes = codec::encode_control(&reject_control).unwrap();
+                            let _ = framed.send(reject_bytes).await;
+                            return;
+                        }
 
-                // Schema hash validation (pure validation - no token dependency)
-                if hello.schema_hash != codec::schema_hash() {
-                    let reject = pb::IpcReject {
+                        // Schema hash validation (pure validation - no token dependency)
+                        if hello.schema_hash != codec::schema_hash() {
+                            let reject = pb::IpcReject {
                         code: pb::ipc_reject::Code::FailedPrecondition as i32,
                         message:
                             "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI)."
                                 .to_string(),
                     };
-                    let reject_control = pb::IpcControl {
-                        kind: Some(pb::ipc_control::Kind::Reject(reject)),
-                    };
-                    let reject_bytes = codec::encode_control(&reject_control).unwrap();
-                    let _ = framed.send(reject_bytes).await;
-                    return;
-                }
+                            let reject_control = pb::IpcControl {
+                                kind: Some(pb::ipc_control::Kind::Reject(reject)),
+                            };
+                            let reject_bytes = codec::encode_control(&reject_control).unwrap();
+                            let _ = framed.send(reject_bytes).await;
+                            return;
+                        }
 
-                // Send welcome response
-                let welcome = pb::IpcWelcome {
-                    ipc_version: hello.ipc_version,
-                    accepted_features: hello.features,
-                    schema_hash: hello.schema_hash,
-                    server_name: "test-unity-server".to_string(),
-                    server_version: "0.1.0".to_string(),
-                    editor_version: "Unity 6000.0.test".to_string(),
-                    session_id: "test-session-123".to_string(),
-                    meta: std::collections::HashMap::from([(
-                        "platform".to_string(),
-                        "test".to_string(),
-                    )]),
-                };
-                let welcome_control = pb::IpcControl {
-                    kind: Some(pb::ipc_control::Kind::Welcome(welcome)),
-                };
-                let welcome_bytes = codec::encode_control(&welcome_control).unwrap();
-                let _ = framed.send(welcome_bytes).await;
+                        // Send welcome response
+                        let welcome = pb::IpcWelcome {
+                            ipc_version: hello.ipc_version,
+                            accepted_features: hello.features,
+                            schema_hash: hello.schema_hash,
+                            server_name: "test-unity-server".to_string(),
+                            server_version: "0.1.0".to_string(),
+                            editor_version: "Unity 6000.0.test".to_string(),
+                            session_id: "test-session-123".to_string(),
+                            meta: std::collections::HashMap::from([(
+                                "platform".to_string(),
+                                "test".to_string(),
+                            )]),
+                        };
+                        let welcome_control = pb::IpcControl {
+                            kind: Some(pb::ipc_control::Kind::Welcome(welcome)),
+                        };
+                        let welcome_bytes = codec::encode_control(&welcome_control).unwrap();
+                        let _ = framed.send(welcome_bytes).await;
 
-                // Handle regular envelope messages
-                while let Some(Ok(bytes)) = framed.next().await {
-                    if let Ok(env) = codec::decode_envelope(bytes.freeze())
-                        && let Some(pb::ipc_envelope::Kind::Request(req)) = env.kind
-                        && let Some(pb::ipc_request::Payload::Health(_)) = req.payload
-                    {
-                        // Respond to health check
-                        let health_resp = pb::HealthResponse {
-                            ready: true,
-                            version: "test-unity-server".to_string(),
-                            status: "ok".to_string(),
-                            project_name: String::new(),
-                            project_path: String::new(),
-                        };
-                        let cid = env.correlation_id.clone();
-                        let mut resp_env = pb::IpcEnvelope {
-                            correlation_id: cid.clone(),
-                            kind: None,
-                        };
-                        resp_env.kind = Some(pb::ipc_envelope::Kind::Response(pb::IpcResponse {
-                            correlation_id: cid,
-                            payload: Some(pb::ipc_response::Payload::Health(health_resp)),
-                        }));
-                        let resp_bytes = codec::encode_envelope(&resp_env).unwrap();
-                        let _ = framed.send(resp_bytes).await;
+                        // Handle regular envelope messages
+                        while let Some(Ok(bytes)) = framed.next().await {
+                            if let Ok(env) = codec::decode_envelope(bytes.freeze()) {
+                                if let Some(pb::ipc_envelope::Kind::Request(req)) = env.kind {
+                                    if let Some(pb::ipc_request::Payload::Health(_)) = req.payload {
+                                        // Respond to health check
+                                        let health_resp = pb::HealthResponse {
+                                            ready: true,
+                                            version: "test-unity-server".to_string(),
+                                            status: "ok".to_string(),
+                                            project_name: String::new(),
+                                            project_path: String::new(),
+                                        };
+                                        let cid = env.correlation_id.clone();
+                                        let mut resp_env = pb::IpcEnvelope {
+                                            correlation_id: cid.clone(),
+                                            kind: None,
+                                        };
+                                        resp_env.kind = Some(pb::ipc_envelope::Kind::Response(
+                                            pb::IpcResponse {
+                                                correlation_id: cid,
+                                                payload: Some(pb::ipc_response::Payload::Health(
+                                                    health_resp,
+                                                )),
+                                            },
+                                        ));
+                                        let resp_bytes = codec::encode_envelope(&resp_env).unwrap();
+                                        let _ = framed.send(resp_bytes).await;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -353,55 +359,56 @@ impl MockUnityServer {
                 let mut framed = framing::into_framed(stream);
 
                 // Handle handshake
-                if let Some(Ok(bytes)) = framed.next().await
-                    && let Ok(control) = codec::decode_control(bytes.freeze())
-                    && let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind
-                {
-                    // project_root no longer part of handshake
-                    // Schema hash validation (responsibility separated from token)
-                    let expected_schema_hash =
-                        hash_override.unwrap_or_else(|| codec::schema_hash().to_vec());
+                if let Some(Ok(bytes)) = framed.next().await {
+                    if let Ok(control) = codec::decode_control(bytes.freeze()) {
+                        if let Some(pb::ipc_control::Kind::Hello(hello)) = control.kind {
+                            // project_root no longer part of handshake
+                            // Schema hash validation (responsibility separated from token)
+                            let expected_schema_hash =
+                                hash_override.unwrap_or_else(|| codec::schema_hash().to_vec());
 
-                    if hello.schema_hash != expected_schema_hash {
-                        let reject = pb::IpcReject {
+                            if hello.schema_hash != expected_schema_hash {
+                                let reject = pb::IpcReject {
                             code: pb::ipc_reject::Code::FailedPrecondition as i32,
                             message:
                                 "Schema hash mismatch. Regenerate C# SCHEMA_HASH from server (CI)."
                                     .to_string(),
                         };
-                        let reject_control = pb::IpcControl {
-                            kind: Some(pb::ipc_control::Kind::Reject(reject)),
-                        };
-                        let reject_bytes = codec::encode_control(&reject_control).unwrap();
-                        let _ = framed.send(reject_bytes).await;
-                        return;
+                                let reject_control = pb::IpcControl {
+                                    kind: Some(pb::ipc_control::Kind::Reject(reject)),
+                                };
+                                let reject_bytes = codec::encode_control(&reject_control).unwrap();
+                                let _ = framed.send(reject_bytes).await;
+                                return;
+                            }
+
+                            // Feature negotiation - intersection
+                            let client_features: Vec<String> = hello.features;
+                            let accepted_features: Vec<String> = client_features
+                                .into_iter()
+                                .filter(|f| features_clone.contains(f))
+                                .collect();
+
+                            let welcome = pb::IpcWelcome {
+                                ipc_version: hello.ipc_version,
+                                accepted_features,
+                                schema_hash: hello.schema_hash,
+                                server_name: "mock-unity-server".to_string(),
+                                server_version: "0.1.0".to_string(),
+                                editor_version: "Unity 6000.0.test".to_string(),
+                                session_id: "test-session-123".to_string(),
+                                meta: std::collections::HashMap::from([(
+                                    "platform".to_string(),
+                                    "test".to_string(),
+                                )]),
+                            };
+                            let welcome_control = pb::IpcControl {
+                                kind: Some(pb::ipc_control::Kind::Welcome(welcome)),
+                            };
+                            let welcome_bytes = codec::encode_control(&welcome_control).unwrap();
+                            let _ = framed.send(welcome_bytes).await;
+                        }
                     }
-
-                    // Feature negotiation - intersection
-                    let client_features: Vec<String> = hello.features;
-                    let accepted_features: Vec<String> = client_features
-                        .into_iter()
-                        .filter(|f| features_clone.contains(f))
-                        .collect();
-
-                    let welcome = pb::IpcWelcome {
-                        ipc_version: hello.ipc_version,
-                        accepted_features,
-                        schema_hash: hello.schema_hash,
-                        server_name: "mock-unity-server".to_string(),
-                        server_version: "0.1.0".to_string(),
-                        editor_version: "Unity 6000.0.test".to_string(),
-                        session_id: "test-session-123".to_string(),
-                        meta: std::collections::HashMap::from([(
-                            "platform".to_string(),
-                            "test".to_string(),
-                        )]),
-                    };
-                    let welcome_control = pb::IpcControl {
-                        kind: Some(pb::ipc_control::Kind::Welcome(welcome)),
-                    };
-                    let welcome_bytes = codec::encode_control(&welcome_control).unwrap();
-                    let _ = framed.send(welcome_bytes).await;
                 }
             });
         }
