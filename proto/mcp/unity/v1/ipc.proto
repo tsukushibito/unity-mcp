@@ -31,6 +31,7 @@ message IpcRequest {
     // Editor control
     Empty get_play_mode = 10;
     SetPlayModeRequest set_play_mode = 11;
+    GetCompileDiagnosticsRequest get_compile_diagnostics = 12;
     
     // Assets
     AssetsRequest assets = 20;
@@ -54,6 +55,7 @@ message IpcResponse {
     // Editor control
     GetPlayModeResponse get_play_mode = 10;
     SetPlayModeResponse set_play_mode = 11;
+    GetCompileDiagnosticsResponse get_compile_diagnostics = 12;
     
     // Assets
     AssetsResponse assets = 20;

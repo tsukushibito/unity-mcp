@@ -679,11 +679,8 @@ mod test_runner_tests {
             .parent()
             .unwrap()
             .join("bridge");
-        let test_dir = bridge_path
-            .join("Temp")
-            .join("AI")
-            .join("tests")
-            .join("test");
+        // Use a writable path under bridge (avoid root-owned Temp)
+        let test_dir = bridge_path.join("AI").join("tests").join("test");
         tokio::fs::create_dir_all(&test_dir).await.unwrap();
 
         let large_file_path = test_dir.join("large.json");

@@ -12,7 +12,9 @@
       "Bash(cargo test:*)",
       "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
       "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
-      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)"
+      "Read(/D:\\GitHub\\unity-mcp\\bridge/**)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
