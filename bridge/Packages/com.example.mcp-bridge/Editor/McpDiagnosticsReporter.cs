@@ -78,20 +78,33 @@ namespace MCP.Editor
     [InitializeOnLoad]
     public static class McpDiagnosticsReporter
     {
-        private static readonly string OutputDirectory = Path.Combine(Application.dataPath, "../Temp/AI");
-        private static readonly string LatestJsonPath = Path.Combine(OutputDirectory, "latest.json");
+        private static readonly string ProjectRoot;
+        private static readonly string LatestJsonPath;
+        private static readonly string OutputDirectory;
         private static readonly List<CompilerMessageWithAssembly> CollectedMessages = new List<CompilerMessageWithAssembly>();
-        
-        // In-memory storage for IPC access
-        private static CompileDiagnostics cachedDiagnostics = null;
-        private static readonly object diagnosticsLock = new object();
-        
+
         static McpDiagnosticsReporter()
         {
+            ProjectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+
+            var envPath = Environment.GetEnvironmentVariable("UNITY_MCP_DIAG_PATH");
+            if (!string.IsNullOrEmpty(envPath))
+            {
+                LatestJsonPath = Path.IsPathRooted(envPath)
+                    ? envPath
+                    : Path.Combine(ProjectRoot, envPath);
+            }
+            else
+            {
+                LatestJsonPath = Path.Combine(ProjectRoot, "Temp/AI/latest.json");
+            }
+
+            OutputDirectory = Path.GetDirectoryName(LatestJsonPath);
+
             CompilationPipeline.compilationStarted += OnCompilationStarted;
             CompilationPipeline.compilationFinished += OnCompilationFinished;
             CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompilationFinished;
-            
+
             // Ensure output directory exists
             EnsureOutputDirectory();
         }
@@ -267,12 +280,6 @@ namespace MCP.Editor
         {
             try
             {
-                // Cache diagnostics for IPC access
-                lock (diagnosticsLock)
-                {
-                    cachedDiagnostics = diagnostics;
-                }
-
                 EnsureOutputDirectory();
 
                 var json = JsonUtility.ToJson(diagnostics, prettyPrint: true);
@@ -284,7 +291,7 @@ namespace MCP.Editor
                 var idSpecificPath = Path.Combine(OutputDirectory, $"compile-{compileId}.json");
                 File.WriteAllText(idSpecificPath, json);
 
-                Debug.Log($"[McpDiagnosticsReporter] Diagnostics written to {LatestJsonPath} and cached in memory " +
+                Debug.Log($"[McpDiagnosticsReporter] Diagnostics written to {LatestJsonPath} " +
                          $"({diagnostics.summary.errors} errors, {diagnostics.summary.warnings} warnings, " +
                          $"{diagnostics.summary.infos} infos)");
             }
@@ -292,75 +299,6 @@ namespace MCP.Editor
             {
                 Debug.LogError($"[McpDiagnosticsReporter] Failed to write diagnostics: {e.Message}");
             }
-        }
-
-        /// <summary>
-        /// Get the latest compile diagnostics from memory cache for IPC access
-        /// </summary>
-        /// <param name="maxItems">Maximum number of diagnostics to return</param>
-        /// <param name="severity">Filter by severity: "all", "error", "warning", "info"</param>
-        /// <param name="changedOnly">Return only changed diagnostics (not implemented yet)</param>
-        /// <param name="assembly">Filter by assembly name</param>
-        /// <returns>Filtered CompileDiagnostics or null if no data available</returns>
-        public static CompileDiagnostics GetCachedDiagnostics(uint maxItems = 2000, string severity = "all", bool changedOnly = false, string assembly = null)
-        {
-            lock (diagnosticsLock)
-            {
-                if (cachedDiagnostics == null)
-                    return null;
-
-                // Apply filters
-                var filteredDiagnostics = cachedDiagnostics.diagnostics.AsEnumerable();
-
-                // Filter by severity
-                if (!string.IsNullOrEmpty(severity) && severity != "all")
-                {
-                    filteredDiagnostics = filteredDiagnostics.Where(d => d.severity == severity);
-                }
-
-                // Filter by assembly
-                if (!string.IsNullOrEmpty(assembly))
-                {
-                    filteredDiagnostics = filteredDiagnostics.Where(d => d.assembly == assembly);
-                }
-
-                // Apply limit
-                var diagnosticsList = filteredDiagnostics.ToList();
-                bool truncated = diagnosticsList.Count > maxItems;
-                if (truncated)
-                {
-                    diagnosticsList = diagnosticsList.Take((int)maxItems).ToList();
-                }
-
-                // Create filtered result
-                var result = new CompileDiagnostics
-                {
-                    compile_id = cachedDiagnostics.compile_id,
-                    summary = CalculateFilteredSummary(diagnosticsList),
-                    diagnostics = diagnosticsList.ToArray(),
-                    truncated = truncated
-                };
-
-                return result;
-            }
-        }
-
-        private static DiagnosticSummary CalculateFilteredSummary(List<Diagnostic> diagnostics)
-        {
-            var assemblies = new HashSet<string>();
-            foreach (var diag in diagnostics)
-            {
-                if (!string.IsNullOrEmpty(diag.assembly))
-                    assemblies.Add(diag.assembly);
-            }
-
-            return new DiagnosticSummary
-            {
-                errors = diagnostics.Count(d => d.severity == "error"),
-                warnings = diagnostics.Count(d => d.severity == "warning"),
-                infos = diagnostics.Count(d => d.severity == "info"),
-                assemblies = assemblies.ToArray()
-            };
         }
     }
 }
