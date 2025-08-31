@@ -1,3 +1,4 @@
+#if false
 using UnityEngine;
 
 public class TestCompileError : MonoBehaviour
@@ -20,3 +21,4 @@ public class TestCompileError : MonoBehaviour
         NonExistentFunction(); // CS0103: 存在しない関数
     }
 }
+#endif
