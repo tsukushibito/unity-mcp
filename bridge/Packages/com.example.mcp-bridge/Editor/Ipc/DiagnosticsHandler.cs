@@ -48,8 +48,8 @@ namespace Mcp.Unity.V1.Ipc
                         FileUri = diag.file_uri ?? "",
                         Range = new Pb.DiagnosticRange
                         {
-                            Line = (uint)diag.range.line,
-                            Column = (uint)diag.range.column
+                            Line = (uint)diag.range.start.line,
+                            Column = (uint)diag.range.start.character
                         },
                         Severity = diag.severity ?? "",
                         Message = diag.message ?? "",
