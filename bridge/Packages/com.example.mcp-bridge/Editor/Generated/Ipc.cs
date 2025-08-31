@@ -32,35 +32,38 @@ namespace Mcp.Unity.V1 {
             "cGUSFgoOY29ycmVsYXRpb25faWQYASABKAkSKwoHcmVxdWVzdBgCIAEoCzIY",
             "Lm1jcC51bml0eS52MS5JcGNSZXF1ZXN0SAASLQoIcmVzcG9uc2UYAyABKAsy",
             "GS5tY3AudW5pdHkudjEuSXBjUmVzcG9uc2VIABInCgVldmVudBgEIAEoCzIW",
-            "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQiiQMKCklwY1JlcXVl",
+            "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQi2AMKCklwY1JlcXVl",
             "c3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYxLkhlYWx0aFJlcXVl",
             "c3RIABIsCg1nZXRfcGxheV9tb2RlGAogASgLMhMubWNwLnVuaXR5LnYxLkVt",
             "cHR5SAASOQoNc2V0X3BsYXlfbW9kZRgLIAEoCzIgLm1jcC51bml0eS52MS5T",
-            "ZXRQbGF5TW9kZVJlcXVlc3RIABItCgZhc3NldHMYFCABKAsyGy5tY3AudW5p",
-            "dHkudjEuQXNzZXRzUmVxdWVzdEgAEisKBWJ1aWxkGB4gASgLMhoubWNwLnVu",
-            "aXR5LnYxLkJ1aWxkUmVxdWVzdEgAEjoKDW9wZXJhdGlvbl9nZXQYKCABKAsy",
-            "IS5tY3AudW5pdHkudjEuT3BlcmF0aW9uR2V0UmVxdWVzdEgAEkAKEG9wZXJh",
-            "dGlvbl9jYW5jZWwYKSABKAsyJC5tY3AudW5pdHkudjEuT3BlcmF0aW9uQ2Fu",
-            "Y2VsUmVxdWVzdEgAQgkKB3BheWxvYWQitgMKC0lwY1Jlc3BvbnNlEhYKDmNv",
-            "cnJlbGF0aW9uX2lkGAEgASgJEi4KBmhlYWx0aBgCIAEoCzIcLm1jcC51bml0",
-            "eS52MS5IZWFsdGhSZXNwb25zZUgAEjoKDWdldF9wbGF5X21vZGUYCiABKAsy",
-            "IS5tY3AudW5pdHkudjEuR2V0UGxheU1vZGVSZXNwb25zZUgAEjoKDXNldF9w",
-            "bGF5X21vZGUYCyABKAsyIS5tY3AudW5pdHkudjEuU2V0UGxheU1vZGVSZXNw",
-            "b25zZUgAEi4KBmFzc2V0cxgUIAEoCzIcLm1jcC51bml0eS52MS5Bc3NldHNS",
-            "ZXNwb25zZUgAEiwKBWJ1aWxkGB4gASgLMhsubWNwLnVuaXR5LnYxLkJ1aWxk",
-            "UmVzcG9uc2VIABI7Cg1vcGVyYXRpb25fZ2V0GCggASgLMiIubWNwLnVuaXR5",
-            "LnYxLk9wZXJhdGlvbkdldFJlc3BvbnNlSAASQQoQb3BlcmF0aW9uX2NhbmNl",
-            "bBgpIAEoCzIlLm1jcC51bml0eS52MS5PcGVyYXRpb25DYW5jZWxSZXNwb25z",
-            "ZUgAQgkKB3BheWxvYWQigQEKCElwY0V2ZW50EhcKD21vbm90b25pY190c19u",
-            "cxgBIAEoAxIlCgNsb2cYCiABKAsyFi5tY3AudW5pdHkudjEuTG9nRXZlbnRI",
-            "ABIqCgJvcBgLIAEoCzIcLm1jcC51bml0eS52MS5PcGVyYXRpb25FdmVudEgA",
-            "QgkKB3BheWxvYWRiBnByb3RvMw=="));
+            "ZXRQbGF5TW9kZVJlcXVlc3RIABJNChdnZXRfY29tcGlsZV9kaWFnbm9zdGlj",
+            "cxgMIAEoCzIqLm1jcC51bml0eS52MS5HZXRDb21waWxlRGlhZ25vc3RpY3NS",
+            "ZXF1ZXN0SAASLQoGYXNzZXRzGBQgASgLMhsubWNwLnVuaXR5LnYxLkFzc2V0",
+            "c1JlcXVlc3RIABIrCgVidWlsZBgeIAEoCzIaLm1jcC51bml0eS52MS5CdWls",
+            "ZFJlcXVlc3RIABI6Cg1vcGVyYXRpb25fZ2V0GCggASgLMiEubWNwLnVuaXR5",
+            "LnYxLk9wZXJhdGlvbkdldFJlcXVlc3RIABJAChBvcGVyYXRpb25fY2FuY2Vs",
+            "GCkgASgLMiQubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkNhbmNlbFJlcXVlc3RI",
+            "AEIJCgdwYXlsb2FkIoYECgtJcGNSZXNwb25zZRIWCg5jb3JyZWxhdGlvbl9p",
+            "ZBgBIAEoCRIuCgZoZWFsdGgYAiABKAsyHC5tY3AudW5pdHkudjEuSGVhbHRo",
+            "UmVzcG9uc2VIABI6Cg1nZXRfcGxheV9tb2RlGAogASgLMiEubWNwLnVuaXR5",
+            "LnYxLkdldFBsYXlNb2RlUmVzcG9uc2VIABI6Cg1zZXRfcGxheV9tb2RlGAsg",
+            "ASgLMiEubWNwLnVuaXR5LnYxLlNldFBsYXlNb2RlUmVzcG9uc2VIABJOChdn",
+            "ZXRfY29tcGlsZV9kaWFnbm9zdGljcxgMIAEoCzIrLm1jcC51bml0eS52MS5H",
+            "ZXRDb21waWxlRGlhZ25vc3RpY3NSZXNwb25zZUgAEi4KBmFzc2V0cxgUIAEo",
+            "CzIcLm1jcC51bml0eS52MS5Bc3NldHNSZXNwb25zZUgAEiwKBWJ1aWxkGB4g",
+            "ASgLMhsubWNwLnVuaXR5LnYxLkJ1aWxkUmVzcG9uc2VIABI7Cg1vcGVyYXRp",
+            "b25fZ2V0GCggASgLMiIubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJlc3Bv",
+            "bnNlSAASQQoQb3BlcmF0aW9uX2NhbmNlbBgpIAEoCzIlLm1jcC51bml0eS52",
+            "MS5PcGVyYXRpb25DYW5jZWxSZXNwb25zZUgAQgkKB3BheWxvYWQigQEKCElw",
+            "Y0V2ZW50EhcKD21vbm90b25pY190c19ucxgBIAEoAxIlCgNsb2cYCiABKAsy",
+            "Fi5tY3AudW5pdHkudjEuTG9nRXZlbnRIABIqCgJvcBgLIAEoCzIcLm1jcC51",
+            "bml0eS52MS5PcGVyYXRpb25FdmVudEgAQgkKB3BheWxvYWRiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEnvelope), global::Mcp.Unity.V1.IpcEnvelope.Parser, new[]{ "CorrelationId", "Request", "Response", "Event" }, new[]{ "Kind" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
@@ -506,6 +509,9 @@ namespace Mcp.Unity.V1 {
         case PayloadOneofCase.SetPlayMode:
           SetPlayMode = other.SetPlayMode.Clone();
           break;
+        case PayloadOneofCase.GetCompileDiagnostics:
+          GetCompileDiagnostics = other.GetCompileDiagnostics.Clone();
+          break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
           break;
@@ -568,6 +574,18 @@ namespace Mcp.Unity.V1 {
       set {
         payload_ = value;
         payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.SetPlayMode;
+      }
+    }
+
+    /// <summary>Field number for the "get_compile_diagnostics" field.</summary>
+    public const int GetCompileDiagnosticsFieldNumber = 12;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.GetCompileDiagnosticsRequest GetCompileDiagnostics {
+      get { return payloadCase_ == PayloadOneofCase.GetCompileDiagnostics ? (global::Mcp.Unity.V1.GetCompileDiagnosticsRequest) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.GetCompileDiagnostics;
       }
     }
 
@@ -635,6 +653,7 @@ namespace Mcp.Unity.V1 {
       Health = 1,
       GetPlayMode = 10,
       SetPlayMode = 11,
+      GetCompileDiagnostics = 12,
       Assets = 20,
       Build = 30,
       OperationGet = 40,
@@ -672,6 +691,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(Health, other.Health)) return false;
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
+      if (!object.Equals(GetCompileDiagnostics, other.GetCompileDiagnostics)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Build, other.Build)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
@@ -687,6 +707,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Health) hash ^= Health.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) hash ^= GetCompileDiagnostics.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
@@ -721,6 +742,10 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
+      }
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+        output.WriteRawTag(98);
+        output.WriteMessage(GetCompileDiagnostics);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -760,6 +785,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
       }
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+        output.WriteRawTag(98);
+        output.WriteMessage(GetCompileDiagnostics);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -794,6 +823,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(SetPlayMode);
+      }
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(GetCompileDiagnostics);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -837,6 +869,12 @@ namespace Mcp.Unity.V1 {
             SetPlayMode = new global::Mcp.Unity.V1.SetPlayModeRequest();
           }
           SetPlayMode.MergeFrom(other.SetPlayMode);
+          break;
+        case PayloadOneofCase.GetCompileDiagnostics:
+          if (GetCompileDiagnostics == null) {
+            GetCompileDiagnostics = new global::Mcp.Unity.V1.GetCompileDiagnosticsRequest();
+          }
+          GetCompileDiagnostics.MergeFrom(other.GetCompileDiagnostics);
           break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
@@ -908,6 +946,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             SetPlayMode = subBuilder;
+            break;
+          }
+          case 98: {
+            global::Mcp.Unity.V1.GetCompileDiagnosticsRequest subBuilder = new global::Mcp.Unity.V1.GetCompileDiagnosticsRequest();
+            if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+              subBuilder.MergeFrom(GetCompileDiagnostics);
+            }
+            input.ReadMessage(subBuilder);
+            GetCompileDiagnostics = subBuilder;
             break;
           }
           case 162: {
@@ -990,6 +1037,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             SetPlayMode = subBuilder;
+            break;
+          }
+          case 98: {
+            global::Mcp.Unity.V1.GetCompileDiagnosticsRequest subBuilder = new global::Mcp.Unity.V1.GetCompileDiagnosticsRequest();
+            if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+              subBuilder.MergeFrom(GetCompileDiagnostics);
+            }
+            input.ReadMessage(subBuilder);
+            GetCompileDiagnostics = subBuilder;
             break;
           }
           case 162: {
@@ -1084,6 +1140,9 @@ namespace Mcp.Unity.V1 {
         case PayloadOneofCase.SetPlayMode:
           SetPlayMode = other.SetPlayMode.Clone();
           break;
+        case PayloadOneofCase.GetCompileDiagnostics:
+          GetCompileDiagnostics = other.GetCompileDiagnostics.Clone();
+          break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
           break;
@@ -1164,6 +1223,18 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "get_compile_diagnostics" field.</summary>
+    public const int GetCompileDiagnosticsFieldNumber = 12;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.GetCompileDiagnosticsResponse GetCompileDiagnostics {
+      get { return payloadCase_ == PayloadOneofCase.GetCompileDiagnostics ? (global::Mcp.Unity.V1.GetCompileDiagnosticsResponse) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.GetCompileDiagnostics;
+      }
+    }
+
     /// <summary>Field number for the "assets" field.</summary>
     public const int AssetsFieldNumber = 20;
     /// <summary>
@@ -1228,6 +1299,7 @@ namespace Mcp.Unity.V1 {
       Health = 2,
       GetPlayMode = 10,
       SetPlayMode = 11,
+      GetCompileDiagnostics = 12,
       Assets = 20,
       Build = 30,
       OperationGet = 40,
@@ -1266,6 +1338,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(Health, other.Health)) return false;
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
+      if (!object.Equals(GetCompileDiagnostics, other.GetCompileDiagnostics)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Build, other.Build)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
@@ -1282,6 +1355,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Health) hash ^= Health.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) hash ^= GetCompileDiagnostics.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
@@ -1320,6 +1394,10 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
+      }
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+        output.WriteRawTag(98);
+        output.WriteMessage(GetCompileDiagnostics);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -1363,6 +1441,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(90);
         output.WriteMessage(SetPlayMode);
       }
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+        output.WriteRawTag(98);
+        output.WriteMessage(GetCompileDiagnostics);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -1400,6 +1482,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(SetPlayMode);
+      }
+      if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(GetCompileDiagnostics);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -1446,6 +1531,12 @@ namespace Mcp.Unity.V1 {
             SetPlayMode = new global::Mcp.Unity.V1.SetPlayModeResponse();
           }
           SetPlayMode.MergeFrom(other.SetPlayMode);
+          break;
+        case PayloadOneofCase.GetCompileDiagnostics:
+          if (GetCompileDiagnostics == null) {
+            GetCompileDiagnostics = new global::Mcp.Unity.V1.GetCompileDiagnosticsResponse();
+          }
+          GetCompileDiagnostics.MergeFrom(other.GetCompileDiagnostics);
           break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
@@ -1521,6 +1612,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             SetPlayMode = subBuilder;
+            break;
+          }
+          case 98: {
+            global::Mcp.Unity.V1.GetCompileDiagnosticsResponse subBuilder = new global::Mcp.Unity.V1.GetCompileDiagnosticsResponse();
+            if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+              subBuilder.MergeFrom(GetCompileDiagnostics);
+            }
+            input.ReadMessage(subBuilder);
+            GetCompileDiagnostics = subBuilder;
             break;
           }
           case 162: {
@@ -1607,6 +1707,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             SetPlayMode = subBuilder;
+            break;
+          }
+          case 98: {
+            global::Mcp.Unity.V1.GetCompileDiagnosticsResponse subBuilder = new global::Mcp.Unity.V1.GetCompileDiagnosticsResponse();
+            if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
+              subBuilder.MergeFrom(GetCompileDiagnostics);
+            }
+            input.ReadMessage(subBuilder);
+            GetCompileDiagnostics = subBuilder;
             break;
           }
           case 162: {

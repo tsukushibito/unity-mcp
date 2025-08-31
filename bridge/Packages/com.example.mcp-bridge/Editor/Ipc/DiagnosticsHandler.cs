@@ -2,6 +2,7 @@
 // Handles compile diagnostics requests via IPC
 using System;
 using UnityEngine;
+using MCP.Editor;
 using Pb = Mcp.Unity.V1;
 
 namespace Mcp.Unity.V1.Ipc
