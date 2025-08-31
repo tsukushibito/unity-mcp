@@ -303,7 +303,6 @@ impl McpService {
             .parent()
             .unwrap_or_else(|| std::path::Path::new("."))
             .join("bridge")
-            .join("Temp")
             .join("AI")
             .join("requests")
     }
@@ -317,7 +316,6 @@ impl McpService {
             .parent()
             .unwrap_or_else(|| std::path::Path::new("."))
             .join("bridge")
-            .join("Temp")
             .join("AI")
             .join("tests")
     }
@@ -511,9 +509,9 @@ impl McpService {
 
         let finished_at = chrono::Utc::now().to_rfc3339();
 
-        // resultsPath format: <ProjectName>/Temp/AI/tests/run-<runId>.json
+        // resultsPath format: <ProjectName>/AI/tests/run-<runId>.json
         // For now, use a placeholder project name - in real implementation, this would be derived from project context
-        let results_path = format!("UnityProject/Temp/AI/tests/run-{}.json", run_id);
+        let results_path = format!("UnityProject/AI/tests/run-{}.json", run_id);
 
         let payload = serde_json::json!({
             "event": "unity.tests.finished",

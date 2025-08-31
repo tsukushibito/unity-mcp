@@ -78,7 +78,7 @@ namespace MCP.Editor
     [InitializeOnLoad]
     public static class McpDiagnosticsReporter
     {
-        private static readonly string OutputDirectory = Path.Combine(Application.dataPath, "../Temp/AI");
+        private static readonly string OutputDirectory = Path.Combine(Application.dataPath, "../AI");
         private static readonly string LatestJsonPath = Path.Combine(OutputDirectory, "latest.json");
         private static readonly List<CompilerMessageWithAssembly> CollectedMessages = new List<CompilerMessageWithAssembly>();
         
