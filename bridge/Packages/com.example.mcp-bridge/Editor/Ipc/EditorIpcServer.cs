@@ -373,6 +373,10 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleBuildRequest(stream, correlationId, request.Build);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.Component:
+                        await HandleComponentRequest(stream, correlationId, request.Component);
+                        break;
+
 
                     default:
                         Debug.LogWarning($"[EditorIpcServer] Unhandled request type: {request.PayloadCase}");
@@ -458,6 +462,40 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent assets response: status={assetsResponse.StatusCode}");
+        }
+
+        /// <summary>
+        /// Handle Component request
+        /// </summary>
+        private static async Task HandleComponentRequest(Stream stream, string correlationId, ComponentRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing component request: {request.PayloadCase}");
+
+            var compResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                Bridge.Editor.Ipc.FeatureGuard features;
+                lock (_streamLock)
+                {
+                    _negotiatedFeatures.TryGetValue(stream, out features);
+                }
+
+                if (features == null)
+                {
+                    throw new InvalidOperationException("No negotiated features found for connection");
+                }
+
+                return ComponentsHandler.Handle(request, features);
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                Component = compResponse
+            };
+
+            await SendResponseAsync(stream, response);
+            Debug.Log($"[EditorIpcServer] Sent component response: status={compResponse.StatusCode}");
         }
 
         /// <summary>

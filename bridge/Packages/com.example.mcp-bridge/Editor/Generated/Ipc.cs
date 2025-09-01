@@ -28,42 +28,45 @@ namespace Mcp.Unity.V1 {
             "bml0eS92MS9jb21tb24ucHJvdG8aIW1jcC91bml0eS92MS9lZGl0b3JfY29u",
             "dHJvbC5wcm90bxoZbWNwL3VuaXR5L3YxL2Fzc2V0cy5wcm90bxoYbWNwL3Vu",
             "aXR5L3YxL2J1aWxkLnByb3RvGh1tY3AvdW5pdHkvdjEvb3BlcmF0aW9ucy5w",
-            "cm90bxoZbWNwL3VuaXR5L3YxL2V2ZW50cy5wcm90byKyAQoLSXBjRW52ZWxv",
-            "cGUSFgoOY29ycmVsYXRpb25faWQYASABKAkSKwoHcmVxdWVzdBgCIAEoCzIY",
-            "Lm1jcC51bml0eS52MS5JcGNSZXF1ZXN0SAASLQoIcmVzcG9uc2UYAyABKAsy",
-            "GS5tY3AudW5pdHkudjEuSXBjUmVzcG9uc2VIABInCgVldmVudBgEIAEoCzIW",
-            "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQi2AMKCklwY1JlcXVl",
-            "c3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYxLkhlYWx0aFJlcXVl",
-            "c3RIABIsCg1nZXRfcGxheV9tb2RlGAogASgLMhMubWNwLnVuaXR5LnYxLkVt",
-            "cHR5SAASOQoNc2V0X3BsYXlfbW9kZRgLIAEoCzIgLm1jcC51bml0eS52MS5T",
-            "ZXRQbGF5TW9kZVJlcXVlc3RIABJNChdnZXRfY29tcGlsZV9kaWFnbm9zdGlj",
-            "cxgMIAEoCzIqLm1jcC51bml0eS52MS5HZXRDb21waWxlRGlhZ25vc3RpY3NS",
-            "ZXF1ZXN0SAASLQoGYXNzZXRzGBQgASgLMhsubWNwLnVuaXR5LnYxLkFzc2V0",
-            "c1JlcXVlc3RIABIrCgVidWlsZBgeIAEoCzIaLm1jcC51bml0eS52MS5CdWls",
-            "ZFJlcXVlc3RIABI6Cg1vcGVyYXRpb25fZ2V0GCggASgLMiEubWNwLnVuaXR5",
-            "LnYxLk9wZXJhdGlvbkdldFJlcXVlc3RIABJAChBvcGVyYXRpb25fY2FuY2Vs",
-            "GCkgASgLMiQubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkNhbmNlbFJlcXVlc3RI",
-            "AEIJCgdwYXlsb2FkIoYECgtJcGNSZXNwb25zZRIWCg5jb3JyZWxhdGlvbl9p",
-            "ZBgBIAEoCRIuCgZoZWFsdGgYAiABKAsyHC5tY3AudW5pdHkudjEuSGVhbHRo",
-            "UmVzcG9uc2VIABI6Cg1nZXRfcGxheV9tb2RlGAogASgLMiEubWNwLnVuaXR5",
-            "LnYxLkdldFBsYXlNb2RlUmVzcG9uc2VIABI6Cg1zZXRfcGxheV9tb2RlGAsg",
-            "ASgLMiEubWNwLnVuaXR5LnYxLlNldFBsYXlNb2RlUmVzcG9uc2VIABJOChdn",
-            "ZXRfY29tcGlsZV9kaWFnbm9zdGljcxgMIAEoCzIrLm1jcC51bml0eS52MS5H",
-            "ZXRDb21waWxlRGlhZ25vc3RpY3NSZXNwb25zZUgAEi4KBmFzc2V0cxgUIAEo",
-            "CzIcLm1jcC51bml0eS52MS5Bc3NldHNSZXNwb25zZUgAEiwKBWJ1aWxkGB4g",
-            "ASgLMhsubWNwLnVuaXR5LnYxLkJ1aWxkUmVzcG9uc2VIABI7Cg1vcGVyYXRp",
-            "b25fZ2V0GCggASgLMiIubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJlc3Bv",
-            "bnNlSAASQQoQb3BlcmF0aW9uX2NhbmNlbBgpIAEoCzIlLm1jcC51bml0eS52",
-            "MS5PcGVyYXRpb25DYW5jZWxSZXNwb25zZUgAQgkKB3BheWxvYWQigQEKCElw",
-            "Y0V2ZW50EhcKD21vbm90b25pY190c19ucxgBIAEoAxIlCgNsb2cYCiABKAsy",
-            "Fi5tY3AudW5pdHkudjEuTG9nRXZlbnRIABIqCgJvcBgLIAEoCzIcLm1jcC51",
-            "bml0eS52MS5PcGVyYXRpb25FdmVudEgAQgkKB3BheWxvYWRiBnByb3RvMw=="));
+            "cm90bxoZbWNwL3VuaXR5L3YxL2V2ZW50cy5wcm90bxocbWNwL3VuaXR5L3Yx",
+            "L2NvbXBvbmVudC5wcm90byKyAQoLSXBjRW52ZWxvcGUSFgoOY29ycmVsYXRp",
+            "b25faWQYASABKAkSKwoHcmVxdWVzdBgCIAEoCzIYLm1jcC51bml0eS52MS5J",
+            "cGNSZXF1ZXN0SAASLQoIcmVzcG9uc2UYAyABKAsyGS5tY3AudW5pdHkudjEu",
+            "SXBjUmVzcG9uc2VIABInCgVldmVudBgEIAEoCzIWLm1jcC51bml0eS52MS5J",
+            "cGNFdmVudEgAQgYKBGtpbmQijQQKCklwY1JlcXVlc3QSLQoGaGVhbHRoGAEg",
+            "ASgLMhsubWNwLnVuaXR5LnYxLkhlYWx0aFJlcXVlc3RIABIsCg1nZXRfcGxh",
+            "eV9tb2RlGAogASgLMhMubWNwLnVuaXR5LnYxLkVtcHR5SAASOQoNc2V0X3Bs",
+            "YXlfbW9kZRgLIAEoCzIgLm1jcC51bml0eS52MS5TZXRQbGF5TW9kZVJlcXVl",
+            "c3RIABJNChdnZXRfY29tcGlsZV9kaWFnbm9zdGljcxgMIAEoCzIqLm1jcC51",
+            "bml0eS52MS5HZXRDb21waWxlRGlhZ25vc3RpY3NSZXF1ZXN0SAASLQoGYXNz",
+            "ZXRzGBQgASgLMhsubWNwLnVuaXR5LnYxLkFzc2V0c1JlcXVlc3RIABIrCgVi",
+            "dWlsZBgeIAEoCzIaLm1jcC51bml0eS52MS5CdWlsZFJlcXVlc3RIABI6Cg1v",
+            "cGVyYXRpb25fZ2V0GCggASgLMiEubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdl",
+            "dFJlcXVlc3RIABJAChBvcGVyYXRpb25fY2FuY2VsGCkgASgLMiQubWNwLnVu",
+            "aXR5LnYxLk9wZXJhdGlvbkNhbmNlbFJlcXVlc3RIABIzCgljb21wb25lbnQY",
+            "MiABKAsyHi5tY3AudW5pdHkudjEuQ29tcG9uZW50UmVxdWVzdEgAQgkKB3Bh",
+            "eWxvYWQivAQKC0lwY1Jlc3BvbnNlEhYKDmNvcnJlbGF0aW9uX2lkGAEgASgJ",
+            "Ei4KBmhlYWx0aBgCIAEoCzIcLm1jcC51bml0eS52MS5IZWFsdGhSZXNwb25z",
+            "ZUgAEjoKDWdldF9wbGF5X21vZGUYCiABKAsyIS5tY3AudW5pdHkudjEuR2V0",
+            "UGxheU1vZGVSZXNwb25zZUgAEjoKDXNldF9wbGF5X21vZGUYCyABKAsyIS5t",
+            "Y3AudW5pdHkudjEuU2V0UGxheU1vZGVSZXNwb25zZUgAEk4KF2dldF9jb21w",
+            "aWxlX2RpYWdub3N0aWNzGAwgASgLMisubWNwLnVuaXR5LnYxLkdldENvbXBp",
+            "bGVEaWFnbm9zdGljc1Jlc3BvbnNlSAASLgoGYXNzZXRzGBQgASgLMhwubWNw",
+            "LnVuaXR5LnYxLkFzc2V0c1Jlc3BvbnNlSAASLAoFYnVpbGQYHiABKAsyGy5t",
+            "Y3AudW5pdHkudjEuQnVpbGRSZXNwb25zZUgAEjsKDW9wZXJhdGlvbl9nZXQY",
+            "KCABKAsyIi5tY3AudW5pdHkudjEuT3BlcmF0aW9uR2V0UmVzcG9uc2VIABJB",
+            "ChBvcGVyYXRpb25fY2FuY2VsGCkgASgLMiUubWNwLnVuaXR5LnYxLk9wZXJh",
+            "dGlvbkNhbmNlbFJlc3BvbnNlSAASNAoJY29tcG9uZW50GDIgASgLMh8ubWNw",
+            "LnVuaXR5LnYxLkNvbXBvbmVudFJlc3BvbnNlSABCCQoHcGF5bG9hZCKBAQoI",
+            "SXBjRXZlbnQSFwoPbW9ub3RvbmljX3RzX25zGAEgASgDEiUKA2xvZxgKIAEo",
+            "CzIWLm1jcC51bml0eS52MS5Mb2dFdmVudEgAEioKAm9wGAsgASgLMhwubWNw",
+            "LnVuaXR5LnYxLk9wZXJhdGlvbkV2ZW50SABCCQoHcGF5bG9hZGIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, global::Mcp.Unity.V1.ComponentReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEnvelope), global::Mcp.Unity.V1.IpcEnvelope.Parser, new[]{ "CorrelationId", "Request", "Response", "Event" }, new[]{ "Kind" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
@@ -74,7 +77,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Top-level envelope for all IPC messages
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcEnvelope : pb::IMessage<IpcEnvelope>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -365,11 +367,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -415,11 +413,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
@@ -464,7 +458,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Request message with typed payloads
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcRequest : pb::IMessage<IpcRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -523,6 +516,9 @@ namespace Mcp.Unity.V1 {
           break;
         case PayloadOneofCase.OperationCancel:
           OperationCancel = other.OperationCancel.Clone();
+          break;
+        case PayloadOneofCase.Component:
+          Component = other.Component.Clone();
           break;
       }
 
@@ -646,6 +642,21 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "component" field.</summary>
+    public const int ComponentFieldNumber = 50;
+    /// <summary>
+    /// Components
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ComponentRequest Component {
+      get { return payloadCase_ == PayloadOneofCase.Component ? (global::Mcp.Unity.V1.ComponentRequest) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Component;
+      }
+    }
+
     private object payload_;
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
@@ -658,6 +669,7 @@ namespace Mcp.Unity.V1 {
       Build = 30,
       OperationGet = 40,
       OperationCancel = 41,
+      Component = 50,
     }
     private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -696,6 +708,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(Build, other.Build)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
       if (!object.Equals(OperationCancel, other.OperationCancel)) return false;
+      if (!object.Equals(Component, other.Component)) return false;
       if (PayloadCase != other.PayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -712,6 +725,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationCancel) hash ^= OperationCancel.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Component) hash ^= Component.GetHashCode();
       hash ^= (int) payloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -763,6 +777,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(202, 2);
         output.WriteMessage(OperationCancel);
       }
+      if (payloadCase_ == PayloadOneofCase.Component) {
+        output.WriteRawTag(146, 3);
+        output.WriteMessage(Component);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -805,6 +823,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(202, 2);
         output.WriteMessage(OperationCancel);
       }
+      if (payloadCase_ == PayloadOneofCase.Component) {
+        output.WriteRawTag(146, 3);
+        output.WriteMessage(Component);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -838,6 +860,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.OperationCancel) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(OperationCancel);
+      }
+      if (payloadCase_ == PayloadOneofCase.Component) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(Component);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -900,6 +925,12 @@ namespace Mcp.Unity.V1 {
           }
           OperationCancel.MergeFrom(other.OperationCancel);
           break;
+        case PayloadOneofCase.Component:
+          if (Component == null) {
+            Component = new global::Mcp.Unity.V1.ComponentRequest();
+          }
+          Component.MergeFrom(other.Component);
+          break;
       }
 
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -913,11 +944,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -993,6 +1020,15 @@ namespace Mcp.Unity.V1 {
             OperationCancel = subBuilder;
             break;
           }
+          case 402: {
+            global::Mcp.Unity.V1.ComponentRequest subBuilder = new global::Mcp.Unity.V1.ComponentRequest();
+            if (payloadCase_ == PayloadOneofCase.Component) {
+              subBuilder.MergeFrom(Component);
+            }
+            input.ReadMessage(subBuilder);
+            Component = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -1004,11 +1040,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
@@ -1084,6 +1116,15 @@ namespace Mcp.Unity.V1 {
             OperationCancel = subBuilder;
             break;
           }
+          case 402: {
+            global::Mcp.Unity.V1.ComponentRequest subBuilder = new global::Mcp.Unity.V1.ComponentRequest();
+            if (payloadCase_ == PayloadOneofCase.Component) {
+              subBuilder.MergeFrom(Component);
+            }
+            input.ReadMessage(subBuilder);
+            Component = subBuilder;
+            break;
+          }
         }
       }
     }
@@ -1094,7 +1135,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Response message with typed payloads
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcResponse : pb::IMessage<IpcResponse>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1154,6 +1194,9 @@ namespace Mcp.Unity.V1 {
           break;
         case PayloadOneofCase.OperationCancel:
           OperationCancel = other.OperationCancel.Clone();
+          break;
+        case PayloadOneofCase.Component:
+          Component = other.Component.Clone();
           break;
       }
 
@@ -1292,6 +1335,21 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "component" field.</summary>
+    public const int ComponentFieldNumber = 50;
+    /// <summary>
+    /// Components
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ComponentResponse Component {
+      get { return payloadCase_ == PayloadOneofCase.Component ? (global::Mcp.Unity.V1.ComponentResponse) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Component;
+      }
+    }
+
     private object payload_;
     /// <summary>Enum of possible cases for the "payload" oneof.</summary>
     public enum PayloadOneofCase {
@@ -1304,6 +1362,7 @@ namespace Mcp.Unity.V1 {
       Build = 30,
       OperationGet = 40,
       OperationCancel = 41,
+      Component = 50,
     }
     private PayloadOneofCase payloadCase_ = PayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1343,6 +1402,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(Build, other.Build)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
       if (!object.Equals(OperationCancel, other.OperationCancel)) return false;
+      if (!object.Equals(Component, other.Component)) return false;
       if (PayloadCase != other.PayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -1360,6 +1420,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationCancel) hash ^= OperationCancel.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Component) hash ^= Component.GetHashCode();
       hash ^= (int) payloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -1415,6 +1476,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(202, 2);
         output.WriteMessage(OperationCancel);
       }
+      if (payloadCase_ == PayloadOneofCase.Component) {
+        output.WriteRawTag(146, 3);
+        output.WriteMessage(Component);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1461,6 +1526,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(202, 2);
         output.WriteMessage(OperationCancel);
       }
+      if (payloadCase_ == PayloadOneofCase.Component) {
+        output.WriteRawTag(146, 3);
+        output.WriteMessage(Component);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1497,6 +1566,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.OperationCancel) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(OperationCancel);
+      }
+      if (payloadCase_ == PayloadOneofCase.Component) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(Component);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1562,6 +1634,12 @@ namespace Mcp.Unity.V1 {
           }
           OperationCancel.MergeFrom(other.OperationCancel);
           break;
+        case PayloadOneofCase.Component:
+          if (Component == null) {
+            Component = new global::Mcp.Unity.V1.ComponentResponse();
+          }
+          Component.MergeFrom(other.Component);
+          break;
       }
 
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -1575,11 +1653,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -1659,6 +1733,15 @@ namespace Mcp.Unity.V1 {
             OperationCancel = subBuilder;
             break;
           }
+          case 402: {
+            global::Mcp.Unity.V1.ComponentResponse subBuilder = new global::Mcp.Unity.V1.ComponentResponse();
+            if (payloadCase_ == PayloadOneofCase.Component) {
+              subBuilder.MergeFrom(Component);
+            }
+            input.ReadMessage(subBuilder);
+            Component = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -1670,11 +1753,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
@@ -1754,6 +1833,15 @@ namespace Mcp.Unity.V1 {
             OperationCancel = subBuilder;
             break;
           }
+          case 402: {
+            global::Mcp.Unity.V1.ComponentResponse subBuilder = new global::Mcp.Unity.V1.ComponentResponse();
+            if (payloadCase_ == PayloadOneofCase.Component) {
+              subBuilder.MergeFrom(Component);
+            }
+            input.ReadMessage(subBuilder);
+            Component = subBuilder;
+            break;
+          }
         }
       }
     }
@@ -1764,7 +1852,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Event message for server-to-client notifications
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcEvent : pb::IMessage<IpcEvent>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2017,11 +2104,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -2058,11 +2141,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;

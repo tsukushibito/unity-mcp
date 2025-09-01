@@ -35,6 +35,7 @@ PROTO_FILES=(
     "mcp/unity/v1/build.proto"
     "mcp/unity/v1/operations.proto"
     "mcp/unity/v1/events.proto"
+    "mcp/unity/v1/component.proto"
     "mcp/unity/v1/ipc.proto"
     "mcp/unity/v1/ipc_control.proto"
     "mcp/unity/v1/tests.proto"
@@ -93,11 +94,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     let files = [
         "mcp/unity/v1/common.proto",
-        "mcp/unity/v1/editor_control.proto", 
+        "mcp/unity/v1/editor_control.proto",
         "mcp/unity/v1/assets.proto",
         "mcp/unity/v1/build.proto",
         "mcp/unity/v1/operations.proto",
         "mcp/unity/v1/events.proto",
+        "mcp/unity/v1/component.proto",
         "mcp/unity/v1/ipc.proto",
         "mcp/unity/v1/ipc_control.proto",
         "mcp/unity/v1/tests.proto",

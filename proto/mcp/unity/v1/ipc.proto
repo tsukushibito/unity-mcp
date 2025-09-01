@@ -10,6 +10,7 @@ import "mcp/unity/v1/assets.proto";
 import "mcp/unity/v1/build.proto";
 import "mcp/unity/v1/operations.proto";
 import "mcp/unity/v1/events.proto";
+import "mcp/unity/v1/component.proto";
 
 // Top-level envelope for all IPC messages
 message IpcEnvelope {
@@ -38,10 +39,13 @@ message IpcRequest {
     
     // Build
     BuildRequest build = 30;
-    
+
     // Operations
     OperationGetRequest operation_get = 40;
     OperationCancelRequest operation_cancel = 41;
+
+    // Components
+    ComponentRequest component = 50;
   }
 }
 
@@ -62,10 +66,13 @@ message IpcResponse {
     
     // Build
     BuildResponse build = 30;
-    
+
     // Operations
     OperationGetResponse operation_get = 40;
     OperationCancelResponse operation_cancel = 41;
+
+    // Components
+    ComponentResponse component = 50;
   }
 }
 

@@ -1,5 +1,6 @@
 pub mod assets;
 pub mod build;
+pub mod component;
 pub mod diagnostics;
 pub mod health;
 pub mod status;
@@ -78,6 +79,33 @@ impl McpService {
         Parameters(req): Parameters<UnityAssetsPathToGuidRequest>,
     ) -> Result<CallToolResult, McpError> {
         self.do_unity_assets_path_to_guid(req.paths, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Add Unity component via Direct IPC")]
+    pub async fn unity_component_add(
+        &self,
+        Parameters(req): Parameters<UnityComponentAddRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_component_add(req.game_object, req.component, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Get Unity components via Direct IPC")]
+    pub async fn unity_get_components(
+        &self,
+        Parameters(req): Parameters<UnityGetComponentsRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_get_components(req.game_object, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Remove Unity component via Direct IPC")]
+    pub async fn unity_component_remove(
+        &self,
+        Parameters(req): Parameters<UnityComponentRemoveRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_component_remove(req.game_object, req.component, req.timeout_secs)
             .await
     }
 
@@ -166,6 +194,26 @@ pub struct UnityAssetsPathToGuidRequest {
     pub timeout_secs: Option<u64>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityComponentAddRequest {
+    pub game_object: String,
+    pub component: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityGetComponentsRequest {
+    pub game_object: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityComponentRemoveRequest {
+    pub game_object: String,
+    pub component: String,
+    pub timeout_secs: Option<u64>,
+}
+
 #[cfg(test)]
 mod tool_tests {
     use super::*;
@@ -181,6 +229,9 @@ mod tool_tests {
         assert!(router.has_route("unity_assets_refresh"));
         assert!(router.has_route("unity_assets_guid_to_path"));
         assert!(router.has_route("unity_assets_path_to_guid"));
+        assert!(router.has_route("unity_component_add"));
+        assert!(router.has_route("unity_get_components"));
+        assert!(router.has_route("unity_component_remove"));
         assert!(router.has_route("unity_get_compile_diagnostics"));
         assert!(router.has_route("unity_run_tests"));
         assert!(router.has_route("unity_get_test_results"));

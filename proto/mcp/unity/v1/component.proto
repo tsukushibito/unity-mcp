@@ -1,0 +1,51 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+
+// Unity component operations on GameObjects
+message AddComponentRequest {
+  string game_object = 1;
+  string component = 2;
+}
+
+message AddComponentResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message GetComponentsRequest {
+  string game_object = 1;
+}
+
+message GetComponentsResponse {
+  repeated string components = 1;
+}
+
+message RemoveComponentRequest {
+  string game_object = 1;
+  string component = 2;
+}
+
+message RemoveComponentResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message ComponentRequest {
+  oneof payload {
+    AddComponentRequest add = 1;
+    GetComponentsRequest get = 2;
+    RemoveComponentRequest remove = 3;
+  }
+}
+
+message ComponentResponse {
+  int32 status_code = 1; // 0=OK, 2=INVALID_ARGUMENT, 5=NOT_FOUND, 13=INTERNAL
+  string message = 2;
+  oneof payload {
+    AddComponentResponse add = 10;
+    GetComponentsResponse get = 11;
+    RemoveComponentResponse remove = 12;
+  }
+}

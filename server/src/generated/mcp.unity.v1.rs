@@ -590,6 +590,84 @@ pub mod operation_event {
         }
     }
 }
+/// Unity component operations on GameObjects
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AddComponentRequest {
+    #[prost(string, tag = "1")]
+    pub game_object: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub component: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AddComponentResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetComponentsRequest {
+    #[prost(string, tag = "1")]
+    pub game_object: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetComponentsResponse {
+    #[prost(string, repeated, tag = "1")]
+    pub components: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RemoveComponentRequest {
+    #[prost(string, tag = "1")]
+    pub game_object: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub component: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RemoveComponentResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ComponentRequest {
+    #[prost(oneof = "component_request::Payload", tags = "1, 2, 3")]
+    pub payload: ::core::option::Option<component_request::Payload>,
+}
+/// Nested message and enum types in `ComponentRequest`.
+pub mod component_request {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "1")]
+        Add(super::AddComponentRequest),
+        #[prost(message, tag = "2")]
+        Get(super::GetComponentsRequest),
+        #[prost(message, tag = "3")]
+        Remove(super::RemoveComponentRequest),
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ComponentResponse {
+    /// 0=OK, 2=INVALID_ARGUMENT, 5=NOT_FOUND, 13=INTERNAL
+    #[prost(int32, tag = "1")]
+    pub status_code: i32,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(oneof = "component_response::Payload", tags = "10, 11, 12")]
+    pub payload: ::core::option::Option<component_response::Payload>,
+}
+/// Nested message and enum types in `ComponentResponse`.
+pub mod component_response {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "10")]
+        Add(super::AddComponentResponse),
+        #[prost(message, tag = "11")]
+        Get(super::GetComponentsResponse),
+        #[prost(message, tag = "12")]
+        Remove(super::RemoveComponentResponse),
+    }
+}
 /// Top-level envelope for all IPC messages
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcEnvelope {
@@ -614,7 +692,7 @@ pub mod ipc_envelope {
 /// Request message with typed payloads
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcRequest {
-    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 12, 20, 30, 40, 41, 50")]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
 /// Nested message and enum types in `IpcRequest`.
@@ -642,6 +720,9 @@ pub mod ipc_request {
         OperationGet(super::OperationGetRequest),
         #[prost(message, tag = "41")]
         OperationCancel(super::OperationCancelRequest),
+        /// Components
+        #[prost(message, tag = "50")]
+        Component(super::ComponentRequest),
     }
 }
 /// Response message with typed payloads
@@ -650,7 +731,7 @@ pub struct IpcResponse {
     /// Matches the request correlation_id
     #[prost(string, tag = "1")]
     pub correlation_id: ::prost::alloc::string::String,
-    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 12, 20, 30, 40, 41, 50")]
     pub payload: ::core::option::Option<ipc_response::Payload>,
 }
 /// Nested message and enum types in `IpcResponse`.
@@ -678,6 +759,9 @@ pub mod ipc_response {
         OperationGet(super::OperationGetResponse),
         #[prost(message, tag = "41")]
         OperationCancel(super::OperationCancelResponse),
+        /// Components
+        #[prost(message, tag = "50")]
+        Component(super::ComponentResponse),
     }
 }
 /// Event message for server-to-client notifications
