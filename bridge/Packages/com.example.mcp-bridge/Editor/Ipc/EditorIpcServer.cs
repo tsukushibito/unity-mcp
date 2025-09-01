@@ -117,7 +117,6 @@ namespace Mcp.Unity.V1.Ipc
                     _clientsByStream.Clear();
                     _activeStreams.Clear();
                     _negotiatedFeatures.Clear();
-                    foreach (var gate in _writeLocks.Values) { gate.Dispose(); }
                     _writeLocks.Clear();
                 }
 
@@ -906,10 +905,7 @@ namespace Mcp.Unity.V1.Ipc
             {
                 _activeStreams.Remove(stream);
                 _negotiatedFeatures.Remove(stream);
-                if (_writeLocks.TryRemove(stream, out var gate))
-                {
-                    gate.Dispose();
-                }
+                _writeLocks.TryRemove(stream, out _);
 
                 if (_clientsByStream.Remove(stream, out var client))
                 {
