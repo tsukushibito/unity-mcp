@@ -1,0 +1,131 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+
+import "mcp/unity/v1/common.proto";
+
+// Test service for Unity test runner operations via IPC
+service Tests {
+  // Run Unity tests with specified parameters
+  rpc RunTests(RunTestsRequest) returns (RunTestsResponse);
+  
+  // Get test results from previous runs
+  rpc GetTestResults(GetTestResultsRequest) returns (GetTestResultsResponse);
+  
+  // Get test run status (running, finished, failed)
+  rpc GetTestRunStatus(GetTestRunStatusRequest) returns (GetTestRunStatusResponse);
+}
+
+// Test execution request
+message RunTestsRequest {
+  string run_id = 1;                    // Unique run identifier
+  TestMode mode = 2;                    // Test mode: edit, play, or all
+  optional string test_filter = 3;      // Optional test name filter
+  repeated string categories = 4;       // Optional category filters
+  uint32 timeout_sec = 5;              // Timeout in seconds (default: 180)
+  uint32 max_items = 6;                // Max results to return (default: 2000)  
+  bool include_passed = 7;              // Include passed tests in results (default: true)
+}
+
+// Test execution response
+message RunTestsResponse {
+  string run_id = 1;                    // Echo of run_id from request
+  bool accepted = 2;                    // Whether test run was accepted/started
+  string message = 3;                   // Status or error message
+}
+
+// Test results request
+message GetTestResultsRequest {
+  optional string run_id = 1;           // Specific run ID (optional, gets latest if not specified)
+  uint32 max_items = 2;                // Max results to return (default: 2000)
+  bool include_passed = 3;              // Include passed tests (default: true)
+}
+
+// Test results response
+message GetTestResultsResponse {
+  TestResults results = 1;              // Complete test results
+  bool found = 2;                       // Whether results were found
+}
+
+// Test run status request  
+message GetTestRunStatusRequest {
+  optional string run_id = 1;           // Specific run ID (optional, gets latest if not specified)
+}
+
+// Test run status response
+message GetTestRunStatusResponse {
+  TestRunStatus status = 1;             // Current status
+  bool found = 2;                       // Whether status was found
+}
+
+// Test execution mode enumeration
+enum TestMode {
+  TEST_MODE_UNSPECIFIED = 0;
+  TEST_MODE_EDIT = 1;                   // EditMode tests only
+  TEST_MODE_PLAY = 2;                   // PlayMode tests only  
+  TEST_MODE_ALL = 3;                    // Both EditMode and PlayMode
+}
+
+// Complete test results structure
+message TestResults {
+  string run_id = 1;                    // Run identifier
+  string started_at = 2;                // ISO 8601 timestamp
+  string finished_at = 3;               // ISO 8601 timestamp
+  TestMode mode = 4;                    // Test mode used
+  optional string filter = 5;           // Test filter used
+  repeated string categories = 6;       // Categories used
+  TestSummary summary = 7;              // Test summary statistics
+  repeated TestResult tests = 8;        // Individual test results
+  bool truncated = 9;                   // Whether results were truncated
+}
+
+// Test summary statistics
+message TestSummary {
+  uint32 total = 1;                     // Total tests
+  uint32 passed = 2;                    // Passed tests
+  uint32 failed = 3;                    // Failed tests  
+  uint32 skipped = 4;                   // Skipped tests
+  float duration_sec = 5;               // Total duration in seconds
+}
+
+// Individual test result
+message TestResult {
+  string assembly = 1;                  // Assembly name
+  string suite = 2;                     // Test suite name
+  string name = 3;                      // Test name
+  string full_name = 4;                 // Full test name
+  TestStatus status = 5;                // Test execution status
+  float duration_sec = 6;               // Test duration in seconds
+  string message = 7;                   // Test message (empty if passed)
+  string stack_trace = 8;               // Stack trace (empty if passed)
+  repeated string categories = 9;       // Test categories
+  string owner = 10;                    // Test owner (usually empty)
+  string file = 11;                     // Source file path
+  uint32 line = 12;                     // Source line number
+}
+
+// Test execution status enumeration
+enum TestStatus {
+  TEST_STATUS_UNSPECIFIED = 0;
+  TEST_STATUS_PASSED = 1;               // Test passed
+  TEST_STATUS_FAILED = 2;               // Test failed
+  TEST_STATUS_SKIPPED = 3;              // Test skipped
+  TEST_STATUS_INCONCLUSIVE = 4;         // Test inconclusive
+}
+
+// Test run status information
+message TestRunStatus {
+  RunStatus status = 1;                 // Current run status
+  string run_id = 2;                    // Run identifier
+  string timestamp = 3;                 // Status timestamp (ISO 8601)
+}
+
+// Test run status enumeration
+enum RunStatus {
+  RUN_STATUS_UNSPECIFIED = 0;
+  RUN_STATUS_STARTED = 1;               // Test run started
+  RUN_STATUS_RUNNING = 2;               // Test run in progress
+  RUN_STATUS_FINISHED = 3;              // Test run completed
+  RUN_STATUS_FAILED = 4;                // Test run failed to start/execute
+}

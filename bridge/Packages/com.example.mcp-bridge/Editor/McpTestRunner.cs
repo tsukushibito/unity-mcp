@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using UnityEditor;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
+using Bridge.Editor;
 
 namespace MCP.Editor
 {
@@ -73,9 +74,13 @@ namespace MCP.Editor
     [InitializeOnLoad]
     public static class McpTestRunner
     {
-        private static readonly string RequestDirectory = Path.Combine(Application.dataPath, "../Temp/AI/requests");
-        private static readonly string OutputDirectory = Path.Combine(Application.dataPath, "../Temp/AI/tests");
-        private static readonly string LatestJsonPath = Path.Combine(OutputDirectory, "latest.json");
+        private static readonly string RequestDirectory = McpFilePathManager.GetTestsRequestsDirectory();
+        private static readonly string OutputDirectory = McpFilePathManager.GetTestsDirectory();
+        private static readonly string LatestJsonPath = McpFilePathManager.GetLatestJsonPath(OutputDirectory);
+        
+        // Phase 2: IPC and file output configuration
+        private static bool EnableIpcCommunication = true;  // Enable IPC communication (Phase 2)
+        private static bool EnableFileOutput = true;        // Keep file output for debugging
         
         private static readonly Queue<TestRequest> pendingRequests = new Queue<TestRequest>();
         private static bool isRunning = false;
@@ -103,14 +108,8 @@ namespace MCP.Editor
         {
             try
             {
-                if (!Directory.Exists(RequestDirectory))
-                {
-                    Directory.CreateDirectory(RequestDirectory);
-                }
-                if (!Directory.Exists(OutputDirectory))
-                {
-                    Directory.CreateDirectory(OutputDirectory);
-                }
+                McpFilePathManager.EnsureDirectoryExists(RequestDirectory);
+                McpFilePathManager.EnsureDirectoryExists(OutputDirectory);
             }
             catch (Exception e)
             {
@@ -174,6 +173,12 @@ namespace MCP.Editor
                 currentRequest = request; // Store current request for later reference
                 testStartTime = DateTime.UtcNow;
                 
+                // Phase 2: Send IPC notification about test run acceptance
+                if (EnableIpcCommunication)
+                {
+                    SendIpcTestRunAccepted(request);
+                }
+                
                 // Initialize results structure
                 currentResults = new TestResults
                 {
@@ -202,8 +207,11 @@ namespace MCP.Editor
                     phaseQueue.Enqueue(GetTestMode(request.mode));
                 }
 
-                // Write status file to indicate test started
-                WriteStatusFile("started", currentResults);
+                // Phase 2: Write status file to indicate test started (optional for debugging)
+                if (EnableFileOutput)
+                {
+                    WriteStatusFile("started", currentResults);
+                }
 
                 Debug.Log($"[McpTestRunner] Starting test run: {request.runId} (mode: {request.mode})");
 
@@ -225,8 +233,12 @@ namespace MCP.Editor
                     durationSec = 0
                 };
                 
-                SaveResults(currentResults);
-                WriteStatusFile("finished", currentResults);
+                // Phase 2: Optional file output for error cases
+                if (EnableFileOutput)
+                {
+                    SaveResults(currentResults);
+                    WriteStatusFile("finished", currentResults);
+                }
                 isRunning = false;
             }
         }
@@ -346,9 +358,18 @@ namespace MCP.Editor
 
                 currentResults.tests = filteredResults.ToArray();
 
-                // Save results and mark finished
-                SaveResults(currentResults);
-                WriteStatusFile("finished", currentResults);
+                // Phase 2: Send IPC notification with results (primary communication)
+                if (EnableIpcCommunication)
+                {
+                    SendIpcTestResultsReady(currentResults);
+                }
+                
+                // Phase 2: Optionally save results and status files (for debugging)
+                if (EnableFileOutput)
+                {
+                    SaveResults(currentResults);
+                    WriteStatusFile("finished", currentResults);
+                }
 
                 Debug.Log($"[McpTestRunner] Results saved: {currentResults.summary.passed} passed, " +
                          $"{currentResults.summary.failed} failed, {currentResults.summary.skipped} skipped");
@@ -561,6 +582,167 @@ namespace MCP.Editor
             {
                 Debug.LogError($"[McpTestRunner] Failed to write status file: {e.Message}");
             }
+        }
+        
+        // === Phase 2: IPC Communication Methods ===
+        
+        /// <summary>
+        /// Send IPC notification that test run was accepted and started
+        /// </summary>
+        private static void SendIpcTestRunAccepted(TestRequest request)
+        {
+            try
+            {
+                // TODO: Implement actual IPC communication to Rust server
+                // For now, just log the intent
+                Debug.Log($"[McpTestRunner] IPC: Test run accepted - {request.runId} (mode: {request.mode})");
+                
+                // In Phase 2, this would send a RunTestsResponse via IPC
+                // var response = new RunTestsResponse
+                // {
+                //     runId = request.runId,
+                //     accepted = true,
+                //     message = "Test run accepted"
+                // };
+                // IpcManager.SendResponse(response);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[McpTestRunner] Failed to send IPC test run accepted: {e.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Send IPC notification that test results are ready
+        /// </summary>
+        private static void SendIpcTestResultsReady(TestResults results)
+        {
+            try
+            {
+                // TODO: Implement actual IPC communication to Rust server
+                // For now, just log the intent
+                Debug.Log($"[McpTestRunner] IPC: Test results ready - {results.runId} " +
+                         $"({results.summary.passed} passed, {results.summary.failed} failed)");
+                
+                // In Phase 2, this would send TestResults via IPC
+                // var ipcResults = ConvertToIpcTestResults(results);
+                // IpcManager.SendTestResults(ipcResults);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[McpTestRunner] Failed to send IPC test results: {e.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Handle incoming IPC test run requests (Phase 2)
+        /// </summary>
+        public static void HandleIpcRunTestsRequest(string runId, string mode, string testFilter, 
+                                                   string[] categories, int timeoutSec, int maxItems, bool includePassed)
+        {
+            try
+            {
+                Debug.Log($"[McpTestRunner] IPC: Received test run request - {runId}");
+                
+                // Convert IPC request to internal TestRequest format
+                var request = new TestRequest
+                {
+                    runId = runId,
+                    mode = mode,
+                    testFilter = testFilter ?? "",
+                    categories = categories ?? new string[0],
+                    timeoutSec = timeoutSec,
+                    maxItems = maxItems,
+                    includePassed = includePassed
+                };
+                
+                // Queue the request for processing (reuse existing infrastructure)
+                pendingRequests.Enqueue(request);
+                Debug.Log($"[McpTestRunner] IPC request queued: {request.runId}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[McpTestRunner] Failed to handle IPC test run request: {e.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Handle incoming IPC test results requests (Phase 2)
+        /// </summary>
+        public static TestResults HandleIpcGetTestResultsRequest(string runId, int maxItems, bool includePassed)
+        {
+            try
+            {
+                Debug.Log($"[McpTestRunner] IPC: Received get test results request - runId={runId}");
+                
+                // Try to get cached results first (from current run)
+                if (currentResults != null && 
+                    (string.IsNullOrEmpty(runId) || currentResults.runId == runId))
+                {
+                    return ApplyTestResultsFiltering(currentResults, maxItems, includePassed);
+                }
+                
+                // Fallback: Try to load from file if available and file output is enabled
+                if (EnableFileOutput)
+                {
+                    var resultsPath = string.IsNullOrEmpty(runId) 
+                        ? LatestJsonPath 
+                        : Path.Combine(OutputDirectory, $"run-{runId}.json");
+                        
+                    if (File.Exists(resultsPath))
+                    {
+                        var json = File.ReadAllText(resultsPath);
+                        var results = JsonUtility.FromJson<TestResults>(json);
+                        return ApplyTestResultsFiltering(results, maxItems, includePassed);
+                    }
+                }
+                
+                Debug.Log($"[McpTestRunner] IPC: No test results found for runId={runId}");
+                return null;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[McpTestRunner] Failed to handle IPC get test results request: {e.Message}");
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// Apply filtering to test results (helper method)
+        /// </summary>
+        private static TestResults ApplyTestResultsFiltering(TestResults results, int maxItems, bool includePassed)
+        {
+            if (results == null) return null;
+            
+            var filteredTests = results.tests.AsEnumerable();
+            
+            // Apply include_passed filter
+            if (!includePassed)
+            {
+                filteredTests = filteredTests.Where(t => t.status != "passed");
+            }
+            
+            // Apply max_items limit
+            var testsList = filteredTests.ToList();
+            bool truncated = testsList.Count > maxItems;
+            if (truncated)
+            {
+                testsList = testsList.Take(maxItems).ToList();
+            }
+            
+            // Create filtered copy
+            return new TestResults
+            {
+                runId = results.runId,
+                startedAt = results.startedAt,
+                finishedAt = results.finishedAt,
+                mode = results.mode,
+                filter = results.filter,
+                categories = results.categories,
+                summary = results.summary,
+                tests = testsList.ToArray(),
+                truncated = truncated || results.truncated
+            };
         }
     }
 }

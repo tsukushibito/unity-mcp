@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
 using System.Security.Cryptography;
+using Bridge.Editor;
 
 namespace MCP.Editor
 {
@@ -78,8 +79,8 @@ namespace MCP.Editor
     [InitializeOnLoad]
     public static class McpDiagnosticsReporter
     {
-        private static readonly string OutputDirectory = Path.Combine(Application.dataPath, "../AI");
-        private static readonly string LatestJsonPath = Path.Combine(OutputDirectory, "latest.json");
+        private static readonly string OutputDirectory = McpFilePathManager.GetDiagnosticsDirectory();
+        private static readonly string LatestJsonPath = McpFilePathManager.GetLatestJsonPath(OutputDirectory);
         private static readonly List<CompilerMessageWithAssembly> CollectedMessages = new List<CompilerMessageWithAssembly>();
         
         // In-memory storage for IPC access
@@ -100,10 +101,7 @@ namespace MCP.Editor
         {
             try
             {
-                if (!Directory.Exists(OutputDirectory))
-                {
-                    Directory.CreateDirectory(OutputDirectory);
-                }
+                McpFilePathManager.EnsureDirectoryExists(OutputDirectory);
             }
             catch (Exception e)
             {

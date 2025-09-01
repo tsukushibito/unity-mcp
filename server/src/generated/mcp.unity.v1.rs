@@ -846,3 +846,300 @@ pub mod ipc_reject {
         }
     }
 }
+/// Test execution request
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RunTestsRequest {
+    /// Unique run identifier
+    #[prost(string, tag = "1")]
+    pub run_id: ::prost::alloc::string::String,
+    /// Test mode: edit, play, or all
+    #[prost(enumeration = "TestMode", tag = "2")]
+    pub mode: i32,
+    /// Optional test name filter
+    #[prost(string, optional, tag = "3")]
+    pub test_filter: ::core::option::Option<::prost::alloc::string::String>,
+    /// Optional category filters
+    #[prost(string, repeated, tag = "4")]
+    pub categories: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Timeout in seconds (default: 180)
+    #[prost(uint32, tag = "5")]
+    pub timeout_sec: u32,
+    /// Max results to return (default: 2000)
+    #[prost(uint32, tag = "6")]
+    pub max_items: u32,
+    /// Include passed tests in results (default: true)
+    #[prost(bool, tag = "7")]
+    pub include_passed: bool,
+}
+/// Test execution response
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RunTestsResponse {
+    /// Echo of run_id from request
+    #[prost(string, tag = "1")]
+    pub run_id: ::prost::alloc::string::String,
+    /// Whether test run was accepted/started
+    #[prost(bool, tag = "2")]
+    pub accepted: bool,
+    /// Status or error message
+    #[prost(string, tag = "3")]
+    pub message: ::prost::alloc::string::String,
+}
+/// Test results request
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetTestResultsRequest {
+    /// Specific run ID (optional, gets latest if not specified)
+    #[prost(string, optional, tag = "1")]
+    pub run_id: ::core::option::Option<::prost::alloc::string::String>,
+    /// Max results to return (default: 2000)
+    #[prost(uint32, tag = "2")]
+    pub max_items: u32,
+    /// Include passed tests (default: true)
+    #[prost(bool, tag = "3")]
+    pub include_passed: bool,
+}
+/// Test results response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetTestResultsResponse {
+    /// Complete test results
+    #[prost(message, optional, tag = "1")]
+    pub results: ::core::option::Option<TestResults>,
+    /// Whether results were found
+    #[prost(bool, tag = "2")]
+    pub found: bool,
+}
+/// Test run status request
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetTestRunStatusRequest {
+    /// Specific run ID (optional, gets latest if not specified)
+    #[prost(string, optional, tag = "1")]
+    pub run_id: ::core::option::Option<::prost::alloc::string::String>,
+}
+/// Test run status response
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetTestRunStatusResponse {
+    /// Current status
+    #[prost(message, optional, tag = "1")]
+    pub status: ::core::option::Option<TestRunStatus>,
+    /// Whether status was found
+    #[prost(bool, tag = "2")]
+    pub found: bool,
+}
+/// Complete test results structure
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TestResults {
+    /// Run identifier
+    #[prost(string, tag = "1")]
+    pub run_id: ::prost::alloc::string::String,
+    /// ISO 8601 timestamp
+    #[prost(string, tag = "2")]
+    pub started_at: ::prost::alloc::string::String,
+    /// ISO 8601 timestamp
+    #[prost(string, tag = "3")]
+    pub finished_at: ::prost::alloc::string::String,
+    /// Test mode used
+    #[prost(enumeration = "TestMode", tag = "4")]
+    pub mode: i32,
+    /// Test filter used
+    #[prost(string, optional, tag = "5")]
+    pub filter: ::core::option::Option<::prost::alloc::string::String>,
+    /// Categories used
+    #[prost(string, repeated, tag = "6")]
+    pub categories: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Test summary statistics
+    #[prost(message, optional, tag = "7")]
+    pub summary: ::core::option::Option<TestSummary>,
+    /// Individual test results
+    #[prost(message, repeated, tag = "8")]
+    pub tests: ::prost::alloc::vec::Vec<TestResult>,
+    /// Whether results were truncated
+    #[prost(bool, tag = "9")]
+    pub truncated: bool,
+}
+/// Test summary statistics
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct TestSummary {
+    /// Total tests
+    #[prost(uint32, tag = "1")]
+    pub total: u32,
+    /// Passed tests
+    #[prost(uint32, tag = "2")]
+    pub passed: u32,
+    /// Failed tests
+    #[prost(uint32, tag = "3")]
+    pub failed: u32,
+    /// Skipped tests
+    #[prost(uint32, tag = "4")]
+    pub skipped: u32,
+    /// Total duration in seconds
+    #[prost(float, tag = "5")]
+    pub duration_sec: f32,
+}
+/// Individual test result
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TestResult {
+    /// Assembly name
+    #[prost(string, tag = "1")]
+    pub assembly: ::prost::alloc::string::String,
+    /// Test suite name
+    #[prost(string, tag = "2")]
+    pub suite: ::prost::alloc::string::String,
+    /// Test name
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+    /// Full test name
+    #[prost(string, tag = "4")]
+    pub full_name: ::prost::alloc::string::String,
+    /// Test execution status
+    #[prost(enumeration = "TestStatus", tag = "5")]
+    pub status: i32,
+    /// Test duration in seconds
+    #[prost(float, tag = "6")]
+    pub duration_sec: f32,
+    /// Test message (empty if passed)
+    #[prost(string, tag = "7")]
+    pub message: ::prost::alloc::string::String,
+    /// Stack trace (empty if passed)
+    #[prost(string, tag = "8")]
+    pub stack_trace: ::prost::alloc::string::String,
+    /// Test categories
+    #[prost(string, repeated, tag = "9")]
+    pub categories: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Test owner (usually empty)
+    #[prost(string, tag = "10")]
+    pub owner: ::prost::alloc::string::String,
+    /// Source file path
+    #[prost(string, tag = "11")]
+    pub file: ::prost::alloc::string::String,
+    /// Source line number
+    #[prost(uint32, tag = "12")]
+    pub line: u32,
+}
+/// Test run status information
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TestRunStatus {
+    /// Current run status
+    #[prost(enumeration = "RunStatus", tag = "1")]
+    pub status: i32,
+    /// Run identifier
+    #[prost(string, tag = "2")]
+    pub run_id: ::prost::alloc::string::String,
+    /// Status timestamp (ISO 8601)
+    #[prost(string, tag = "3")]
+    pub timestamp: ::prost::alloc::string::String,
+}
+/// Test execution mode enumeration
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum TestMode {
+    Unspecified = 0,
+    /// EditMode tests only
+    Edit = 1,
+    /// PlayMode tests only
+    Play = 2,
+    /// Both EditMode and PlayMode
+    All = 3,
+}
+impl TestMode {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "TEST_MODE_UNSPECIFIED",
+            Self::Edit => "TEST_MODE_EDIT",
+            Self::Play => "TEST_MODE_PLAY",
+            Self::All => "TEST_MODE_ALL",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "TEST_MODE_UNSPECIFIED" => Some(Self::Unspecified),
+            "TEST_MODE_EDIT" => Some(Self::Edit),
+            "TEST_MODE_PLAY" => Some(Self::Play),
+            "TEST_MODE_ALL" => Some(Self::All),
+            _ => None,
+        }
+    }
+}
+/// Test execution status enumeration
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum TestStatus {
+    Unspecified = 0,
+    /// Test passed
+    Passed = 1,
+    /// Test failed
+    Failed = 2,
+    /// Test skipped
+    Skipped = 3,
+    /// Test inconclusive
+    Inconclusive = 4,
+}
+impl TestStatus {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "TEST_STATUS_UNSPECIFIED",
+            Self::Passed => "TEST_STATUS_PASSED",
+            Self::Failed => "TEST_STATUS_FAILED",
+            Self::Skipped => "TEST_STATUS_SKIPPED",
+            Self::Inconclusive => "TEST_STATUS_INCONCLUSIVE",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "TEST_STATUS_UNSPECIFIED" => Some(Self::Unspecified),
+            "TEST_STATUS_PASSED" => Some(Self::Passed),
+            "TEST_STATUS_FAILED" => Some(Self::Failed),
+            "TEST_STATUS_SKIPPED" => Some(Self::Skipped),
+            "TEST_STATUS_INCONCLUSIVE" => Some(Self::Inconclusive),
+            _ => None,
+        }
+    }
+}
+/// Test run status enumeration
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum RunStatus {
+    Unspecified = 0,
+    /// Test run started
+    Started = 1,
+    /// Test run in progress
+    Running = 2,
+    /// Test run completed
+    Finished = 3,
+    /// Test run failed to start/execute
+    Failed = 4,
+}
+impl RunStatus {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "RUN_STATUS_UNSPECIFIED",
+            Self::Started => "RUN_STATUS_STARTED",
+            Self::Running => "RUN_STATUS_RUNNING",
+            Self::Finished => "RUN_STATUS_FINISHED",
+            Self::Failed => "RUN_STATUS_FAILED",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "RUN_STATUS_UNSPECIFIED" => Some(Self::Unspecified),
+            "RUN_STATUS_STARTED" => Some(Self::Started),
+            "RUN_STATUS_RUNNING" => Some(Self::Running),
+            "RUN_STATUS_FINISHED" => Some(Self::Finished),
+            "RUN_STATUS_FAILED" => Some(Self::Failed),
+            _ => None,
+        }
+    }
+}

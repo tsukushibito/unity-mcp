@@ -37,6 +37,7 @@ PROTO_FILES=(
     "mcp/unity/v1/events.proto"
     "mcp/unity/v1/ipc.proto"
     "mcp/unity/v1/ipc_control.proto"
+    "mcp/unity/v1/tests.proto"
 )
 
 # Verify all proto files exist
@@ -99,6 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "mcp/unity/v1/events.proto",
         "mcp/unity/v1/ipc.proto",
         "mcp/unity/v1/ipc_control.proto",
+        "mcp/unity/v1/tests.proto",
     ];
     
     let full_paths: Vec<_> = files.iter()
