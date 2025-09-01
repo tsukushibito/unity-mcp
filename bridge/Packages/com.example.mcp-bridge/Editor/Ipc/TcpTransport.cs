@@ -29,6 +29,16 @@ namespace Mcp.Unity.V1.Ipc
         }
 
         /// <summary>
+        /// Create TcpTransport with specified port on loopback address (127.0.0.1)
+        /// </summary>
+        /// <param name="port">Port number to use</param>
+        /// <returns>TcpTransport configured for the specified port</returns>
+        public static TcpTransport CreateWithPort(int port)
+        {
+            return new TcpTransport(new IPEndPoint(IPAddress.Loopback, port));
+        }
+
+        /// <summary>
         /// Start the TCP listener
         /// </summary>
         public void Start()
@@ -82,6 +92,9 @@ namespace Mcp.Unity.V1.Ipc
 
             try
             {
+                // Check cancellation before accepting connection
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 var tcpClient = await _listener.AcceptTcpClientAsync();
                 var clientEndpoint = tcpClient.Client.RemoteEndPoint;
                 Debug.Log($"[TcpTransport] Accepted connection from {clientEndpoint}");
@@ -96,6 +109,11 @@ namespace Mcp.Unity.V1.Ipc
             {
                 throw new OperationCanceledException("Transport disposed");
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                Debug.Log("[TcpTransport] Accept operation was cancelled");
+                throw;
+            }
             catch (Exception ex)
             {
                 Debug.LogError($"[TcpTransport] Error accepting connection: {ex.Message}");
@@ -107,6 +125,16 @@ namespace Mcp.Unity.V1.Ipc
         /// Check if the transport is listening
         /// </summary>
         public bool IsListening => _listener != null && _listener.Server.IsBound;
+
+        /// <summary>
+        /// Get the configured endpoint (host and port)
+        /// </summary>
+        public IPEndPoint Endpoint => _endpoint;
+
+        /// <summary>
+        /// Get the configured port number
+        /// </summary>
+        public int Port => _endpoint.Port;
 
         public void Dispose()
         {
