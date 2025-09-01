@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEngine;
 
@@ -54,11 +55,56 @@ namespace Bridge.Editor
         /// Ensures the specified directory exists, creating it if necessary.
         /// </summary>
         /// <param name="directoryPath">The directory path to ensure exists</param>
-        public static void EnsureDirectoryExists(string directoryPath)
+        /// <returns>True if directory exists or was created successfully, false otherwise</returns>
+        public static bool EnsureDirectoryExists(string directoryPath)
         {
-            if (!Directory.Exists(directoryPath))
+            try
             {
-                Directory.CreateDirectory(directoryPath);
+                if (string.IsNullOrEmpty(directoryPath))
+                {
+                    Debug.LogError("[McpFilePathManager] Directory path is null or empty");
+                    return false;
+                }
+
+                if (Directory.Exists(directoryPath))
+                {
+                    return true;
+                }
+
+                // Create directory with explicit error handling
+                DirectoryInfo dirInfo = Directory.CreateDirectory(directoryPath);
+                
+                // Verify creation was successful
+                if (dirInfo.Exists)
+                {
+                    Debug.Log($"[McpFilePathManager] Successfully created directory: {directoryPath}");
+                    return true;
+                }
+                else
+                {
+                    Debug.LogError($"[McpFilePathManager] Failed to verify directory creation: {directoryPath}");
+                    return false;
+                }
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                Debug.LogError($"[McpFilePathManager] Access denied creating directory: {directoryPath}. Error: {e.Message}");
+                return false;
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                Debug.LogError($"[McpFilePathManager] Parent directory not found: {directoryPath}. Error: {e.Message}");
+                return false;
+            }
+            catch (IOException e)
+            {
+                Debug.LogError($"[McpFilePathManager] IO error creating directory: {directoryPath}. Error: {e.Message}");
+                return false;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[McpFilePathManager] Unexpected error creating directory: {directoryPath}. Error: {e.Message}");
+                return false;
             }
         }
         

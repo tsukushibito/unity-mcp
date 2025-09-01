@@ -106,14 +106,30 @@ namespace MCP.Editor
 
         private static void EnsureDirectories()
         {
-            try
+            Debug.Log($"[McpTestRunner] Ensuring directories exist...");
+            Debug.Log($"[McpTestRunner] Request directory: {RequestDirectory}");
+            Debug.Log($"[McpTestRunner] Output directory: {OutputDirectory}");
+            
+            bool requestDirSuccess = McpFilePathManager.EnsureDirectoryExists(RequestDirectory);
+            bool outputDirSuccess = McpFilePathManager.EnsureDirectoryExists(OutputDirectory);
+            
+            if (!requestDirSuccess)
             {
-                McpFilePathManager.EnsureDirectoryExists(RequestDirectory);
-                McpFilePathManager.EnsureDirectoryExists(OutputDirectory);
+                Debug.LogError($"[McpTestRunner] Failed to create request directory: {RequestDirectory}");
             }
-            catch (Exception e)
+            
+            if (!outputDirSuccess)
             {
-                Debug.LogError($"[McpTestRunner] Failed to create directories: {e.Message}");
+                Debug.LogError($"[McpTestRunner] Failed to create output directory: {OutputDirectory}");
+            }
+            
+            if (requestDirSuccess && outputDirSuccess)
+            {
+                Debug.Log("[McpTestRunner] All required directories are available");
+            }
+            else
+            {
+                Debug.LogWarning("[McpTestRunner] Some directories could not be created. File operations may fail.");
             }
         }
 
@@ -324,6 +340,34 @@ namespace MCP.Editor
             {
                 Debug.Log($"[McpTestRunner] Test phase finished");
 
+                // Critical null check: Ensure currentResults is not null
+                if (currentResults == null)
+                {
+                    Debug.LogError("[McpTestRunner] currentResults is null in OnRunFinished - creating fallback results");
+                    
+                    // Create fallback results to prevent null reference exceptions
+                    var fallbackRunId = currentRequest?.runId ?? Guid.NewGuid().ToString();
+                    currentResults = new TestResults
+                    {
+                        runId = fallbackRunId,
+                        startedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                        finishedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                        mode = currentRequest?.mode ?? "unknown",
+                        filter = currentRequest?.testFilter ?? "",
+                        categories = currentRequest?.categories ?? new string[0],
+                        summary = new TestSummary
+                        {
+                            total = 0,
+                            passed = 0,
+                            failed = 1,
+                            skipped = 0,
+                            durationSec = 0
+                        },
+                        tests = new TestResult[0],
+                        truncated = false
+                    };
+                }
+
                 // If multi-phase and there are remaining phases, continue accumulating and start next phase
                 if (multiPhase && phaseQueue != null && phaseQueue.Count > 0)
                 {
@@ -377,6 +421,45 @@ namespace MCP.Editor
             catch (Exception e)
             {
                 Debug.LogError($"[McpTestRunner] Failed to finalize test run: {e.Message}");
+                Debug.LogError($"[McpTestRunner] Exception details: {e.StackTrace}");
+                
+                // Enhanced error handling: Ensure safe state even on exception
+                try
+                {
+                    // If currentResults is still null even after our null check above, create minimal results
+                    if (currentResults == null)
+                    {
+                        Debug.LogError("[McpTestRunner] currentResults is still null after exception - creating minimal error results");
+                        currentResults = new TestResults
+                        {
+                            runId = "error-" + Guid.NewGuid().ToString(),
+                            startedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                            finishedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                            mode = "unknown",
+                            filter = "",
+                            categories = new string[0],
+                            summary = new TestSummary { total = 0, passed = 0, failed = 1, skipped = 0, durationSec = 0 },
+                            tests = new TestResult[0],
+                            truncated = false
+                        };
+                    }
+                    
+                    // Try to send IPC notification even on error
+                    if (EnableIpcCommunication && currentResults != null)
+                    {
+                        SendIpcTestResultsReady(currentResults);
+                    }
+                    
+                    // Try to write error status file if file output is enabled
+                    if (EnableFileOutput && currentResults != null)
+                    {
+                        WriteStatusFile("error", currentResults);
+                    }
+                }
+                catch (Exception innerE)
+                {
+                    Debug.LogError($"[McpTestRunner] Failed to handle error recovery: {innerE.Message}");
+                }
             }
             finally
             {
@@ -384,6 +467,10 @@ namespace MCP.Editor
                 // Reset phase state
                 phaseQueue = null;
                 multiPhase = false;
+                
+                // Additional debug logging for state tracking
+                Debug.Log($"[McpTestRunner] Test run completed. isRunning={isRunning}, multiPhase={multiPhase}, " +
+                         $"currentResults={(currentResults != null ? currentResults.runId : "null")}");
             }
         }
 
@@ -391,6 +478,34 @@ namespace MCP.Editor
         {
             try
             {
+                // Validate inputs
+                if (test == null)
+                {
+                    Debug.LogError("[McpTestRunner] test parameter is null in CreateTestResult");
+                    return null;
+                }
+                
+                if (result == null)
+                {
+                    Debug.LogError("[McpTestRunner] result parameter is null in CreateTestResult");
+                    return null;
+                }
+
+                string testName = "";
+                string fullName = "";
+                
+                try
+                {
+                    testName = test.Name ?? "";
+                    fullName = test.FullName ?? "";
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[McpTestRunner] Error accessing test properties: {e.Message}");
+                    testName = "UnknownTest";
+                    fullName = "UnknownTest";
+                }
+
                 var status = result.TestStatus switch
                 {
                     TestStatus.Passed => "passed",
@@ -400,15 +515,31 @@ namespace MCP.Editor
                     _ => "unknown"
                 };
 
-                // Extract file and line from stack trace
+                // Extract file and line from stack trace with additional error handling
                 var (file, line) = ExtractFileAndLine(result.StackTrace);
+                
+                // Extract assembly and suite with safer error handling
+                string assembly = "";
+                string suite = "";
+                
+                try
+                {
+                    assembly = ExtractAssemblyName(fullName);
+                    suite = ExtractSuiteName(fullName);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[McpTestRunner] Error extracting assembly/suite from '{fullName}': {e.Message}");
+                    assembly = "UnknownAssembly";
+                    suite = "UnknownSuite";
+                }
                 
                 return new TestResult
                 {
-                    assembly = ExtractAssemblyName(test.FullName),
-                    suite = ExtractSuiteName(test.FullName),
-                    name = test.Name,
-                    fullName = test.FullName,
+                    assembly = assembly,
+                    suite = suite,
+                    name = testName,
+                    fullName = fullName,
                     status = status,
                     durationSec = (float)result.Duration,
                     message = result.Message ?? "",
@@ -421,8 +552,24 @@ namespace MCP.Editor
             }
             catch (Exception e)
             {
-                Debug.LogError($"[McpTestRunner] Failed to create test result for {test?.Name}: {e.Message}");
-                return null;
+                Debug.LogError($"[McpTestRunner] Failed to create test result for {test?.Name ?? "Unknown"}: {e.Message}\nStack trace: {e.StackTrace}");
+                
+                // Return a minimal safe TestResult to avoid null reference issues
+                return new TestResult
+                {
+                    assembly = "ErrorAssembly",
+                    suite = "ErrorSuite",
+                    name = test?.Name ?? "ErrorTest",
+                    fullName = test?.FullName ?? "ErrorTest",
+                    status = "failed",
+                    durationSec = 0.0f,
+                    message = $"Error creating test result: {e.Message}",
+                    stackTrace = "",
+                    categories = new string[0],
+                    owner = "",
+                    file = "",
+                    line = 0
+                };
             }
         }
 
@@ -481,17 +628,34 @@ namespace MCP.Editor
 
         private static string ExtractSuiteName(string fullName)
         {
-            if (string.IsNullOrEmpty(fullName)) return "";
-            
-            var lastDotIndex = fullName.LastIndexOf('.');
-            var secondLastDotIndex = fullName.LastIndexOf('.', lastDotIndex - 1);
-            
-            if (secondLastDotIndex >= 0 && lastDotIndex > secondLastDotIndex)
+            try
             {
-                return fullName.Substring(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
+                if (string.IsNullOrEmpty(fullName)) return "";
+                
+                var lastDotIndex = fullName.LastIndexOf('.');
+                if (lastDotIndex <= 0) return ""; // No dot found or dot is at the beginning
+                
+                var secondLastDotIndex = fullName.LastIndexOf('.', lastDotIndex - 1);
+                
+                if (secondLastDotIndex >= 0 && lastDotIndex > secondLastDotIndex)
+                {
+                    // Ensure we have valid indices for Substring
+                    int startIndex = secondLastDotIndex + 1;
+                    int length = lastDotIndex - secondLastDotIndex - 1;
+                    
+                    if (startIndex >= 0 && length > 0 && startIndex + length <= fullName.Length)
+                    {
+                        return fullName.Substring(startIndex, length);
+                    }
+                }
+                
+                return "";
             }
-            
-            return "";
+            catch (Exception e)
+            {
+                Debug.LogError($"[McpTestRunner] Error extracting suite name from '{fullName}': {e.Message}");
+                return "";
+            }
         }
 
         private static (string file, int line) ExtractFileAndLine(string stackTrace)
@@ -543,16 +707,37 @@ namespace MCP.Editor
             {
                 EnsureDirectories();
                 
+                // Verify directory exists before attempting file operations
+                if (!Directory.Exists(OutputDirectory))
+                {
+                    Debug.LogError($"[McpTestRunner] Output directory does not exist after EnsureDirectories: {OutputDirectory}");
+                    return;
+                }
+                
                 var json = JsonUtility.ToJson(results, false);
                 
                 // Write latest.json
-                File.WriteAllText(LatestJsonPath, json);
+                try
+                {
+                    File.WriteAllText(LatestJsonPath, json);
+                    Debug.Log($"[McpTestRunner] Latest results written to {LatestJsonPath}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[McpTestRunner] Failed to write latest.json: {e.Message}");
+                }
                 
                 // Write run-specific file
-                var runSpecificPath = Path.Combine(OutputDirectory, $"run-{results.runId}.json");
-                File.WriteAllText(runSpecificPath, json);
-                
-                Debug.Log($"[McpTestRunner] Results written to {LatestJsonPath}");
+                try
+                {
+                    var runSpecificPath = Path.Combine(OutputDirectory, $"run-{results.runId}.json");
+                    File.WriteAllText(runSpecificPath, json);
+                    Debug.Log($"[McpTestRunner] Run-specific results written to {runSpecificPath}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[McpTestRunner] Failed to write run-specific file: {e.Message}");
+                }
             }
             catch (Exception e)
             {
@@ -564,7 +749,19 @@ namespace MCP.Editor
         {
             try
             {
-                var statusPath = Path.Combine(OutputDirectory, "status.json");
+                // Verify directory exists before attempting file operations
+                if (!Directory.Exists(OutputDirectory))
+                {
+                    Debug.LogError($"[McpTestRunner] Output directory does not exist for status file: {OutputDirectory}");
+                    // Try to create directories one more time
+                    EnsureDirectories();
+                    if (!Directory.Exists(OutputDirectory))
+                    {
+                        Debug.LogError($"[McpTestRunner] Could not create output directory, status file will not be written");
+                        return;
+                    }
+                }
+                
                 var statusData = new TestRunStatus
                 {
                     status = status,
@@ -572,11 +769,30 @@ namespace MCP.Editor
                     timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
                 };
                 var statusJson = JsonUtility.ToJson(statusData, false);
-                File.WriteAllText(statusPath, statusJson);
+                
+                // Write main status file
+                try
+                {
+                    var statusPath = Path.Combine(OutputDirectory, "status.json");
+                    File.WriteAllText(statusPath, statusJson);
+                    Debug.Log($"[McpTestRunner] Status file written to {statusPath}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[McpTestRunner] Failed to write main status file: {e.Message}");
+                }
 
                 // Also write per-run status to ease debugging parallel runs
-                var statusPerRunPath = Path.Combine(OutputDirectory, $"status-{results.runId}.json");
-                File.WriteAllText(statusPerRunPath, statusJson);
+                try
+                {
+                    var statusPerRunPath = Path.Combine(OutputDirectory, $"status-{results.runId}.json");
+                    File.WriteAllText(statusPerRunPath, statusJson);
+                    Debug.Log($"[McpTestRunner] Per-run status file written to {statusPerRunPath}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[McpTestRunner] Failed to write per-run status file: {e.Message}");
+                }
             }
             catch (Exception e)
             {

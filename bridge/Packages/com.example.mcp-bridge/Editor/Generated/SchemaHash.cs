@@ -7,11 +7,11 @@ namespace Mcp.Unity.V1.Generated
 {
     internal static class Schema
     {
-        public const string SCHEMA_HASH_HEX = "78ebcf82ff9b01494caa1b23e09b8706014f867e68bcf886b7fdf3c3b30b33f4";
+        public const string SCHEMA_HASH_HEX = "89f2d146adbe87e35c4a17ae9f6b390a3faa0413b3deffb941654e5459f7c00b";
         
         public static byte[] SchemaHashBytes => new byte[]
         {
-            120,  235,  207,  130,  255,  155,  1,  73,  76,  170,  27,  35,  224,  155,  135,  6,  1,  79,  134,  126,  104,  188,  248,  134,  183,  253,  243,  195,  179,  11,  51,  244
+            137,  242,  209,  70,  173,  190,  135,  227,  92,  74,  23,  174,  159,  107,  57,  10,  63,  170,  4,  19,  179,  222,  255,  185,  65,  101,  78,  84,  89,  247,  192,  11
         };
     }
 }
