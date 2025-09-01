@@ -28,6 +28,7 @@ namespace Mcp.Unity.V1.Ipc
         private static readonly Dictionary<Stream, Bridge.Editor.Ipc.FeatureGuard> _negotiatedFeatures = new();
         private static readonly ConcurrentDictionary<Stream, object> _writeLocks = new();
         private static string _cachedToken;
+        private static int _cachedPort;
 
         static EditorIpcServer()
         {
@@ -38,8 +39,9 @@ namespace Mcp.Unity.V1.Ipc
             {
                 try
                 {
-                    // Cache authentication token on main thread
+                    // Cache authentication token and port on main thread
                     _cachedToken = LoadTokenFromPrefs();
+                    _cachedPort = LoadPortFromPrefs();
 
                     // Clean shutdown when Unity Editor closes
                     EditorApplication.quitting += Shutdown;
@@ -73,7 +75,7 @@ namespace Mcp.Unity.V1.Ipc
                 _cancellationTokenSource?.Cancel();
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                _transport = TcpTransport.CreateDefault();
+                _transport = TcpTransport.CreateWithPort(_cachedPort);
                 _transport.Start();
                 _isRunning = true;
 
@@ -601,6 +603,29 @@ namespace Mcp.Unity.V1.Ipc
         /// Get server status for debugging
         /// </summary>
         public static bool IsRunning => _isRunning;
+        /// <summary>
+        /// Check if the IPC server is running and ready to accept connections
+        /// </summary>
+        public static bool IsReady => _isRunning && _transport?.IsListening == true;
+
+        /// <summary>
+        /// Get the current server port
+        /// </summary>
+        public static int CurrentPort => _transport?.Port ?? _cachedPort;
+        /// <summary>
+        /// Reload configuration from preferences (for testing purposes)
+        /// </summary>
+        public static void ReloadConfiguration()
+        {
+            if (!Application.isEditor) return;
+            
+            EditorDispatcher.RunOnMainAsync(() =>
+            {
+                _cachedToken = LoadTokenFromPrefs();
+                _cachedPort = LoadPortFromPrefs();
+                Debug.Log($"[EditorIpcServer] Configuration reloaded: port={_cachedPort}");
+            });
+        }
 
         /// <summary>
         /// Try to get an active stream for event sending
@@ -808,6 +833,31 @@ namespace Mcp.Unity.V1.Ipc
             }
 
             return token;
+        }
+
+        /// <summary>
+        /// Load IPC port from Unity Editor settings
+        /// </summary>
+        private static int LoadPortFromPrefs()
+        {
+            MainThreadGuard.AssertMainThread();
+
+            // Unity Editor only: Get port from EditorUserSettings
+            var portString = UnityEditor.EditorUserSettings.GetConfigValue("MCP.IpcPort");
+
+            if (string.IsNullOrEmpty(portString))
+            {
+                // Default to port 7777 if not configured
+                return 7777;
+            }
+
+            if (int.TryParse(portString, out int port) && port > 0 && port <= 65535)
+            {
+                return port;
+            }
+
+            Debug.LogWarning($"[EditorIpcServer] Invalid port configuration '{portString}', using default 7777");
+            return 7777;
         }
 
 

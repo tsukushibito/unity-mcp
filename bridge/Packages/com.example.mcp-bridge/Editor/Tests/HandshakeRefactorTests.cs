@@ -25,22 +25,56 @@ namespace Bridge.Editor.Tests
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            // Ensure IPC server is running for tests
-            if (!EditorIpcServer.IsRunning)
-            {
-                Debug.Log("[HandshakeRefactorTests] Starting IPC server for tests...");
-                _ = EditorIpcServer.StartAsync();
+            // Set up test token for IPC authentication
+            var testToken = "test-token";
+            UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", testToken);
+            Debug.Log($"[HandshakeRefactorTests] Set test token: {testToken}");
 
-                // Wait a bit for server to start
-                System.Threading.Thread.Sleep(1000);
+            // Restart IPC server to pick up new token configuration
+            if (EditorIpcServer.IsRunning)
+            {
+                Debug.Log("[HandshakeRefactorTests] Restarting IPC server to pick up new configuration...");
+                EditorIpcServer.Shutdown();
+                System.Threading.Thread.Sleep(200); // Brief wait for shutdown
             }
+            
+            // Reload configuration and start server
+            EditorIpcServer.ReloadConfiguration();
+            Debug.Log("[HandshakeRefactorTests] Starting IPC server for tests...");
+            _ = EditorIpcServer.StartAsync();
+
+            // Wait for server to be ready with timeout
+            var startTime = System.DateTime.Now;
+            var timeout = System.TimeSpan.FromSeconds(5);
+            
+            while (!EditorIpcServer.IsReady && (System.DateTime.Now - startTime) < timeout)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            if (!EditorIpcServer.IsReady)
+            {
+                throw new System.Exception($"EditorIpcServer failed to become ready within {timeout.TotalSeconds} seconds");
+            }
+
+            Debug.Log($"[HandshakeRefactorTests] EditorIpcServer is ready on port {EditorIpcServer.CurrentPort}");
+        }
+
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            // Clean up test token
+            UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", "");
+            Debug.Log("[HandshakeRefactorTests] Cleaned up test token");
         }
 
         [SetUp]
         public void SetUp()
         {
-            // Use fixed port that matches TcpTransport default
-            _testPort = 7777; // Default port from TcpTransport.CreateDefault()
+            // Connect to the actual EditorIpcServer using its current port
+            _testPort = EditorIpcServer.CurrentPort;
+            
+            Debug.Log($"[HandshakeRefactorTests] Connecting to EditorIpcServer on port: {_testPort}");
             _mockClient = new MockIpcClient(IPAddress.Loopback, _testPort);
         }
 
