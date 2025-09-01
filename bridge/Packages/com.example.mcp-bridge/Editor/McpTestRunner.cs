@@ -85,7 +85,7 @@ namespace MCP.Editor
         private static readonly Queue<TestRequest> pendingRequests = new Queue<TestRequest>();
         private static bool isRunning = false;
         private static TestRunnerApi testRunnerApi;
-        private static TestResults currentResults;
+        private static TestResults currentResults = null;
         private static List<TestResult> collectedResults = new List<TestResult>();
         private static DateTime testStartTime;
         private static TestRequest currentRequest;
@@ -195,13 +195,13 @@ namespace MCP.Editor
                     SendIpcTestRunAccepted(request);
                 }
                 
-                // Initialize results structure
+                // Initialize results structure - ensure it's never null
                 currentResults = new TestResults
                 {
-                    runId = request.runId,
+                    runId = request.runId ?? Guid.NewGuid().ToString(),
                     startedAt = testStartTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                    mode = request.mode,
-                    filter = request.testFilter,
+                    mode = request.mode ?? "unknown",
+                    filter = request.testFilter ?? "",
                     categories = request.categories ?? new string[0],
                     summary = new TestSummary(),
                     tests = new TestResult[0],
@@ -238,15 +238,25 @@ namespace MCP.Editor
             {
                 Debug.LogError($"[McpTestRunner] Failed to execute test run: {e.Message}");
                 
-                // Create error results
-                currentResults.finishedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-                currentResults.summary = new TestSummary
+                // Create error results - ensure currentResults is never null
+                currentResults = new TestResults
                 {
-                    total = 0,
-                    passed = 0,
-                    failed = 1,
-                    skipped = 0,
-                    durationSec = 0
+                    runId = request?.runId ?? Guid.NewGuid().ToString(),
+                    startedAt = testStartTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    finishedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    mode = request?.mode ?? "unknown",
+                    filter = request?.testFilter ?? "",
+                    categories = request?.categories ?? new string[0],
+                    summary = new TestSummary
+                    {
+                        total = 0,
+                        passed = 0,
+                        failed = 1,
+                        skipped = 0,
+                        durationSec = 0
+                    },
+                    tests = new TestResult[0],
+                    truncated = false
                 };
                 
                 // Phase 2: Optional file output for error cases
@@ -343,7 +353,7 @@ namespace MCP.Editor
                 // Critical null check: Ensure currentResults is not null
                 if (currentResults == null)
                 {
-                    Debug.LogError("[McpTestRunner] currentResults is null in OnRunFinished - creating fallback results");
+                    Debug.LogWarning("[McpTestRunner] currentResults is null in OnRunFinished - creating fallback results");
                     
                     // Create fallback results to prevent null reference exceptions
                     var fallbackRunId = currentRequest?.runId ?? Guid.NewGuid().ToString();
@@ -469,8 +479,22 @@ namespace MCP.Editor
                 multiPhase = false;
                 
                 // Additional debug logging for state tracking
+                string runId = "null";
+                if (currentResults != null && !string.IsNullOrEmpty(currentResults.runId))
+                {
+                    runId = currentResults.runId;
+                }
+                else if (currentRequest != null && !string.IsNullOrEmpty(currentRequest.runId))
+                {
+                    runId = currentRequest.runId + " (from request)";
+                }
+                
                 Debug.Log($"[McpTestRunner] Test run completed. isRunning={isRunning}, multiPhase={multiPhase}, " +
-                         $"currentResults={(currentResults != null ? currentResults.runId : "null")}");
+                         $"currentResults={runId}");
+                
+                // Reset currentResults to null for next run
+                currentResults = null;
+                currentRequest = null;
             }
         }
 
