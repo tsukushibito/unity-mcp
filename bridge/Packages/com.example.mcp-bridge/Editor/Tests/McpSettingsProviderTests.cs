@@ -15,10 +15,16 @@ namespace Mcp.Unity.Editor.Tests
     {
         private const string TokenKey = "MCP.IpcToken";
         private const string PortKey = "MCP.IpcPort";
+        private string _originalToken;
+        private string _originalPort;
 
         [SetUp]
         public void SetUp()
         {
+            // Save original settings before each test
+            _originalToken = EditorUserSettings.GetConfigValue(TokenKey);
+            _originalPort = EditorUserSettings.GetConfigValue(PortKey);
+            
             // Clear any existing settings before each test
             EditorUserSettings.SetConfigValue(TokenKey, "");
             EditorUserSettings.SetConfigValue(PortKey, "");
@@ -27,9 +33,9 @@ namespace Mcp.Unity.Editor.Tests
         [TearDown]
         public void TearDown()
         {
-            // Clean up settings after each test
-            EditorUserSettings.SetConfigValue(TokenKey, "");
-            EditorUserSettings.SetConfigValue(PortKey, "");
+            // Restore original settings after each test
+            EditorUserSettings.SetConfigValue(TokenKey, _originalToken ?? "");
+            EditorUserSettings.SetConfigValue(PortKey, _originalPort ?? "");
         }
 
         [Test]

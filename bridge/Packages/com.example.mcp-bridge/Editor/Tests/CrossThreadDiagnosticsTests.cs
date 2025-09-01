@@ -28,10 +28,15 @@ namespace Mcp.Unity.V1.Ipc.Tests
     {
         private MockIpcClient _mockClient;
         private int _testPort;
+        private string _originalToken;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
+            // Save original token value for restoration
+            _originalToken = UnityEditor.EditorUserSettings.GetConfigValue("MCP.IpcToken");
+            Debug.Log($"[CrossThreadDiagnosticsTests] Saved original token: {(_originalToken ?? "(null)")}");
+            
             // Set test token in EditorUserSettings for authentication
             UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", "test-token");
             Debug.Log("[CrossThreadDiagnosticsTests] Set test token in EditorUserSettings");
@@ -50,9 +55,22 @@ namespace Mcp.Unity.V1.Ipc.Tests
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            // Clean up test token from EditorUserSettings
-            UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", "");
-            Debug.Log("[CrossThreadDiagnosticsTests] Cleaned up test token from EditorUserSettings");
+            // サーバーをシャットダウンしてクリーンな状態にする
+            if (EditorIpcServer.IsRunning)
+            {
+                Debug.Log("[CrossThreadDiagnosticsTests] Shutting down IPC server...");
+                EditorIpcServer.Shutdown();
+                System.Threading.Thread.Sleep(200); // シャットダウン完了待機
+            }
+            
+            // 元のトークン値を復元
+            UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", _originalToken ?? "");
+            Debug.Log($"[CrossThreadDiagnosticsTests] Restored original token: {(_originalToken ?? "(null)")}");
+            
+            // 設定変更後のサーバー再起動（元の設定で）
+            EditorIpcServer.ReloadConfiguration();
+            Debug.Log("[CrossThreadDiagnosticsTests] Restarting server with original configuration...");
+            _ = EditorIpcServer.StartAsync();
         }
 
         [SetUp]

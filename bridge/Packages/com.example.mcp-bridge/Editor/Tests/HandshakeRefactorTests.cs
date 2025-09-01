@@ -21,10 +21,15 @@ namespace Bridge.Editor.Tests
     {
         private MockIpcClient _mockClient;
         private int _testPort;
+        private string _originalToken;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
+            // Save original token value for restoration
+            _originalToken = UnityEditor.EditorUserSettings.GetConfigValue("MCP.IpcToken");
+            Debug.Log($"[HandshakeRefactorTests] Saved original token: {(_originalToken ?? "(null)")}");
+            
             // Set up test token for IPC authentication
             var testToken = "test-token";
             UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", testToken);
@@ -35,7 +40,7 @@ namespace Bridge.Editor.Tests
             {
                 Debug.Log("[HandshakeRefactorTests] Restarting IPC server to pick up new configuration...");
                 EditorIpcServer.Shutdown();
-                System.Threading.Thread.Sleep(200); // Brief wait for shutdown
+                System.Threading.Thread.Sleep(300); // Extended wait for shutdown
             }
             
             // Reload configuration and start server
@@ -63,9 +68,34 @@ namespace Bridge.Editor.Tests
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            // Clean up test token
-            UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", "");
-            Debug.Log("[HandshakeRefactorTests] Cleaned up test token");
+            // サーバーをシャットダウンしてクリーンな状態にする
+            if (EditorIpcServer.IsRunning)
+            {
+                Debug.Log("[HandshakeRefactorTests] Shutting down IPC server...");
+                EditorIpcServer.Shutdown();
+                
+                // 非同期処理の完全な停止を確実に待機
+                var shutdownStartTime = System.DateTime.Now;
+                var shutdownTimeout = System.TimeSpan.FromSeconds(3);
+                
+                while (EditorIpcServer.IsRunning && (System.DateTime.Now - shutdownStartTime) < shutdownTimeout)
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
+                
+                // 追加の安全な待機時間
+                System.Threading.Thread.Sleep(500);
+                Debug.Log("[HandshakeRefactorTests] IPC server shutdown completed");
+            }
+            
+            // 元のトークン値を復元
+            UnityEditor.EditorUserSettings.SetConfigValue("MCP.IpcToken", _originalToken ?? "");
+            Debug.Log($"[HandshakeRefactorTests] Restored original token: {(_originalToken ?? "(null)")}");
+            
+            // 設定変更後のサーバー再起動（元の設定で）
+            EditorIpcServer.ReloadConfiguration();
+            Debug.Log("[HandshakeRefactorTests] Restarting server with original configuration...");
+            _ = EditorIpcServer.StartAsync();
         }
 
         [SetUp]
@@ -74,7 +104,17 @@ namespace Bridge.Editor.Tests
             // Connect to the actual EditorIpcServer using its current port
             _testPort = EditorIpcServer.CurrentPort;
             
-            Debug.Log($"[HandshakeRefactorTests] Connecting to EditorIpcServer on port: {_testPort}");
+            // Fallback to default port if CurrentPort is not available
+            if (_testPort <= 0)
+            {
+                _testPort = 7777; // Default port
+                Debug.LogWarning($"[HandshakeRefactorTests] EditorIpcServer.CurrentPort not available, using default port: {_testPort}");
+            }
+            else
+            {
+                Debug.Log($"[HandshakeRefactorTests] Using EditorIpcServer.CurrentPort: {_testPort}");
+            }
+            
             _mockClient = new MockIpcClient(IPAddress.Loopback, _testPort);
         }
 
