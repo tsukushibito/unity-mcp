@@ -32,38 +32,41 @@ namespace Mcp.Unity.V1 {
             "cGUSFgoOY29ycmVsYXRpb25faWQYASABKAkSKwoHcmVxdWVzdBgCIAEoCzIY",
             "Lm1jcC51bml0eS52MS5JcGNSZXF1ZXN0SAASLQoIcmVzcG9uc2UYAyABKAsy",
             "GS5tY3AudW5pdHkudjEuSXBjUmVzcG9uc2VIABInCgVldmVudBgEIAEoCzIW",
-            "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQi2AMKCklwY1JlcXVl",
+            "Lm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQihwQKCklwY1JlcXVl",
             "c3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYxLkhlYWx0aFJlcXVl",
             "c3RIABIsCg1nZXRfcGxheV9tb2RlGAogASgLMhMubWNwLnVuaXR5LnYxLkVt",
             "cHR5SAASOQoNc2V0X3BsYXlfbW9kZRgLIAEoCzIgLm1jcC51bml0eS52MS5T",
             "ZXRQbGF5TW9kZVJlcXVlc3RIABJNChdnZXRfY29tcGlsZV9kaWFnbm9zdGlj",
             "cxgMIAEoCzIqLm1jcC51bml0eS52MS5HZXRDb21waWxlRGlhZ25vc3RpY3NS",
-            "ZXF1ZXN0SAASLQoGYXNzZXRzGBQgASgLMhsubWNwLnVuaXR5LnYxLkFzc2V0",
-            "c1JlcXVlc3RIABIrCgVidWlsZBgeIAEoCzIaLm1jcC51bml0eS52MS5CdWls",
-            "ZFJlcXVlc3RIABI6Cg1vcGVyYXRpb25fZ2V0GCggASgLMiEubWNwLnVuaXR5",
-            "LnYxLk9wZXJhdGlvbkdldFJlcXVlc3RIABJAChBvcGVyYXRpb25fY2FuY2Vs",
-            "GCkgASgLMiQubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkNhbmNlbFJlcXVlc3RI",
-            "AEIJCgdwYXlsb2FkIoYECgtJcGNSZXNwb25zZRIWCg5jb3JyZWxhdGlvbl9p",
-            "ZBgBIAEoCRIuCgZoZWFsdGgYAiABKAsyHC5tY3AudW5pdHkudjEuSGVhbHRo",
-            "UmVzcG9uc2VIABI6Cg1nZXRfcGxheV9tb2RlGAogASgLMiEubWNwLnVuaXR5",
-            "LnYxLkdldFBsYXlNb2RlUmVzcG9uc2VIABI6Cg1zZXRfcGxheV9tb2RlGAsg",
-            "ASgLMiEubWNwLnVuaXR5LnYxLlNldFBsYXlNb2RlUmVzcG9uc2VIABJOChdn",
-            "ZXRfY29tcGlsZV9kaWFnbm9zdGljcxgMIAEoCzIrLm1jcC51bml0eS52MS5H",
-            "ZXRDb21waWxlRGlhZ25vc3RpY3NSZXNwb25zZUgAEi4KBmFzc2V0cxgUIAEo",
-            "CzIcLm1jcC51bml0eS52MS5Bc3NldHNSZXNwb25zZUgAEiwKBWJ1aWxkGB4g",
-            "ASgLMhsubWNwLnVuaXR5LnYxLkJ1aWxkUmVzcG9uc2VIABI7Cg1vcGVyYXRp",
-            "b25fZ2V0GCggASgLMiIubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJlc3Bv",
-            "bnNlSAASQQoQb3BlcmF0aW9uX2NhbmNlbBgpIAEoCzIlLm1jcC51bml0eS52",
-            "MS5PcGVyYXRpb25DYW5jZWxSZXNwb25zZUgAQgkKB3BheWxvYWQigQEKCElw",
-            "Y0V2ZW50EhcKD21vbm90b25pY190c19ucxgBIAEoAxIlCgNsb2cYCiABKAsy",
-            "Fi5tY3AudW5pdHkudjEuTG9nRXZlbnRIABIqCgJvcBgLIAEoCzIcLm1jcC51",
-            "bml0eS52MS5PcGVyYXRpb25FdmVudEgAQgkKB3BheWxvYWRiBnByb3RvMw=="));
+            "ZXF1ZXN0SAASLQoGc2NlbmVzGA0gASgLMhsubWNwLnVuaXR5LnYxLlNjZW5l",
+            "c1JlcXVlc3RIABItCgZhc3NldHMYFCABKAsyGy5tY3AudW5pdHkudjEuQXNz",
+            "ZXRzUmVxdWVzdEgAEisKBWJ1aWxkGB4gASgLMhoubWNwLnVuaXR5LnYxLkJ1",
+            "aWxkUmVxdWVzdEgAEjoKDW9wZXJhdGlvbl9nZXQYKCABKAsyIS5tY3AudW5p",
+            "dHkudjEuT3BlcmF0aW9uR2V0UmVxdWVzdEgAEkAKEG9wZXJhdGlvbl9jYW5j",
+            "ZWwYKSABKAsyJC5tY3AudW5pdHkudjEuT3BlcmF0aW9uQ2FuY2VsUmVxdWVz",
+            "dEgAQgkKB3BheWxvYWQitgQKC0lwY1Jlc3BvbnNlEhYKDmNvcnJlbGF0aW9u",
+            "X2lkGAEgASgJEi4KBmhlYWx0aBgCIAEoCzIcLm1jcC51bml0eS52MS5IZWFs",
+            "dGhSZXNwb25zZUgAEjoKDWdldF9wbGF5X21vZGUYCiABKAsyIS5tY3AudW5p",
+            "dHkudjEuR2V0UGxheU1vZGVSZXNwb25zZUgAEjoKDXNldF9wbGF5X21vZGUY",
+            "CyABKAsyIS5tY3AudW5pdHkudjEuU2V0UGxheU1vZGVSZXNwb25zZUgAEk4K",
+            "F2dldF9jb21waWxlX2RpYWdub3N0aWNzGAwgASgLMisubWNwLnVuaXR5LnYx",
+            "LkdldENvbXBpbGVEaWFnbm9zdGljc1Jlc3BvbnNlSAASLgoGc2NlbmVzGA0g",
+            "ASgLMhwubWNwLnVuaXR5LnYxLlNjZW5lc1Jlc3BvbnNlSAASLgoGYXNzZXRz",
+            "GBQgASgLMhwubWNwLnVuaXR5LnYxLkFzc2V0c1Jlc3BvbnNlSAASLAoFYnVp",
+            "bGQYHiABKAsyGy5tY3AudW5pdHkudjEuQnVpbGRSZXNwb25zZUgAEjsKDW9w",
+            "ZXJhdGlvbl9nZXQYKCABKAsyIi5tY3AudW5pdHkudjEuT3BlcmF0aW9uR2V0",
+            "UmVzcG9uc2VIABJBChBvcGVyYXRpb25fY2FuY2VsGCkgASgLMiUubWNwLnVu",
+            "aXR5LnYxLk9wZXJhdGlvbkNhbmNlbFJlc3BvbnNlSABCCQoHcGF5bG9hZCKB",
+            "AQoISXBjRXZlbnQSFwoPbW9ub3RvbmljX3RzX25zGAEgASgDEiUKA2xvZxgK",
+            "IAEoCzIWLm1jcC51bml0eS52MS5Mb2dFdmVudEgAEioKAm9wGAsgASgLMhwu",
+            "bWNwLnVuaXR5LnYxLk9wZXJhdGlvbkV2ZW50SABCCQoHcGF5bG9hZGIGcHJv",
+            "dG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEnvelope), global::Mcp.Unity.V1.IpcEnvelope.Parser, new[]{ "CorrelationId", "Request", "Response", "Event" }, new[]{ "Kind" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Scenes", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "Scenes", "Assets", "Build", "OperationGet", "OperationCancel" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
@@ -74,7 +77,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Top-level envelope for all IPC messages
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcEnvelope : pb::IMessage<IpcEnvelope>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -365,11 +367,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -415,11 +413,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
@@ -464,7 +458,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Request message with typed payloads
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcRequest : pb::IMessage<IpcRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -511,6 +504,9 @@ namespace Mcp.Unity.V1 {
           break;
         case PayloadOneofCase.GetCompileDiagnostics:
           GetCompileDiagnostics = other.GetCompileDiagnostics.Clone();
+          break;
+        case PayloadOneofCase.Scenes:
+          Scenes = other.Scenes.Clone();
           break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
@@ -589,6 +585,18 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "scenes" field.</summary>
+    public const int ScenesFieldNumber = 13;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ScenesRequest Scenes {
+      get { return payloadCase_ == PayloadOneofCase.Scenes ? (global::Mcp.Unity.V1.ScenesRequest) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Scenes;
+      }
+    }
+
     /// <summary>Field number for the "assets" field.</summary>
     public const int AssetsFieldNumber = 20;
     /// <summary>
@@ -654,6 +662,7 @@ namespace Mcp.Unity.V1 {
       GetPlayMode = 10,
       SetPlayMode = 11,
       GetCompileDiagnostics = 12,
+      Scenes = 13,
       Assets = 20,
       Build = 30,
       OperationGet = 40,
@@ -692,6 +701,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
       if (!object.Equals(GetCompileDiagnostics, other.GetCompileDiagnostics)) return false;
+      if (!object.Equals(Scenes, other.Scenes)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Build, other.Build)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
@@ -708,6 +718,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) hash ^= GetCompileDiagnostics.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Scenes) hash ^= Scenes.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
@@ -746,6 +757,10 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
         output.WriteRawTag(98);
         output.WriteMessage(GetCompileDiagnostics);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(106);
+        output.WriteMessage(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -789,6 +804,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(98);
         output.WriteMessage(GetCompileDiagnostics);
       }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(106);
+        output.WriteMessage(Scenes);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -826,6 +845,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(GetCompileDiagnostics);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -876,6 +898,12 @@ namespace Mcp.Unity.V1 {
           }
           GetCompileDiagnostics.MergeFrom(other.GetCompileDiagnostics);
           break;
+        case PayloadOneofCase.Scenes:
+          if (Scenes == null) {
+            Scenes = new global::Mcp.Unity.V1.ScenesRequest();
+          }
+          Scenes.MergeFrom(other.Scenes);
+          break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
             Assets = new global::Mcp.Unity.V1.AssetsRequest();
@@ -913,11 +941,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -955,6 +979,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             GetCompileDiagnostics = subBuilder;
+            break;
+          }
+          case 106: {
+            global::Mcp.Unity.V1.ScenesRequest subBuilder = new global::Mcp.Unity.V1.ScenesRequest();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
             break;
           }
           case 162: {
@@ -1004,11 +1037,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
@@ -1046,6 +1075,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             GetCompileDiagnostics = subBuilder;
+            break;
+          }
+          case 106: {
+            global::Mcp.Unity.V1.ScenesRequest subBuilder = new global::Mcp.Unity.V1.ScenesRequest();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
             break;
           }
           case 162: {
@@ -1094,7 +1132,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Response message with typed payloads
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcResponse : pb::IMessage<IpcResponse>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1142,6 +1179,9 @@ namespace Mcp.Unity.V1 {
           break;
         case PayloadOneofCase.GetCompileDiagnostics:
           GetCompileDiagnostics = other.GetCompileDiagnostics.Clone();
+          break;
+        case PayloadOneofCase.Scenes:
+          Scenes = other.Scenes.Clone();
           break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
@@ -1235,6 +1275,18 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "scenes" field.</summary>
+    public const int ScenesFieldNumber = 13;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ScenesResponse Scenes {
+      get { return payloadCase_ == PayloadOneofCase.Scenes ? (global::Mcp.Unity.V1.ScenesResponse) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Scenes;
+      }
+    }
+
     /// <summary>Field number for the "assets" field.</summary>
     public const int AssetsFieldNumber = 20;
     /// <summary>
@@ -1300,6 +1352,7 @@ namespace Mcp.Unity.V1 {
       GetPlayMode = 10,
       SetPlayMode = 11,
       GetCompileDiagnostics = 12,
+      Scenes = 13,
       Assets = 20,
       Build = 30,
       OperationGet = 40,
@@ -1339,6 +1392,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(GetPlayMode, other.GetPlayMode)) return false;
       if (!object.Equals(SetPlayMode, other.SetPlayMode)) return false;
       if (!object.Equals(GetCompileDiagnostics, other.GetCompileDiagnostics)) return false;
+      if (!object.Equals(Scenes, other.Scenes)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Build, other.Build)) return false;
       if (!object.Equals(OperationGet, other.OperationGet)) return false;
@@ -1356,6 +1410,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetPlayMode) hash ^= GetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetPlayMode) hash ^= SetPlayMode.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) hash ^= GetCompileDiagnostics.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Scenes) hash ^= Scenes.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.OperationGet) hash ^= OperationGet.GetHashCode();
@@ -1398,6 +1453,10 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
         output.WriteRawTag(98);
         output.WriteMessage(GetCompileDiagnostics);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(106);
+        output.WriteMessage(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -1445,6 +1504,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(98);
         output.WriteMessage(GetCompileDiagnostics);
       }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(106);
+        output.WriteMessage(Scenes);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -1485,6 +1548,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(GetCompileDiagnostics);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -1538,6 +1604,12 @@ namespace Mcp.Unity.V1 {
           }
           GetCompileDiagnostics.MergeFrom(other.GetCompileDiagnostics);
           break;
+        case PayloadOneofCase.Scenes:
+          if (Scenes == null) {
+            Scenes = new global::Mcp.Unity.V1.ScenesResponse();
+          }
+          Scenes.MergeFrom(other.Scenes);
+          break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
             Assets = new global::Mcp.Unity.V1.AssetsResponse();
@@ -1575,11 +1647,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -1621,6 +1689,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             GetCompileDiagnostics = subBuilder;
+            break;
+          }
+          case 106: {
+            global::Mcp.Unity.V1.ScenesResponse subBuilder = new global::Mcp.Unity.V1.ScenesResponse();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
             break;
           }
           case 162: {
@@ -1670,11 +1747,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
@@ -1716,6 +1789,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             GetCompileDiagnostics = subBuilder;
+            break;
+          }
+          case 106: {
+            global::Mcp.Unity.V1.ScenesResponse subBuilder = new global::Mcp.Unity.V1.ScenesResponse();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
             break;
           }
           case 162: {
@@ -1764,7 +1846,6 @@ namespace Mcp.Unity.V1 {
   /// <summary>
   /// Event message for server-to-client notifications
   /// </summary>
-  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   public sealed partial class IpcEvent : pb::IMessage<IpcEvent>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2017,11 +2098,7 @@ namespace Mcp.Unity.V1 {
     #else
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
@@ -2058,11 +2135,7 @@ namespace Mcp.Unity.V1 {
     void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
       uint tag;
       while ((tag = input.ReadTag()) != 0) {
-      if ((tag & 7) == 4) {
-        // Abort on any end group tag.
-        return;
-      }
-      switch(tag) {
+        switch(tag) {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;

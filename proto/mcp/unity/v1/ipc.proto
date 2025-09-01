@@ -32,6 +32,7 @@ message IpcRequest {
     Empty get_play_mode = 10;
     SetPlayModeRequest set_play_mode = 11;
     GetCompileDiagnosticsRequest get_compile_diagnostics = 12;
+    ScenesRequest scenes = 13;
     
     // Assets
     AssetsRequest assets = 20;
@@ -56,6 +57,7 @@ message IpcResponse {
     GetPlayModeResponse get_play_mode = 10;
     SetPlayModeResponse set_play_mode = 11;
     GetCompileDiagnosticsResponse get_compile_diagnostics = 12;
+    ScenesResponse scenes = 13;
     
     // Assets
     AssetsResponse assets = 20;

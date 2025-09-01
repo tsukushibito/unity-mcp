@@ -2,6 +2,7 @@ pub mod assets;
 pub mod build;
 pub mod diagnostics;
 pub mod health;
+pub mod scene;
 pub mod status;
 pub mod tests;
 
@@ -118,6 +119,40 @@ impl McpService {
     ) -> Result<CallToolResult, McpError> {
         self.do_unity_get_test_results_ipc(req).await
     }
+
+    #[tool(description = "Open Unity scene via Direct IPC")]
+    pub async fn unity_scene_open(
+        &self,
+        Parameters(req): Parameters<UnitySceneOpenRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_scene_open(req.path, req.additive, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Save Unity scene via Direct IPC")]
+    pub async fn unity_scene_save(
+        &self,
+        Parameters(req): Parameters<UnitySceneSaveRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_scene_save(req.path, req.timeout_secs).await
+    }
+
+    #[tool(description = "Get list of open Unity scenes via Direct IPC")]
+    pub async fn unity_scene_get_open(
+        &self,
+        Parameters(req): Parameters<UnitySceneGetOpenRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_scene_get_open(req.timeout_secs).await
+    }
+
+    #[tool(description = "Set active Unity scene via Direct IPC")]
+    pub async fn unity_scene_set_active(
+        &self,
+        Parameters(req): Parameters<UnitySceneSetActiveRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_scene_set_active(req.path, req.timeout_secs)
+            .await
+    }
 }
 
 // Helper to expose router across modules while the generated
@@ -166,6 +201,30 @@ pub struct UnityAssetsPathToGuidRequest {
     pub timeout_secs: Option<u64>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnitySceneOpenRequest {
+    pub path: String,
+    pub additive: Option<bool>,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnitySceneSaveRequest {
+    pub path: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnitySceneGetOpenRequest {
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnitySceneSetActiveRequest {
+    pub path: String,
+    pub timeout_secs: Option<u64>,
+}
+
 #[cfg(test)]
 mod tool_tests {
     use super::*;
@@ -184,5 +243,9 @@ mod tool_tests {
         assert!(router.has_route("unity_get_compile_diagnostics"));
         assert!(router.has_route("unity_run_tests"));
         assert!(router.has_route("unity_get_test_results"));
+        assert!(router.has_route("unity_scene_open"));
+        assert!(router.has_route("unity_scene_save"));
+        assert!(router.has_route("unity_scene_get_open"));
+        assert!(router.has_route("unity_scene_set_active"));
     }
 }
