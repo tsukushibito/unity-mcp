@@ -22,11 +22,13 @@ namespace Mcp.Unity.V1.Ipc
     {
         private static CancellationTokenSource _cancellationTokenSource;
         private static TcpTransport _transport;
+        private static Task _acceptLoopTask;
         private static bool _isRunning = false;
         private static readonly List<Stream> _activeStreams = new();
         private static readonly object _streamLock = new();
         private static readonly Dictionary<Stream, Bridge.Editor.Ipc.FeatureGuard> _negotiatedFeatures = new();
-        private static readonly ConcurrentDictionary<Stream, object> _writeLocks = new();
+        private static readonly ConcurrentDictionary<Stream, SemaphoreSlim> _writeLocks = new();
+        private static readonly Dictionary<Stream, TcpClient> _clientsByStream = new();
         private static string _cachedToken;
         private static int _cachedPort;
 
@@ -61,17 +63,16 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Start the IPC server
         /// </summary>
-        public static async Task StartAsync()
+        public static Task StartAsync()
         {
             if (_isRunning)
             {
                 Debug.LogWarning("[EditorIpcServer] Server is already running");
-                return;
+                return Task.CompletedTask;
             }
 
             try
             {
-                // Cancel any existing operation
                 _cancellationTokenSource?.Cancel();
                 _cancellationTokenSource = new CancellationTokenSource();
 
@@ -79,11 +80,9 @@ namespace Mcp.Unity.V1.Ipc
                 _transport.Start();
                 _isRunning = true;
 
-                Debug.Log("[EditorIpcServer] IPC server started successfully");
+                _acceptLoopTask = Task.Run(() => AcceptConnectionsAsync(_cancellationTokenSource.Token));
 
-                // Start accepting connections in background
-                // TODO(BG_ORIGIN): Task.Run creates background thread that may call Unity APIs
-                await Task.Run(() => AcceptConnectionsAsync(_cancellationTokenSource.Token));
+                Debug.Log("[EditorIpcServer] IPC server started successfully");
             }
             catch (Exception ex)
             {
@@ -91,6 +90,8 @@ namespace Mcp.Unity.V1.Ipc
                 _isRunning = false;
                 throw;
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -105,8 +106,25 @@ namespace Mcp.Unity.V1.Ipc
             try
             {
                 _cancellationTokenSource?.Cancel();
+
+                lock (_streamLock)
+                {
+                    foreach (var kv in _clientsByStream)
+                    {
+                        try { kv.Value.Close(); kv.Value.Dispose(); } catch { }
+                        try { kv.Key.Dispose(); } catch { }
+                    }
+                    _clientsByStream.Clear();
+                    _activeStreams.Clear();
+                    _negotiatedFeatures.Clear();
+                    foreach (var gate in _writeLocks.Values) { gate.Dispose(); }
+                    _writeLocks.Clear();
+                }
+
                 _transport?.Stop();
                 _transport?.Dispose();
+
+                try { _acceptLoopTask?.Wait(1000); } catch { }
             }
             catch (Exception ex)
             {
@@ -114,6 +132,7 @@ namespace Mcp.Unity.V1.Ipc
             }
             finally
             {
+                _acceptLoopTask = null;
                 _cancellationTokenSource = null;
                 _transport = null;
                 _isRunning = false;
@@ -136,10 +155,10 @@ namespace Mcp.Unity.V1.Ipc
                 {
                     try
                     {
-                        var stream = await _transport.AcceptAsync(cancellationToken);
+                        var client = await _transport.AcceptAsync(cancellationToken);
                         // Handle each connection in its own task to allow concurrent connections
                         // TODO(BG_ORIGIN): Task.Run creates background thread that may call Unity APIs
-                        _ = Task.Run(() => HandleConnectionAsync(stream, cancellationToken), cancellationToken);
+                        _ = Task.Run(() => HandleConnectionAsync(client, cancellationToken), cancellationToken);
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
@@ -171,13 +190,19 @@ namespace Mcp.Unity.V1.Ipc
         /// <summary>
         /// Handle a single IPC connection
         /// </summary>
-        private static async Task HandleConnectionAsync(Stream stream, CancellationToken cancellationToken)
+        private static async Task HandleConnectionAsync(TcpClient tcpClient, CancellationToken cancellationToken)
         {
             Debug.Log("[EditorIpcServer] Handling new connection");
 
-            try
+            using (tcpClient)
+            using (var stream = tcpClient.GetStream())
             {
-                using (stream)
+                lock (_streamLock)
+                {
+                    _clientsByStream[stream] = tcpClient;
+                }
+
+                try
                 {
                     // Step 1: Wait for handshake (T01: IpcControl with Hello)
                     var controlFrame = await Framing.ReadFrameAsync(stream);
@@ -252,15 +277,14 @@ namespace Mcp.Unity.V1.Ipc
                     // Step 5: Enter request processing loop
                     await ProcessRequestsAsync(stream, cancellationToken);
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[EditorIpcServer] Connection handling failed: {ex.Message}");
-            }
-            finally
-            {
-                // Step 6: Unregister the stream
-                UnregisterStream(stream);
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[EditorIpcServer] Connection handling failed: {ex.Message}");
+                }
+                finally
+                {
+                    UnregisterStream(stream);
+                }
             }
         }
 
@@ -587,16 +611,16 @@ namespace Mcp.Unity.V1.Ipc
         internal static async Task WriteFrameThreadSafe(Stream stream, ReadOnlyMemory<byte> payload)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
-            var gate = _writeLocks.GetOrAdd(stream, _ => new object());
-            lock (gate)
+            var gate = _writeLocks.GetOrAdd(stream, _ => new SemaphoreSlim(1, 1));
+            await gate.WaitAsync().ConfigureAwait(false);
+            try
             {
-                // Framing.WriteFrameAsync performs async I/O; to keep critical section small,
-                // we write synchronously to the extent possible by blocking here. Since Unity
-                // editor threads are limited, and frames are small, this is acceptable.
-                // If strict async is desired, use a SemaphoreSlim instead of lock.
-                Framing.WriteFrameAsync(stream, payload).GetAwaiter().GetResult();
+                await Framing.WriteFrameAsync(stream, payload).ConfigureAwait(false);
             }
-            await Task.CompletedTask;
+            finally
+            {
+                gate.Release();
+            }
         }
 
         /// <summary>
@@ -882,7 +906,16 @@ namespace Mcp.Unity.V1.Ipc
             {
                 _activeStreams.Remove(stream);
                 _negotiatedFeatures.Remove(stream);
-                _writeLocks.TryRemove(stream, out _);
+                if (_writeLocks.TryRemove(stream, out var gate))
+                {
+                    gate.Dispose();
+                }
+
+                if (_clientsByStream.Remove(stream, out var client))
+                {
+                    try { client.Close(); client.Dispose(); } catch { }
+                }
+
                 Debug.Log($"[EditorIpcServer] Unregistered stream, active count: {_activeStreams.Count}");
             }
         }

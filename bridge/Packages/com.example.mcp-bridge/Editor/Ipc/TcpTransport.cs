@@ -83,41 +83,30 @@ namespace Mcp.Unity.V1.Ipc
         }
 
         /// <summary>
-        /// Accept a client connection and return the network stream
+        /// Accept a client connection
         /// </summary>
-        public async Task<NetworkStream> AcceptAsync(CancellationToken cancellationToken = default)
+        public async Task<TcpClient> AcceptAsync(CancellationToken cancellationToken = default)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(TcpTransport));
             if (_listener == null) throw new InvalidOperationException("Transport not started");
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
-                // Check cancellation before accepting connection
-                cancellationToken.ThrowIfCancellationRequested();
-                
                 var tcpClient = await _listener.AcceptTcpClientAsync();
                 var clientEndpoint = tcpClient.Client.RemoteEndPoint;
                 Debug.Log($"[TcpTransport] Accepted connection from {clientEndpoint}");
 
-                // Configure socket options for low latency
                 tcpClient.NoDelay = true;
                 tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
 
-                return tcpClient.GetStream();
+                return tcpClient;
             }
-            catch (ObjectDisposedException) when (_disposed)
+            catch (ObjectDisposedException)
             {
-                throw new OperationCanceledException("Transport disposed");
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                Debug.Log("[TcpTransport] Accept operation was cancelled");
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[TcpTransport] Error accepting connection: {ex.Message}");
-                throw;
+                // Stop()/Dispose() で閉じられた
+                throw new OperationCanceledException("Listener stopped");
             }
         }
 
