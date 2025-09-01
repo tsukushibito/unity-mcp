@@ -116,8 +116,7 @@ impl McpService {
         &self,
         Parameters(req): Parameters<UnityGetTestResultsRequest>,
     ) -> Result<CallToolResult, McpError> {
-        self.do_unity_get_test_results(req.run_id, req.max_items, req.include_passed)
-            .await
+        self.do_unity_get_test_results_ipc(req).await
     }
 }
 

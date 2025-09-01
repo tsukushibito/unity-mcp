@@ -272,13 +272,56 @@ impl McpService {
                     truncated,
                 };
 
-                let json_value = serde_json::to_value(response).map_err(|e| {
-                    rmcp::ErrorData::internal_error(
-                        format!("Failed to serialize response: {}", e),
-                        None,
-                    )
-                })?;
-                Ok(CallToolResult::structured(json_value))
+                // Use text format for reliable display (structured results not showing in MCP client)
+                let mut result_text = format!(
+                    "Unity Test Results Summary:\n\nRun ID: {}\nTotal Tests: {}\n✓ Passed: {}\n✗ Failed: {}\n⊝ Skipped: {}\nDuration: {:.2}s\nResults Returned: {} (truncated: {})\n",
+                    response.run_id,
+                    response.summary.total,
+                    response.summary.passed,
+                    response.summary.failed,
+                    response.summary.skipped,
+                    response.summary.duration_sec,
+                    response.tests.len(),
+                    response.truncated
+                );
+
+                // Add detailed test results if any are returned
+                if !response.tests.is_empty() {
+                    result_text.push_str("\n--- Test Details ---\n");
+                    for (i, test) in response.tests.iter().enumerate().take(20) {
+                        // Limit to first 20 for readability
+                        let status_icon = match test.status.as_str() {
+                            "passed" => "✓",
+                            "failed" => "✗",
+                            "skipped" => "⊝",
+                            _ => "?",
+                        };
+                        result_text.push_str(&format!(
+                            "{}. {} {} ({}s)\n   {}\n",
+                            i + 1,
+                            status_icon,
+                            test.name,
+                            test.duration_sec,
+                            test.full_name
+                        ));
+
+                        // Add failure details if available
+                        if test.status == "failed" && !test.message.is_empty() {
+                            result_text.push_str(&format!("   Error: {}\n", test.message));
+                        }
+                    }
+
+                    if response.tests.len() > 20 {
+                        result_text.push_str(&format!(
+                            "\n... and {} more tests\n",
+                            response.tests.len() - 20
+                        ));
+                    }
+                }
+
+                Ok(CallToolResult::success(vec![rmcp::model::Content::text(
+                    result_text,
+                )]))
             }
             Err(e) => {
                 tracing::warn!("Failed to read test results file: {}", e);
