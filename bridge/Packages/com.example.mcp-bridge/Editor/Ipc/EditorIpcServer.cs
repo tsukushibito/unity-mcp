@@ -155,9 +155,14 @@ namespace Mcp.Unity.V1.Ipc
                     try
                     {
                         var client = await _transport.AcceptAsync(cancellationToken);
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            client.Dispose();
+                            break;
+                        }
                         // Handle each connection in its own task to allow concurrent connections
                         // TODO(BG_ORIGIN): Task.Run creates background thread that may call Unity APIs
-                        _ = Task.Run(() => HandleConnectionAsync(client, cancellationToken), cancellationToken);
+                        _ = Task.Run(() => HandleConnectionAsync(client, cancellationToken));
                     }
                     catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                     {
