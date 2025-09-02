@@ -267,6 +267,35 @@ pub mod scenes_response {
         SetActive(super::SetActiveSceneResponse),
     }
 }
+/// Editor menu execution
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ExecuteMenuItemRequest {
+    /// e.g., "File/New Scene"
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ExecuteMenuItemResponse {
+    /// True if the menu item was executed
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    /// Optional error message
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+}
+/// Editor window focus
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct FocusWindowRequest {
+    /// Fully qualified type name, e.g., "UnityEditor.SceneView"
+    #[prost(string, tag = "1")]
+    pub window_type: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct FocusWindowResponse {
+    /// True if the window was focused
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+}
 /// Import/Export operations for Unity assets
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ImportAssetRequest {
@@ -912,7 +941,7 @@ pub mod ipc_envelope {
 pub struct IpcRequest {
     #[prost(
         oneof = "ipc_request::Payload",
-        tags = "1, 10, 11, 12, 13, 14, 15, 20, 21, 30, 40, 41, 50"
+        tags = "1, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 30, 40, 41, 50"
     )]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
@@ -936,6 +965,10 @@ pub mod ipc_request {
         SetProjectSettings(super::SetProjectSettingsRequest),
         #[prost(message, tag = "15")]
         Scenes(super::ScenesRequest),
+        #[prost(message, tag = "16")]
+        ExecuteMenuItem(super::ExecuteMenuItemRequest),
+        #[prost(message, tag = "17")]
+        FocusWindow(super::FocusWindowRequest),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsRequest),
@@ -963,7 +996,7 @@ pub struct IpcResponse {
     pub correlation_id: ::prost::alloc::string::String,
     #[prost(
         oneof = "ipc_response::Payload",
-        tags = "2, 10, 11, 12, 13, 14, 15, 20, 21, 30, 40, 41, 50"
+        tags = "2, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 30, 40, 41, 50"
     )]
     pub payload: ::core::option::Option<ipc_response::Payload>,
 }
@@ -987,6 +1020,10 @@ pub mod ipc_response {
         SetProjectSettings(super::SetProjectSettingsResponse),
         #[prost(message, tag = "15")]
         Scenes(super::ScenesResponse),
+        #[prost(message, tag = "16")]
+        ExecuteMenuItem(super::ExecuteMenuItemResponse),
+        #[prost(message, tag = "17")]
+        FocusWindow(super::FocusWindowResponse),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsResponse),

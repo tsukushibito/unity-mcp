@@ -13,6 +13,8 @@ service EditorControl {
   rpc GetProjectSettings(GetProjectSettingsRequest) returns (GetProjectSettingsResponse);
   rpc SetProjectSettings(SetProjectSettingsRequest) returns (SetProjectSettingsResponse);
   rpc Scenes(ScenesRequest) returns (ScenesResponse);
+  rpc ExecuteMenuItem(ExecuteMenuItemRequest) returns (ExecuteMenuItemResponse);
+  rpc FocusWindow(FocusWindowRequest) returns (FocusWindowResponse);
 }
 
 message HealthRequest {}
@@ -129,4 +131,23 @@ message ScenesResponse {
     GetOpenScenesResponse get_open = 12;
     SetActiveSceneResponse set_active = 13;
   }
+}
+
+// Editor menu execution
+message ExecuteMenuItemRequest {
+  string path = 1; // e.g., "File/New Scene"
+}
+
+message ExecuteMenuItemResponse {
+  bool ok = 1;         // True if the menu item was executed
+  string message = 2;  // Optional error message
+}
+
+// Editor window focus
+message FocusWindowRequest {
+  string window_type = 1; // Fully qualified type name, e.g., "UnityEditor.SceneView"
+}
+
+message FocusWindowResponse {
+  bool ok = 1; // True if the window was focused
 }

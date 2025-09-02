@@ -2,6 +2,7 @@ pub mod assets;
 pub mod build;
 pub mod component;
 pub mod diagnostics;
+pub mod editor;
 pub mod health;
 pub mod prefab;
 pub mod project_settings;
@@ -245,6 +246,24 @@ impl McpService {
         self.do_unity_scene_set_active(req.path, req.timeout_secs)
             .await
     }
+
+    #[tool(description = "Execute a Unity Editor menu item via Direct IPC")]
+    pub async fn unity_execute_menu_item(
+        &self,
+        Parameters(req): Parameters<UnityExecuteMenuItemRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_execute_menu_item(req.path, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Focus a Unity Editor window via Direct IPC")]
+    pub async fn unity_focus_window(
+        &self,
+        Parameters(req): Parameters<UnityFocusWindowRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_focus_window(req.window_type, req.timeout_secs)
+            .await
+    }
 }
 
 // Helper to expose router across modules while the generated
@@ -330,6 +349,18 @@ pub struct UnitySceneSetActiveRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityExecuteMenuItemRequest {
+    pub path: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityFocusWindowRequest {
+    pub window_type: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct UnityComponentAddRequest {
     pub game_object: String,
     pub component: String,
@@ -401,5 +432,7 @@ mod tool_tests {
         assert!(router.has_route("unity_scene_save"));
         assert!(router.has_route("unity_scene_get_open"));
         assert!(router.has_route("unity_scene_set_active"));
+        assert!(router.has_route("unity_execute_menu_item"));
+        assert!(router.has_route("unity_focus_window"));
     }
 }

@@ -34,7 +34,7 @@ namespace Mcp.Unity.V1 {
             "dWVzdBgCIAEoCzIYLm1jcC51bml0eS52MS5JcGNSZXF1ZXN0SAASLQoIcmVz",
             "cG9uc2UYAyABKAsyGS5tY3AudW5pdHkudjEuSXBjUmVzcG9uc2VIABInCgVl",
             "dmVudBgEIAEoCzIWLm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQi",
-            "/QUKCklwY1JlcXVlc3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYx",
+            "+gYKCklwY1JlcXVlc3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYx",
             "LkhlYWx0aFJlcXVlc3RIABIsCg1nZXRfcGxheV9tb2RlGAogASgLMhMubWNw",
             "LnVuaXR5LnYxLkVtcHR5SAASOQoNc2V0X3BsYXlfbW9kZRgLIAEoCzIgLm1j",
             "cC51bml0eS52MS5TZXRQbGF5TW9kZVJlcXVlc3RIABJNChdnZXRfY29tcGls",
@@ -43,42 +43,47 @@ namespace Mcp.Unity.V1 {
             "DSABKAsyJy5tY3AudW5pdHkudjEuR2V0UHJvamVjdFNldHRpbmdzUmVxdWVz",
             "dEgAEkcKFHNldF9wcm9qZWN0X3NldHRpbmdzGA4gASgLMicubWNwLnVuaXR5",
             "LnYxLlNldFByb2plY3RTZXR0aW5nc1JlcXVlc3RIABItCgZzY2VuZXMYDyAB",
-            "KAsyGy5tY3AudW5pdHkudjEuU2NlbmVzUmVxdWVzdEgAEi0KBmFzc2V0cxgU",
-            "IAEoCzIbLm1jcC51bml0eS52MS5Bc3NldHNSZXF1ZXN0SAASLQoGcHJlZmFi",
-            "GBUgASgLMhsubWNwLnVuaXR5LnYxLlByZWZhYlJlcXVlc3RIABIrCgVidWls",
-            "ZBgeIAEoCzIaLm1jcC51bml0eS52MS5CdWlsZFJlcXVlc3RIABI6Cg1vcGVy",
-            "YXRpb25fZ2V0GCggASgLMiEubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJl",
-            "cXVlc3RIABJAChBvcGVyYXRpb25fY2FuY2VsGCkgASgLMiQubWNwLnVuaXR5",
-            "LnYxLk9wZXJhdGlvbkNhbmNlbFJlcXVlc3RIABIzCgljb21wb25lbnQYMiAB",
-            "KAsyHi5tY3AudW5pdHkudjEuQ29tcG9uZW50UmVxdWVzdEgAQgkKB3BheWxv",
-            "YWQisAYKC0lwY1Jlc3BvbnNlEhYKDmNvcnJlbGF0aW9uX2lkGAEgASgJEi4K",
-            "BmhlYWx0aBgCIAEoCzIcLm1jcC51bml0eS52MS5IZWFsdGhSZXNwb25zZUgA",
-            "EjoKDWdldF9wbGF5X21vZGUYCiABKAsyIS5tY3AudW5pdHkudjEuR2V0UGxh",
-            "eU1vZGVSZXNwb25zZUgAEjoKDXNldF9wbGF5X21vZGUYCyABKAsyIS5tY3Au",
-            "dW5pdHkudjEuU2V0UGxheU1vZGVSZXNwb25zZUgAEk4KF2dldF9jb21waWxl",
-            "X2RpYWdub3N0aWNzGAwgASgLMisubWNwLnVuaXR5LnYxLkdldENvbXBpbGVE",
-            "aWFnbm9zdGljc1Jlc3BvbnNlSAASSAoUZ2V0X3Byb2plY3Rfc2V0dGluZ3MY",
-            "DSABKAsyKC5tY3AudW5pdHkudjEuR2V0UHJvamVjdFNldHRpbmdzUmVzcG9u",
-            "c2VIABJIChRzZXRfcHJvamVjdF9zZXR0aW5ncxgOIAEoCzIoLm1jcC51bml0",
-            "eS52MS5TZXRQcm9qZWN0U2V0dGluZ3NSZXNwb25zZUgAEi4KBnNjZW5lcxgP",
-            "IAEoCzIcLm1jcC51bml0eS52MS5TY2VuZXNSZXNwb25zZUgAEi4KBmFzc2V0",
-            "cxgUIAEoCzIcLm1jcC51bml0eS52MS5Bc3NldHNSZXNwb25zZUgAEi4KBnBy",
-            "ZWZhYhgVIAEoCzIcLm1jcC51bml0eS52MS5QcmVmYWJSZXNwb25zZUgAEiwK",
-            "BWJ1aWxkGB4gASgLMhsubWNwLnVuaXR5LnYxLkJ1aWxkUmVzcG9uc2VIABI7",
-            "Cg1vcGVyYXRpb25fZ2V0GCggASgLMiIubWNwLnVuaXR5LnYxLk9wZXJhdGlv",
-            "bkdldFJlc3BvbnNlSAASQQoQb3BlcmF0aW9uX2NhbmNlbBgpIAEoCzIlLm1j",
-            "cC51bml0eS52MS5PcGVyYXRpb25DYW5jZWxSZXNwb25zZUgAEjQKCWNvbXBv",
-            "bmVudBgyIAEoCzIfLm1jcC51bml0eS52MS5Db21wb25lbnRSZXNwb25zZUgA",
-            "QgkKB3BheWxvYWQigQEKCElwY0V2ZW50EhcKD21vbm90b25pY190c19ucxgB",
-            "IAEoAxIlCgNsb2cYCiABKAsyFi5tY3AudW5pdHkudjEuTG9nRXZlbnRIABIq",
-            "CgJvcBgLIAEoCzIcLm1jcC51bml0eS52MS5PcGVyYXRpb25FdmVudEgAQgkK",
-            "B3BheWxvYWRiBnByb3RvMw=="));
+            "KAsyGy5tY3AudW5pdHkudjEuU2NlbmVzUmVxdWVzdEgAEkEKEWV4ZWN1dGVf",
+            "bWVudV9pdGVtGBAgASgLMiQubWNwLnVuaXR5LnYxLkV4ZWN1dGVNZW51SXRl",
+            "bVJlcXVlc3RIABI4Cgxmb2N1c193aW5kb3cYESABKAsyIC5tY3AudW5pdHku",
+            "djEuRm9jdXNXaW5kb3dSZXF1ZXN0SAASLQoGYXNzZXRzGBQgASgLMhsubWNw",
+            "LnVuaXR5LnYxLkFzc2V0c1JlcXVlc3RIABItCgZwcmVmYWIYFSABKAsyGy5t",
+            "Y3AudW5pdHkudjEuUHJlZmFiUmVxdWVzdEgAEisKBWJ1aWxkGB4gASgLMhou",
+            "bWNwLnVuaXR5LnYxLkJ1aWxkUmVxdWVzdEgAEjoKDW9wZXJhdGlvbl9nZXQY",
+            "KCABKAsyIS5tY3AudW5pdHkudjEuT3BlcmF0aW9uR2V0UmVxdWVzdEgAEkAK",
+            "EG9wZXJhdGlvbl9jYW5jZWwYKSABKAsyJC5tY3AudW5pdHkudjEuT3BlcmF0",
+            "aW9uQ2FuY2VsUmVxdWVzdEgAEjMKCWNvbXBvbmVudBgyIAEoCzIeLm1jcC51",
+            "bml0eS52MS5Db21wb25lbnRSZXF1ZXN0SABCCQoHcGF5bG9hZCKvBwoLSXBj",
+            "UmVzcG9uc2USFgoOY29ycmVsYXRpb25faWQYASABKAkSLgoGaGVhbHRoGAIg",
+            "ASgLMhwubWNwLnVuaXR5LnYxLkhlYWx0aFJlc3BvbnNlSAASOgoNZ2V0X3Bs",
+            "YXlfbW9kZRgKIAEoCzIhLm1jcC51bml0eS52MS5HZXRQbGF5TW9kZVJlc3Bv",
+            "bnNlSAASOgoNc2V0X3BsYXlfbW9kZRgLIAEoCzIhLm1jcC51bml0eS52MS5T",
+            "ZXRQbGF5TW9kZVJlc3BvbnNlSAASTgoXZ2V0X2NvbXBpbGVfZGlhZ25vc3Rp",
+            "Y3MYDCABKAsyKy5tY3AudW5pdHkudjEuR2V0Q29tcGlsZURpYWdub3N0aWNz",
+            "UmVzcG9uc2VIABJIChRnZXRfcHJvamVjdF9zZXR0aW5ncxgNIAEoCzIoLm1j",
+            "cC51bml0eS52MS5HZXRQcm9qZWN0U2V0dGluZ3NSZXNwb25zZUgAEkgKFHNl",
+            "dF9wcm9qZWN0X3NldHRpbmdzGA4gASgLMigubWNwLnVuaXR5LnYxLlNldFBy",
+            "b2plY3RTZXR0aW5nc1Jlc3BvbnNlSAASLgoGc2NlbmVzGA8gASgLMhwubWNw",
+            "LnVuaXR5LnYxLlNjZW5lc1Jlc3BvbnNlSAASQgoRZXhlY3V0ZV9tZW51X2l0",
+            "ZW0YECABKAsyJS5tY3AudW5pdHkudjEuRXhlY3V0ZU1lbnVJdGVtUmVzcG9u",
+            "c2VIABI5Cgxmb2N1c193aW5kb3cYESABKAsyIS5tY3AudW5pdHkudjEuRm9j",
+            "dXNXaW5kb3dSZXNwb25zZUgAEi4KBmFzc2V0cxgUIAEoCzIcLm1jcC51bml0",
+            "eS52MS5Bc3NldHNSZXNwb25zZUgAEi4KBnByZWZhYhgVIAEoCzIcLm1jcC51",
+            "bml0eS52MS5QcmVmYWJSZXNwb25zZUgAEiwKBWJ1aWxkGB4gASgLMhsubWNw",
+            "LnVuaXR5LnYxLkJ1aWxkUmVzcG9uc2VIABI7Cg1vcGVyYXRpb25fZ2V0GCgg",
+            "ASgLMiIubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJlc3BvbnNlSAASQQoQ",
+            "b3BlcmF0aW9uX2NhbmNlbBgpIAEoCzIlLm1jcC51bml0eS52MS5PcGVyYXRp",
+            "b25DYW5jZWxSZXNwb25zZUgAEjQKCWNvbXBvbmVudBgyIAEoCzIfLm1jcC51",
+            "bml0eS52MS5Db21wb25lbnRSZXNwb25zZUgAQgkKB3BheWxvYWQigQEKCElw",
+            "Y0V2ZW50EhcKD21vbm90b25pY190c19ucxgBIAEoAxIlCgNsb2cYCiABKAsy",
+            "Fi5tY3AudW5pdHkudjEuTG9nRXZlbnRIABIqCgJvcBgLIAEoCzIcLm1jcC51",
+            "bml0eS52MS5PcGVyYXRpb25FdmVudEgAQgkKB3BheWxvYWRiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.PrefabReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, global::Mcp.Unity.V1.ComponentReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEnvelope), global::Mcp.Unity.V1.IpcEnvelope.Parser, new[]{ "CorrelationId", "Request", "Response", "Event" }, new[]{ "Kind" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Scenes", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Scenes", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Scenes", "ExecuteMenuItem", "FocusWindow", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Scenes", "ExecuteMenuItem", "FocusWindow", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
@@ -536,6 +541,12 @@ namespace Mcp.Unity.V1 {
         case PayloadOneofCase.Scenes:
           Scenes = other.Scenes.Clone();
           break;
+        case PayloadOneofCase.ExecuteMenuItem:
+          ExecuteMenuItem = other.ExecuteMenuItem.Clone();
+          break;
+        case PayloadOneofCase.FocusWindow:
+          FocusWindow = other.FocusWindow.Clone();
+          break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
           break;
@@ -655,6 +666,30 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "execute_menu_item" field.</summary>
+    public const int ExecuteMenuItemFieldNumber = 16;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ExecuteMenuItemRequest ExecuteMenuItem {
+      get { return payloadCase_ == PayloadOneofCase.ExecuteMenuItem ? (global::Mcp.Unity.V1.ExecuteMenuItemRequest) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.ExecuteMenuItem;
+      }
+    }
+
+    /// <summary>Field number for the "focus_window" field.</summary>
+    public const int FocusWindowFieldNumber = 17;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.FocusWindowRequest FocusWindow {
+      get { return payloadCase_ == PayloadOneofCase.FocusWindow ? (global::Mcp.Unity.V1.FocusWindowRequest) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.FocusWindow;
+      }
+    }
+
     /// <summary>Field number for the "assets" field.</summary>
     public const int AssetsFieldNumber = 20;
     /// <summary>
@@ -753,6 +788,8 @@ namespace Mcp.Unity.V1 {
       GetProjectSettings = 13,
       SetProjectSettings = 14,
       Scenes = 15,
+      ExecuteMenuItem = 16,
+      FocusWindow = 17,
       Assets = 20,
       Prefab = 21,
       Build = 30,
@@ -796,6 +833,8 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(GetProjectSettings, other.GetProjectSettings)) return false;
       if (!object.Equals(SetProjectSettings, other.SetProjectSettings)) return false;
       if (!object.Equals(Scenes, other.Scenes)) return false;
+      if (!object.Equals(ExecuteMenuItem, other.ExecuteMenuItem)) return false;
+      if (!object.Equals(FocusWindow, other.FocusWindow)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Prefab, other.Prefab)) return false;
       if (!object.Equals(Build, other.Build)) return false;
@@ -817,6 +856,8 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetProjectSettings) hash ^= GetProjectSettings.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) hash ^= SetProjectSettings.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Scenes) hash ^= Scenes.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) hash ^= ExecuteMenuItem.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) hash ^= FocusWindow.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Prefab) hash ^= Prefab.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
@@ -869,6 +910,14 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Scenes) {
         output.WriteRawTag(122);
         output.WriteMessage(Scenes);
+      }
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+        output.WriteRawTag(130, 1);
+        output.WriteMessage(ExecuteMenuItem);
+      }
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+        output.WriteRawTag(138, 1);
+        output.WriteMessage(FocusWindow);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -932,6 +981,14 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(122);
         output.WriteMessage(Scenes);
       }
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+        output.WriteRawTag(130, 1);
+        output.WriteMessage(ExecuteMenuItem);
+      }
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+        output.WriteRawTag(138, 1);
+        output.WriteMessage(FocusWindow);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -986,6 +1043,12 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.Scenes) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Scenes);
+      }
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(ExecuteMenuItem);
+      }
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(FocusWindow);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -1059,6 +1122,18 @@ namespace Mcp.Unity.V1 {
             Scenes = new global::Mcp.Unity.V1.ScenesRequest();
           }
           Scenes.MergeFrom(other.Scenes);
+          break;
+        case PayloadOneofCase.ExecuteMenuItem:
+          if (ExecuteMenuItem == null) {
+            ExecuteMenuItem = new global::Mcp.Unity.V1.ExecuteMenuItemRequest();
+          }
+          ExecuteMenuItem.MergeFrom(other.ExecuteMenuItem);
+          break;
+        case PayloadOneofCase.FocusWindow:
+          if (FocusWindow == null) {
+            FocusWindow = new global::Mcp.Unity.V1.FocusWindowRequest();
+          }
+          FocusWindow.MergeFrom(other.FocusWindow);
           break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
@@ -1178,6 +1253,24 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             Scenes = subBuilder;
+            break;
+          }
+          case 130: {
+            global::Mcp.Unity.V1.ExecuteMenuItemRequest subBuilder = new global::Mcp.Unity.V1.ExecuteMenuItemRequest();
+            if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+              subBuilder.MergeFrom(ExecuteMenuItem);
+            }
+            input.ReadMessage(subBuilder);
+            ExecuteMenuItem = subBuilder;
+            break;
+          }
+          case 138: {
+            global::Mcp.Unity.V1.FocusWindowRequest subBuilder = new global::Mcp.Unity.V1.FocusWindowRequest();
+            if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+              subBuilder.MergeFrom(FocusWindow);
+            }
+            input.ReadMessage(subBuilder);
+            FocusWindow = subBuilder;
             break;
           }
           case 162: {
@@ -1316,6 +1409,24 @@ namespace Mcp.Unity.V1 {
             Scenes = subBuilder;
             break;
           }
+          case 130: {
+            global::Mcp.Unity.V1.ExecuteMenuItemRequest subBuilder = new global::Mcp.Unity.V1.ExecuteMenuItemRequest();
+            if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+              subBuilder.MergeFrom(ExecuteMenuItem);
+            }
+            input.ReadMessage(subBuilder);
+            ExecuteMenuItem = subBuilder;
+            break;
+          }
+          case 138: {
+            global::Mcp.Unity.V1.FocusWindowRequest subBuilder = new global::Mcp.Unity.V1.FocusWindowRequest();
+            if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+              subBuilder.MergeFrom(FocusWindow);
+            }
+            input.ReadMessage(subBuilder);
+            FocusWindow = subBuilder;
+            break;
+          }
           case 162: {
             global::Mcp.Unity.V1.AssetsRequest subBuilder = new global::Mcp.Unity.V1.AssetsRequest();
             if (payloadCase_ == PayloadOneofCase.Assets) {
@@ -1437,6 +1548,12 @@ namespace Mcp.Unity.V1 {
           break;
         case PayloadOneofCase.Scenes:
           Scenes = other.Scenes.Clone();
+          break;
+        case PayloadOneofCase.ExecuteMenuItem:
+          ExecuteMenuItem = other.ExecuteMenuItem.Clone();
+          break;
+        case PayloadOneofCase.FocusWindow:
+          FocusWindow = other.FocusWindow.Clone();
           break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
@@ -1572,6 +1689,30 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "execute_menu_item" field.</summary>
+    public const int ExecuteMenuItemFieldNumber = 16;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ExecuteMenuItemResponse ExecuteMenuItem {
+      get { return payloadCase_ == PayloadOneofCase.ExecuteMenuItem ? (global::Mcp.Unity.V1.ExecuteMenuItemResponse) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.ExecuteMenuItem;
+      }
+    }
+
+    /// <summary>Field number for the "focus_window" field.</summary>
+    public const int FocusWindowFieldNumber = 17;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.FocusWindowResponse FocusWindow {
+      get { return payloadCase_ == PayloadOneofCase.FocusWindow ? (global::Mcp.Unity.V1.FocusWindowResponse) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.FocusWindow;
+      }
+    }
+
     /// <summary>Field number for the "assets" field.</summary>
     public const int AssetsFieldNumber = 20;
     /// <summary>
@@ -1670,6 +1811,8 @@ namespace Mcp.Unity.V1 {
       GetProjectSettings = 13,
       SetProjectSettings = 14,
       Scenes = 15,
+      ExecuteMenuItem = 16,
+      FocusWindow = 17,
       Assets = 20,
       Prefab = 21,
       Build = 30,
@@ -1714,6 +1857,8 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(GetProjectSettings, other.GetProjectSettings)) return false;
       if (!object.Equals(SetProjectSettings, other.SetProjectSettings)) return false;
       if (!object.Equals(Scenes, other.Scenes)) return false;
+      if (!object.Equals(ExecuteMenuItem, other.ExecuteMenuItem)) return false;
+      if (!object.Equals(FocusWindow, other.FocusWindow)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Prefab, other.Prefab)) return false;
       if (!object.Equals(Build, other.Build)) return false;
@@ -1736,6 +1881,8 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetProjectSettings) hash ^= GetProjectSettings.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) hash ^= SetProjectSettings.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Scenes) hash ^= Scenes.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) hash ^= ExecuteMenuItem.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) hash ^= FocusWindow.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Prefab) hash ^= Prefab.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
@@ -1792,6 +1939,14 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.Scenes) {
         output.WriteRawTag(122);
         output.WriteMessage(Scenes);
+      }
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+        output.WriteRawTag(130, 1);
+        output.WriteMessage(ExecuteMenuItem);
+      }
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+        output.WriteRawTag(138, 1);
+        output.WriteMessage(FocusWindow);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -1859,6 +2014,14 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(122);
         output.WriteMessage(Scenes);
       }
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+        output.WriteRawTag(130, 1);
+        output.WriteMessage(ExecuteMenuItem);
+      }
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+        output.WriteRawTag(138, 1);
+        output.WriteMessage(FocusWindow);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -1916,6 +2079,12 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.Scenes) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Scenes);
+      }
+      if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(ExecuteMenuItem);
+      }
+      if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(FocusWindow);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -1992,6 +2161,18 @@ namespace Mcp.Unity.V1 {
             Scenes = new global::Mcp.Unity.V1.ScenesResponse();
           }
           Scenes.MergeFrom(other.Scenes);
+          break;
+        case PayloadOneofCase.ExecuteMenuItem:
+          if (ExecuteMenuItem == null) {
+            ExecuteMenuItem = new global::Mcp.Unity.V1.ExecuteMenuItemResponse();
+          }
+          ExecuteMenuItem.MergeFrom(other.ExecuteMenuItem);
+          break;
+        case PayloadOneofCase.FocusWindow:
+          if (FocusWindow == null) {
+            FocusWindow = new global::Mcp.Unity.V1.FocusWindowResponse();
+          }
+          FocusWindow.MergeFrom(other.FocusWindow);
           break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
@@ -2115,6 +2296,24 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             Scenes = subBuilder;
+            break;
+          }
+          case 130: {
+            global::Mcp.Unity.V1.ExecuteMenuItemResponse subBuilder = new global::Mcp.Unity.V1.ExecuteMenuItemResponse();
+            if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+              subBuilder.MergeFrom(ExecuteMenuItem);
+            }
+            input.ReadMessage(subBuilder);
+            ExecuteMenuItem = subBuilder;
+            break;
+          }
+          case 138: {
+            global::Mcp.Unity.V1.FocusWindowResponse subBuilder = new global::Mcp.Unity.V1.FocusWindowResponse();
+            if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+              subBuilder.MergeFrom(FocusWindow);
+            }
+            input.ReadMessage(subBuilder);
+            FocusWindow = subBuilder;
             break;
           }
           case 162: {
@@ -2255,6 +2454,24 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             Scenes = subBuilder;
+            break;
+          }
+          case 130: {
+            global::Mcp.Unity.V1.ExecuteMenuItemResponse subBuilder = new global::Mcp.Unity.V1.ExecuteMenuItemResponse();
+            if (payloadCase_ == PayloadOneofCase.ExecuteMenuItem) {
+              subBuilder.MergeFrom(ExecuteMenuItem);
+            }
+            input.ReadMessage(subBuilder);
+            ExecuteMenuItem = subBuilder;
+            break;
+          }
+          case 138: {
+            global::Mcp.Unity.V1.FocusWindowResponse subBuilder = new global::Mcp.Unity.V1.FocusWindowResponse();
+            if (payloadCase_ == PayloadOneofCase.FocusWindow) {
+              subBuilder.MergeFrom(FocusWindow);
+            }
+            input.ReadMessage(subBuilder);
+            FocusWindow = subBuilder;
             break;
           }
           case 162: {
