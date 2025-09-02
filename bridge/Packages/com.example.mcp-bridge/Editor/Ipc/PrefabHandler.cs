@@ -36,7 +36,9 @@ namespace Mcp.Unity.V1.Ipc
                 return new Pb.PrefabResponse { StatusCode = 5, Message = "game object not found" };
             try
             {
-                PrefabUtility.SaveAsPrefabAsset(go, r.PrefabPath);
+                var prefab = PrefabUtility.SaveAsPrefabAsset(go, r.PrefabPath);
+                if (prefab == null)
+                    return new Pb.PrefabResponse { StatusCode = 13, Message = "failed to save prefab" };
                 string guid = AssetDatabase.AssetPathToGUID(r.PrefabPath);
                 return new Pb.PrefabResponse
                 {
@@ -59,7 +61,9 @@ namespace Mcp.Unity.V1.Ipc
                 return new Pb.PrefabResponse { StatusCode = 5, Message = "game object not found" };
             try
             {
-                PrefabUtility.SaveAsPrefabAsset(go, r.PrefabPath);
+                var prefab = PrefabUtility.SaveAsPrefabAsset(go, r.PrefabPath);
+                if (prefab == null)
+                    return new Pb.PrefabResponse { StatusCode = 13, Message = "failed to save prefab" };
                 return new Pb.PrefabResponse
                 {
                     StatusCode = 0,
