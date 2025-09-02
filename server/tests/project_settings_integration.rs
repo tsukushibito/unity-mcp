@@ -49,6 +49,24 @@ async fn test_project_settings_roundtrip() {
         .cloned()
         .unwrap_or_default();
 
+    let client_clone = client.clone();
+    let original_clone = original.clone();
+    scopeguard::defer! {
+        let mut restore = HashMap::new();
+        restore.insert("companyName".to_string(), original_clone);
+        let set_req = SetProjectSettingsRequest { settings: restore };
+        let ipc_req = IpcRequest {
+            payload: Some(ipc_request::Payload::SetProjectSettings(set_req)),
+        };
+        tokio::runtime::Handle::current().block_on(async {
+            let _ = timeout(
+                Duration::from_secs(5),
+                client_clone.request(ipc_req, Duration::from_secs(5)),
+            )
+            .await;
+        });
+    }
+
     // Set new companyName
     let mut map = HashMap::new();
     map.insert("companyName".to_string(), "TestCo".to_string());
@@ -111,17 +129,4 @@ async fn test_project_settings_roundtrip() {
         .cloned()
         .unwrap_or_default();
     assert_eq!(updated, "TestCo");
-
-    // Restore original value
-    let mut restore = HashMap::new();
-    restore.insert("companyName".to_string(), original);
-    let set_req = SetProjectSettingsRequest { settings: restore };
-    let ipc_req = IpcRequest {
-        payload: Some(ipc_request::Payload::SetProjectSettings(set_req)),
-    };
-    let _ = timeout(
-        Duration::from_secs(5),
-        client.request(ipc_req, Duration::from_secs(5)),
-    )
-    .await;
 }

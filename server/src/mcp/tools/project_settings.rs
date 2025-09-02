@@ -28,7 +28,7 @@ impl McpService {
             McpError::internal_error(format!("Project settings get IPC error: {}", e), None)
         })?;
 
-        let settings = match response.payload {
+        let resp = match response.payload {
             Some(crate::generated::mcp::unity::v1::ipc_response::Payload::GetProjectSettings(
                 r,
             )) => r,
@@ -40,8 +40,15 @@ impl McpService {
             }
         };
 
+        if !resp.success {
+            return Err(McpError::internal_error(
+                format!("Get project settings failed: {}", resp.error_message),
+                None,
+            ));
+        }
+
         let output = GetProjectSettingsOutput {
-            settings: settings.settings,
+            settings: resp.settings,
         };
         let content = serde_json::to_string(&output)
             .map_err(|e| McpError::internal_error(format!("Serialization error: {}", e), None))?;
