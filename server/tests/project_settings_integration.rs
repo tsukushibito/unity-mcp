@@ -1,4 +1,3 @@
-use scopeguard::guard;
 use server::generated::mcp::unity::v1::{
     GetProjectSettingsRequest, IpcRequest, SetProjectSettingsRequest, ipc_request, ipc_response,
 };
@@ -54,7 +53,7 @@ async fn test_project_settings_roundtrip() {
     let original_clone = original.clone();
     scopeguard::defer! {
         let mut restore = HashMap::new();
-        restore.insert("companyName".to_string(), origina
+        restore.insert("companyName".to_string(), original_clone);
         let set_req = SetProjectSettingsRequest { settings: restore };
         let ipc_req = IpcRequest {
             payload: Some(ipc_request::Payload::SetProjectSettings(set_req)),
