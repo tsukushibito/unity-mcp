@@ -28,32 +28,33 @@ async fn test_scene_operations_end_to_end() {
 
     // Save current active scene to a Temp path to avoid polluting Assets
     let save_path = format!("Temp/TestScene-{}.unity", Uuid::new_v4());
-    let _ = client
+    let save_res = client
         .scenes_save(save_path.clone(), Duration::from_secs(5))
-        .await;
+        .await
+        .expect("scenes_save failed");
+    assert!(save_res.ok, "scenes_save returned not ok");
 
     // Open the saved scene
     let open_res = client
         .scenes_open(save_path.clone(), false, Duration::from_secs(5))
-        .await;
-    match open_res {
-        Ok(r) => println!("Opened scene: ok={}", r.ok),
-        Err(e) => println!("Scene open failed: {}", e),
-    }
+        .await
+        .expect("scenes_open failed");
+    assert!(open_res.ok, "scenes_open returned not ok");
 
     // Get open scenes list
-    match client.scenes_get_open_scenes(Duration::from_secs(5)).await {
-        Ok(list) => {
-            println!("Open scenes: {:?}", list.scenes);
-            if !list.scenes.is_empty() {
-                let target = list.scenes[0].clone();
-                // Set active scene to first scene
-                let _ = client
-                    .scenes_set_active_scene(target, Duration::from_secs(5))
-                    .await;
-            }
-        }
-        Err(e) => println!("Get open scenes failed: {}", e),
+    let list = client
+        .scenes_get_open_scenes(Duration::from_secs(5))
+        .await
+        .expect("scenes_get_open_scenes failed");
+    assert!(!list.scenes.is_empty(), "no open scenes returned");
+    if !list.scenes.is_empty() {
+        let target = list.scenes[0].clone();
+        // Set active scene to first scene
+        let set_res = client
+            .scenes_set_active_scene(target, Duration::from_secs(5))
+            .await
+            .expect("scenes_set_active_scene failed");
+        assert!(set_res.ok, "scenes_set_active_scene returned not ok");
     }
 
     // Clean up the saved scene file if it exists
