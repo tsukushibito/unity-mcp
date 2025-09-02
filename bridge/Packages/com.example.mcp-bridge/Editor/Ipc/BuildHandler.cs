@@ -88,8 +88,13 @@ namespace Mcp.Unity.V1.Ipc
                 // TODO(UNITY_API): touches PlayerSettings/EditorUserBuildSettings — must run on main via EditorDispatcher
                 if (r.Variants?.Il2Cpp == true)
                     PlayerSettings.SetScriptingBackend(group, ScriptingImplementation.IL2CPP);
+                else
+                    PlayerSettings.SetScriptingBackend(group, ScriptingImplementation.Mono2x);
+
                 if (r.Variants?.StripSymbols == true)
                     EditorUserBuildSettings.stripEngineCode = true;
+                else
+                    EditorUserBuildSettings.stripEngineCode = false;
 
                 // 5. Build options setup
                 var buildOptions = BuildOptions.None;
