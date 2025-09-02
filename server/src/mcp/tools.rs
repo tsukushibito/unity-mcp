@@ -3,6 +3,7 @@ pub mod build;
 pub mod component;
 pub mod diagnostics;
 pub mod health;
+pub mod prefab;
 pub mod project_settings;
 pub mod status;
 pub mod tests;
@@ -127,6 +128,33 @@ impl McpService {
             .await
     }
 
+    #[tool(description = "Create Unity prefab via Direct IPC")]
+    pub async fn unity_prefab_create(
+        &self,
+        Parameters(req): Parameters<UnityPrefabCreateRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_prefab_create(req.game_object_path, req.prefab_path, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Update Unity prefab via Direct IPC")]
+    pub async fn unity_prefab_update(
+        &self,
+        Parameters(req): Parameters<UnityPrefabUpdateRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_prefab_update(req.game_object_path, req.prefab_path, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Apply overrides to Unity prefab instance via Direct IPC")]
+    pub async fn unity_prefab_apply_overrides(
+        &self,
+        Parameters(req): Parameters<UnityPrefabApplyOverridesRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_prefab_apply_overrides(req.instance_path, req.timeout_secs)
+            .await
+    }
+
     #[tool(description = "Get Unity C# compile diagnostics (errors, warnings, info)")]
     pub async fn unity_get_compile_diagnostics(
         &self,
@@ -237,15 +265,15 @@ pub struct UnityGetProjectSettingsRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct UnityComponentAddRequest {
-    pub game_object: String,
-    pub component: String,
+pub struct UnitySetProjectSettingsRequest {
+    pub settings: std::collections::HashMap<String, String>,
     pub timeout_secs: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-pub struct UnitySetProjectSettingsRequest {
-    pub settings: std::collections::HashMap<String, String>,
+pub struct UnityComponentAddRequest {
+    pub game_object: String,
+    pub component: String,
     pub timeout_secs: Option<u64>,
 }
 
@@ -259,6 +287,26 @@ pub struct UnityGetComponentsRequest {
 pub struct UnityComponentRemoveRequest {
     pub game_object: String,
     pub component: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityPrefabCreateRequest {
+    pub game_object_path: String,
+    pub prefab_path: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityPrefabUpdateRequest {
+    pub game_object_path: String,
+    pub prefab_path: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityPrefabApplyOverridesRequest {
+    pub instance_path: String,
     pub timeout_secs: Option<u64>,
 }
 
@@ -287,5 +335,8 @@ mod tool_tests {
         assert!(router.has_route("unity_get_test_results"));
         assert!(router.has_route("unity_get_project_settings"));
         assert!(router.has_route("unity_set_project_settings"));
+        assert!(router.has_route("unity_prefab_create"));
+        assert!(router.has_route("unity_prefab_update"));
+        assert!(router.has_route("unity_prefab_apply_overrides"));
     }
 }

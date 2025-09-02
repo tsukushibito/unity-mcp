@@ -25,6 +25,7 @@ protoc \
   "$PROTO_ROOT"/mcp/unity/v1/common.proto \
   "$PROTO_ROOT"/mcp/unity/v1/editor_control.proto \
   "$PROTO_ROOT"/mcp/unity/v1/assets.proto \
+  "$PROTO_ROOT"/mcp/unity/v1/prefab.proto \
   "$PROTO_ROOT"/mcp/unity/v1/build.proto \
   "$PROTO_ROOT"/mcp/unity/v1/operations.proto \
   "$PROTO_ROOT"/mcp/unity/v1/events.proto \

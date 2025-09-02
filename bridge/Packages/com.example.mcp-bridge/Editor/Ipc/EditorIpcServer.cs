@@ -377,6 +377,10 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleAssetsRequest(stream, correlationId, request.Assets);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.Prefab:
+                        await HandlePrefabRequest(stream, correlationId, request.Prefab);
+                        break;
+
                     case IpcRequest.PayloadOneofCase.Build:
                         await HandleBuildRequest(stream, correlationId, request.Build);
                         break;
@@ -548,6 +552,40 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent component response: status={compResponse.StatusCode}");
+        }
+
+        /// <summary>
+        /// Handle Prefab request
+        /// </summary>
+        private static async Task HandlePrefabRequest(Stream stream, string correlationId, PrefabRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing prefab request: {request.PayloadCase}");
+
+            var prefabResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                Bridge.Editor.Ipc.FeatureGuard features;
+                lock (_streamLock)
+                {
+                    _negotiatedFeatures.TryGetValue(stream, out features);
+                }
+
+                if (features == null)
+                {
+                    throw new InvalidOperationException("No negotiated features found for connection");
+                }
+
+                return PrefabHandler.Handle(request, features);
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                Prefab = prefabResponse
+            };
+
+            await SendResponseAsync(stream, response);
+            Debug.Log($"[EditorIpcServer] Sent prefab response: status={prefabResponse.StatusCode}");
         }
 
         /// <summary>

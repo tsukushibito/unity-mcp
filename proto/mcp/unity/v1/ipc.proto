@@ -7,6 +7,7 @@ package mcp.unity.v1;
 import "mcp/unity/v1/common.proto";
 import "mcp/unity/v1/editor_control.proto";
 import "mcp/unity/v1/assets.proto";
+import "mcp/unity/v1/prefab.proto";
 import "mcp/unity/v1/build.proto";
 import "mcp/unity/v1/operations.proto";
 import "mcp/unity/v1/events.proto";
@@ -38,7 +39,10 @@ message IpcRequest {
     
     // Assets
     AssetsRequest assets = 20;
-    
+
+    // Prefab
+    PrefabRequest prefab = 21;
+
     // Build
     BuildRequest build = 30;
 
@@ -67,7 +71,10 @@ message IpcResponse {
     
     // Assets
     AssetsResponse assets = 20;
-    
+
+    // Prefab
+    PrefabResponse prefab = 21;
+
     // Build
     BuildResponse build = 30;
 

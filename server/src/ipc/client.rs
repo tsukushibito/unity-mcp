@@ -401,6 +401,44 @@ impl IpcClient {
         }
     }
 
+    pub async fn prefab_create(
+        &self,
+        game_object_path: String,
+        prefab_path: String,
+        timeout: Duration,
+    ) -> Result<pb::CreatePrefabResponse, IpcError> {
+        if !self.has_feature(FeatureFlag::PrefabsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "prefabs.basic feature not negotiated".into(),
+            ));
+        }
+
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Prefab(pb::PrefabRequest {
+                payload: Some(pb::prefab_request::Payload::Create(
+                    pb::CreatePrefabRequest {
+                        game_object_path,
+                        prefab_path,
+                    },
+                )),
+            })),
+        };
+
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Prefab(pb::PrefabResponse {
+                status_code: 0,
+                payload: Some(pb::prefab_response::Payload::Create(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Prefab(res)) => Err(IpcError::Handshake(format!(
+                "prefab create failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
     pub async fn component_get(
         &self,
         game_object: String,
@@ -453,6 +491,78 @@ impl IpcClient {
             })) => Ok(r),
             Some(pb::ipc_response::Payload::Component(res)) => Err(IpcError::Handshake(format!(
                 "component remove failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn prefab_update(
+        &self,
+        game_object_path: String,
+        prefab_path: String,
+        timeout: Duration,
+    ) -> Result<pb::UpdatePrefabResponse, IpcError> {
+        if !self.has_feature(FeatureFlag::PrefabsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "prefabs.basic feature not negotiated".into(),
+            ));
+        }
+
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Prefab(pb::PrefabRequest {
+                payload: Some(pb::prefab_request::Payload::Update(
+                    pb::UpdatePrefabRequest {
+                        game_object_path,
+                        prefab_path,
+                    },
+                )),
+            })),
+        };
+
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Prefab(pb::PrefabResponse {
+                status_code: 0,
+                payload: Some(pb::prefab_response::Payload::Update(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Prefab(res)) => Err(IpcError::Handshake(format!(
+                "prefab update failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn prefab_apply_overrides(
+        &self,
+        instance_path: String,
+        timeout: Duration,
+    ) -> Result<pb::ApplyPrefabOverridesResponse, IpcError> {
+        if !self.has_feature(FeatureFlag::PrefabsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "prefabs.basic feature not negotiated".into(),
+            ));
+        }
+
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Prefab(pb::PrefabRequest {
+                payload: Some(pb::prefab_request::Payload::ApplyOverrides(
+                    pb::ApplyPrefabOverridesRequest { instance_path },
+                )),
+            })),
+        };
+
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Prefab(pb::PrefabResponse {
+                status_code: 0,
+                payload: Some(pb::prefab_response::Payload::ApplyOverrides(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Prefab(res)) => Err(IpcError::Handshake(format!(
+                "prefab apply overrides failed: {}",
                 res.message
             ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
