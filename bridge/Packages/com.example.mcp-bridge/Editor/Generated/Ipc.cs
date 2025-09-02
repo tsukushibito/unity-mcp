@@ -34,7 +34,7 @@ namespace Mcp.Unity.V1 {
             "dWVzdBgCIAEoCzIYLm1jcC51bml0eS52MS5JcGNSZXF1ZXN0SAASLQoIcmVz",
             "cG9uc2UYAyABKAsyGS5tY3AudW5pdHkudjEuSXBjUmVzcG9uc2VIABInCgVl",
             "dmVudBgEIAEoCzIWLm1jcC51bml0eS52MS5JcGNFdmVudEgAQgYKBGtpbmQi",
-            "zgUKCklwY1JlcXVlc3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYx",
+            "/QUKCklwY1JlcXVlc3QSLQoGaGVhbHRoGAEgASgLMhsubWNwLnVuaXR5LnYx",
             "LkhlYWx0aFJlcXVlc3RIABIsCg1nZXRfcGxheV9tb2RlGAogASgLMhMubWNw",
             "LnVuaXR5LnYxLkVtcHR5SAASOQoNc2V0X3BsYXlfbW9kZRgLIAEoCzIgLm1j",
             "cC51bml0eS52MS5TZXRQbGF5TW9kZVJlcXVlc3RIABJNChdnZXRfY29tcGls",
@@ -42,41 +42,43 @@ namespace Mcp.Unity.V1 {
             "RGlhZ25vc3RpY3NSZXF1ZXN0SAASRwoUZ2V0X3Byb2plY3Rfc2V0dGluZ3MY",
             "DSABKAsyJy5tY3AudW5pdHkudjEuR2V0UHJvamVjdFNldHRpbmdzUmVxdWVz",
             "dEgAEkcKFHNldF9wcm9qZWN0X3NldHRpbmdzGA4gASgLMicubWNwLnVuaXR5",
-            "LnYxLlNldFByb2plY3RTZXR0aW5nc1JlcXVlc3RIABItCgZhc3NldHMYFCAB",
-            "KAsyGy5tY3AudW5pdHkudjEuQXNzZXRzUmVxdWVzdEgAEi0KBnByZWZhYhgV",
-            "IAEoCzIbLm1jcC51bml0eS52MS5QcmVmYWJSZXF1ZXN0SAASKwoFYnVpbGQY",
-            "HiABKAsyGi5tY3AudW5pdHkudjEuQnVpbGRSZXF1ZXN0SAASOgoNb3BlcmF0",
-            "aW9uX2dldBgoIAEoCzIhLm1jcC51bml0eS52MS5PcGVyYXRpb25HZXRSZXF1",
-            "ZXN0SAASQAoQb3BlcmF0aW9uX2NhbmNlbBgpIAEoCzIkLm1jcC51bml0eS52",
-            "MS5PcGVyYXRpb25DYW5jZWxSZXF1ZXN0SAASMwoJY29tcG9uZW50GDIgASgL",
-            "Mh4ubWNwLnVuaXR5LnYxLkNvbXBvbmVudFJlcXVlc3RIAEIJCgdwYXlsb2Fk",
-            "IoAGCgtJcGNSZXNwb25zZRIWCg5jb3JyZWxhdGlvbl9pZBgBIAEoCRIuCgZo",
-            "ZWFsdGgYAiABKAsyHC5tY3AudW5pdHkudjEuSGVhbHRoUmVzcG9uc2VIABI6",
-            "Cg1nZXRfcGxheV9tb2RlGAogASgLMiEubWNwLnVuaXR5LnYxLkdldFBsYXlN",
-            "b2RlUmVzcG9uc2VIABI6Cg1zZXRfcGxheV9tb2RlGAsgASgLMiEubWNwLnVu",
-            "aXR5LnYxLlNldFBsYXlNb2RlUmVzcG9uc2VIABJOChdnZXRfY29tcGlsZV9k",
-            "aWFnbm9zdGljcxgMIAEoCzIrLm1jcC51bml0eS52MS5HZXRDb21waWxlRGlh",
-            "Z25vc3RpY3NSZXNwb25zZUgAEkgKFGdldF9wcm9qZWN0X3NldHRpbmdzGA0g",
-            "ASgLMigubWNwLnVuaXR5LnYxLkdldFByb2plY3RTZXR0aW5nc1Jlc3BvbnNl",
-            "SAASSAoUc2V0X3Byb2plY3Rfc2V0dGluZ3MYDiABKAsyKC5tY3AudW5pdHku",
-            "djEuU2V0UHJvamVjdFNldHRpbmdzUmVzcG9uc2VIABIuCgZhc3NldHMYFCAB",
-            "KAsyHC5tY3AudW5pdHkudjEuQXNzZXRzUmVzcG9uc2VIABIuCgZwcmVmYWIY",
-            "FSABKAsyHC5tY3AudW5pdHkudjEuUHJlZmFiUmVzcG9uc2VIABIsCgVidWls",
-            "ZBgeIAEoCzIbLm1jcC51bml0eS52MS5CdWlsZFJlc3BvbnNlSAASOwoNb3Bl",
-            "cmF0aW9uX2dldBgoIAEoCzIiLm1jcC51bml0eS52MS5PcGVyYXRpb25HZXRS",
-            "ZXNwb25zZUgAEkEKEG9wZXJhdGlvbl9jYW5jZWwYKSABKAsyJS5tY3AudW5p",
-            "dHkudjEuT3BlcmF0aW9uQ2FuY2VsUmVzcG9uc2VIABI0Cgljb21wb25lbnQY",
-            "MiABKAsyHy5tY3AudW5pdHkudjEuQ29tcG9uZW50UmVzcG9uc2VIAEIJCgdw",
-            "YXlsb2FkIoEBCghJcGNFdmVudBIXCg9tb25vdG9uaWNfdHNfbnMYASABKAMS",
-            "JQoDbG9nGAogASgLMhYubWNwLnVuaXR5LnYxLkxvZ0V2ZW50SAASKgoCb3AY",
-            "CyABKAsyHC5tY3AudW5pdHkudjEuT3BlcmF0aW9uRXZlbnRIAEIJCgdwYXls",
-            "b2FkYgZwcm90bzM="));
+            "LnYxLlNldFByb2plY3RTZXR0aW5nc1JlcXVlc3RIABItCgZzY2VuZXMYDyAB",
+            "KAsyGy5tY3AudW5pdHkudjEuU2NlbmVzUmVxdWVzdEgAEi0KBmFzc2V0cxgU",
+            "IAEoCzIbLm1jcC51bml0eS52MS5Bc3NldHNSZXF1ZXN0SAASLQoGcHJlZmFi",
+            "GBUgASgLMhsubWNwLnVuaXR5LnYxLlByZWZhYlJlcXVlc3RIABIrCgVidWls",
+            "ZBgeIAEoCzIaLm1jcC51bml0eS52MS5CdWlsZFJlcXVlc3RIABI6Cg1vcGVy",
+            "YXRpb25fZ2V0GCggASgLMiEubWNwLnVuaXR5LnYxLk9wZXJhdGlvbkdldFJl",
+            "cXVlc3RIABJAChBvcGVyYXRpb25fY2FuY2VsGCkgASgLMiQubWNwLnVuaXR5",
+            "LnYxLk9wZXJhdGlvbkNhbmNlbFJlcXVlc3RIABIzCgljb21wb25lbnQYMiAB",
+            "KAsyHi5tY3AudW5pdHkudjEuQ29tcG9uZW50UmVxdWVzdEgAQgkKB3BheWxv",
+            "YWQisAYKC0lwY1Jlc3BvbnNlEhYKDmNvcnJlbGF0aW9uX2lkGAEgASgJEi4K",
+            "BmhlYWx0aBgCIAEoCzIcLm1jcC51bml0eS52MS5IZWFsdGhSZXNwb25zZUgA",
+            "EjoKDWdldF9wbGF5X21vZGUYCiABKAsyIS5tY3AudW5pdHkudjEuR2V0UGxh",
+            "eU1vZGVSZXNwb25zZUgAEjoKDXNldF9wbGF5X21vZGUYCyABKAsyIS5tY3Au",
+            "dW5pdHkudjEuU2V0UGxheU1vZGVSZXNwb25zZUgAEk4KF2dldF9jb21waWxl",
+            "X2RpYWdub3N0aWNzGAwgASgLMisubWNwLnVuaXR5LnYxLkdldENvbXBpbGVE",
+            "aWFnbm9zdGljc1Jlc3BvbnNlSAASSAoUZ2V0X3Byb2plY3Rfc2V0dGluZ3MY",
+            "DSABKAsyKC5tY3AudW5pdHkudjEuR2V0UHJvamVjdFNldHRpbmdzUmVzcG9u",
+            "c2VIABJIChRzZXRfcHJvamVjdF9zZXR0aW5ncxgOIAEoCzIoLm1jcC51bml0",
+            "eS52MS5TZXRQcm9qZWN0U2V0dGluZ3NSZXNwb25zZUgAEi4KBnNjZW5lcxgP",
+            "IAEoCzIcLm1jcC51bml0eS52MS5TY2VuZXNSZXNwb25zZUgAEi4KBmFzc2V0",
+            "cxgUIAEoCzIcLm1jcC51bml0eS52MS5Bc3NldHNSZXNwb25zZUgAEi4KBnBy",
+            "ZWZhYhgVIAEoCzIcLm1jcC51bml0eS52MS5QcmVmYWJSZXNwb25zZUgAEiwK",
+            "BWJ1aWxkGB4gASgLMhsubWNwLnVuaXR5LnYxLkJ1aWxkUmVzcG9uc2VIABI7",
+            "Cg1vcGVyYXRpb25fZ2V0GCggASgLMiIubWNwLnVuaXR5LnYxLk9wZXJhdGlv",
+            "bkdldFJlc3BvbnNlSAASQQoQb3BlcmF0aW9uX2NhbmNlbBgpIAEoCzIlLm1j",
+            "cC51bml0eS52MS5PcGVyYXRpb25DYW5jZWxSZXNwb25zZUgAEjQKCWNvbXBv",
+            "bmVudBgyIAEoCzIfLm1jcC51bml0eS52MS5Db21wb25lbnRSZXNwb25zZUgA",
+            "QgkKB3BheWxvYWQigQEKCElwY0V2ZW50EhcKD21vbm90b25pY190c19ucxgB",
+            "IAEoAxIlCgNsb2cYCiABKAsyFi5tY3AudW5pdHkudjEuTG9nRXZlbnRIABIq",
+            "CgJvcBgLIAEoCzIcLm1jcC51bml0eS52MS5PcGVyYXRpb25FdmVudEgAQgkK",
+            "B3BheWxvYWRiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Mcp.Unity.V1.CommonReflection.Descriptor, global::Mcp.Unity.V1.EditorControlReflection.Descriptor, global::Mcp.Unity.V1.AssetsReflection.Descriptor, global::Mcp.Unity.V1.PrefabReflection.Descriptor, global::Mcp.Unity.V1.BuildReflection.Descriptor, global::Mcp.Unity.V1.OperationsReflection.Descriptor, global::Mcp.Unity.V1.EventsReflection.Descriptor, global::Mcp.Unity.V1.ComponentReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEnvelope), global::Mcp.Unity.V1.IpcEnvelope.Parser, new[]{ "CorrelationId", "Request", "Response", "Event" }, new[]{ "Kind" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcRequest), global::Mcp.Unity.V1.IpcRequest.Parser, new[]{ "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Scenes", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcResponse), global::Mcp.Unity.V1.IpcResponse.Parser, new[]{ "CorrelationId", "Health", "GetPlayMode", "SetPlayMode", "GetCompileDiagnostics", "GetProjectSettings", "SetProjectSettings", "Scenes", "Assets", "Prefab", "Build", "OperationGet", "OperationCancel", "Component" }, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Mcp.Unity.V1.IpcEvent), global::Mcp.Unity.V1.IpcEvent.Parser, new[]{ "MonotonicTsNs", "Log", "Op" }, new[]{ "Payload" }, null, null, null)
           }));
     }
@@ -531,6 +533,9 @@ namespace Mcp.Unity.V1 {
         case PayloadOneofCase.SetProjectSettings:
           SetProjectSettings = other.SetProjectSettings.Clone();
           break;
+        case PayloadOneofCase.Scenes:
+          Scenes = other.Scenes.Clone();
+          break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
           break;
@@ -638,6 +643,18 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "scenes" field.</summary>
+    public const int ScenesFieldNumber = 15;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ScenesRequest Scenes {
+      get { return payloadCase_ == PayloadOneofCase.Scenes ? (global::Mcp.Unity.V1.ScenesRequest) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Scenes;
+      }
+    }
+
     /// <summary>Field number for the "assets" field.</summary>
     public const int AssetsFieldNumber = 20;
     /// <summary>
@@ -735,6 +752,7 @@ namespace Mcp.Unity.V1 {
       GetCompileDiagnostics = 12,
       GetProjectSettings = 13,
       SetProjectSettings = 14,
+      Scenes = 15,
       Assets = 20,
       Prefab = 21,
       Build = 30,
@@ -777,6 +795,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(GetCompileDiagnostics, other.GetCompileDiagnostics)) return false;
       if (!object.Equals(GetProjectSettings, other.GetProjectSettings)) return false;
       if (!object.Equals(SetProjectSettings, other.SetProjectSettings)) return false;
+      if (!object.Equals(Scenes, other.Scenes)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Prefab, other.Prefab)) return false;
       if (!object.Equals(Build, other.Build)) return false;
@@ -797,6 +816,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) hash ^= GetCompileDiagnostics.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetProjectSettings) hash ^= GetProjectSettings.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) hash ^= SetProjectSettings.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Scenes) hash ^= Scenes.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Prefab) hash ^= Prefab.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
@@ -845,6 +865,10 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) {
         output.WriteRawTag(114);
         output.WriteMessage(SetProjectSettings);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(122);
+        output.WriteMessage(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -904,6 +928,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(114);
         output.WriteMessage(SetProjectSettings);
       }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(122);
+        output.WriteMessage(Scenes);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -955,6 +983,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(SetProjectSettings);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -1022,6 +1053,12 @@ namespace Mcp.Unity.V1 {
             SetProjectSettings = new global::Mcp.Unity.V1.SetProjectSettingsRequest();
           }
           SetProjectSettings.MergeFrom(other.SetProjectSettings);
+          break;
+        case PayloadOneofCase.Scenes:
+          if (Scenes == null) {
+            Scenes = new global::Mcp.Unity.V1.ScenesRequest();
+          }
+          Scenes.MergeFrom(other.Scenes);
           break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
@@ -1132,6 +1169,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             SetProjectSettings = subBuilder;
+            break;
+          }
+          case 122: {
+            global::Mcp.Unity.V1.ScenesRequest subBuilder = new global::Mcp.Unity.V1.ScenesRequest();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
             break;
           }
           case 162: {
@@ -1261,6 +1307,15 @@ namespace Mcp.Unity.V1 {
             SetProjectSettings = subBuilder;
             break;
           }
+          case 122: {
+            global::Mcp.Unity.V1.ScenesRequest subBuilder = new global::Mcp.Unity.V1.ScenesRequest();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
+            break;
+          }
           case 162: {
             global::Mcp.Unity.V1.AssetsRequest subBuilder = new global::Mcp.Unity.V1.AssetsRequest();
             if (payloadCase_ == PayloadOneofCase.Assets) {
@@ -1379,6 +1434,9 @@ namespace Mcp.Unity.V1 {
           break;
         case PayloadOneofCase.SetProjectSettings:
           SetProjectSettings = other.SetProjectSettings.Clone();
+          break;
+        case PayloadOneofCase.Scenes:
+          Scenes = other.Scenes.Clone();
           break;
         case PayloadOneofCase.Assets:
           Assets = other.Assets.Clone();
@@ -1502,6 +1560,18 @@ namespace Mcp.Unity.V1 {
       }
     }
 
+    /// <summary>Field number for the "scenes" field.</summary>
+    public const int ScenesFieldNumber = 15;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Mcp.Unity.V1.ScenesResponse Scenes {
+      get { return payloadCase_ == PayloadOneofCase.Scenes ? (global::Mcp.Unity.V1.ScenesResponse) payload_ : null; }
+      set {
+        payload_ = value;
+        payloadCase_ = value == null ? PayloadOneofCase.None : PayloadOneofCase.Scenes;
+      }
+    }
+
     /// <summary>Field number for the "assets" field.</summary>
     public const int AssetsFieldNumber = 20;
     /// <summary>
@@ -1599,6 +1669,7 @@ namespace Mcp.Unity.V1 {
       GetCompileDiagnostics = 12,
       GetProjectSettings = 13,
       SetProjectSettings = 14,
+      Scenes = 15,
       Assets = 20,
       Prefab = 21,
       Build = 30,
@@ -1642,6 +1713,7 @@ namespace Mcp.Unity.V1 {
       if (!object.Equals(GetCompileDiagnostics, other.GetCompileDiagnostics)) return false;
       if (!object.Equals(GetProjectSettings, other.GetProjectSettings)) return false;
       if (!object.Equals(SetProjectSettings, other.SetProjectSettings)) return false;
+      if (!object.Equals(Scenes, other.Scenes)) return false;
       if (!object.Equals(Assets, other.Assets)) return false;
       if (!object.Equals(Prefab, other.Prefab)) return false;
       if (!object.Equals(Build, other.Build)) return false;
@@ -1663,6 +1735,7 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.GetCompileDiagnostics) hash ^= GetCompileDiagnostics.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.GetProjectSettings) hash ^= GetProjectSettings.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) hash ^= SetProjectSettings.GetHashCode();
+      if (payloadCase_ == PayloadOneofCase.Scenes) hash ^= Scenes.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Assets) hash ^= Assets.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Prefab) hash ^= Prefab.GetHashCode();
       if (payloadCase_ == PayloadOneofCase.Build) hash ^= Build.GetHashCode();
@@ -1715,6 +1788,10 @@ namespace Mcp.Unity.V1 {
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) {
         output.WriteRawTag(114);
         output.WriteMessage(SetProjectSettings);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(122);
+        output.WriteMessage(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
@@ -1778,6 +1855,10 @@ namespace Mcp.Unity.V1 {
         output.WriteRawTag(114);
         output.WriteMessage(SetProjectSettings);
       }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        output.WriteRawTag(122);
+        output.WriteMessage(Scenes);
+      }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         output.WriteRawTag(162, 1);
         output.WriteMessage(Assets);
@@ -1832,6 +1913,9 @@ namespace Mcp.Unity.V1 {
       }
       if (payloadCase_ == PayloadOneofCase.SetProjectSettings) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(SetProjectSettings);
+      }
+      if (payloadCase_ == PayloadOneofCase.Scenes) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Scenes);
       }
       if (payloadCase_ == PayloadOneofCase.Assets) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(Assets);
@@ -1902,6 +1986,12 @@ namespace Mcp.Unity.V1 {
             SetProjectSettings = new global::Mcp.Unity.V1.SetProjectSettingsResponse();
           }
           SetProjectSettings.MergeFrom(other.SetProjectSettings);
+          break;
+        case PayloadOneofCase.Scenes:
+          if (Scenes == null) {
+            Scenes = new global::Mcp.Unity.V1.ScenesResponse();
+          }
+          Scenes.MergeFrom(other.Scenes);
           break;
         case PayloadOneofCase.Assets:
           if (Assets == null) {
@@ -2016,6 +2106,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             SetProjectSettings = subBuilder;
+            break;
+          }
+          case 122: {
+            global::Mcp.Unity.V1.ScenesResponse subBuilder = new global::Mcp.Unity.V1.ScenesResponse();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
             break;
           }
           case 162: {
@@ -2147,6 +2246,15 @@ namespace Mcp.Unity.V1 {
             }
             input.ReadMessage(subBuilder);
             SetProjectSettings = subBuilder;
+            break;
+          }
+          case 122: {
+            global::Mcp.Unity.V1.ScenesResponse subBuilder = new global::Mcp.Unity.V1.ScenesResponse();
+            if (payloadCase_ == PayloadOneofCase.Scenes) {
+              subBuilder.MergeFrom(Scenes);
+            }
+            input.ReadMessage(subBuilder);
+            Scenes = subBuilder;
             break;
           }
           case 162: {

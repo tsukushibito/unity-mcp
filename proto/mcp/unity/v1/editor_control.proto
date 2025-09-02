@@ -12,6 +12,7 @@ service EditorControl {
   // Project settings operations
   rpc GetProjectSettings(GetProjectSettingsRequest) returns (GetProjectSettingsResponse);
   rpc SetProjectSettings(SetProjectSettingsRequest) returns (SetProjectSettingsResponse);
+  rpc Scenes(ScenesRequest) returns (ScenesResponse);
 }
 
 message HealthRequest {}
@@ -88,4 +89,44 @@ message SetProjectSettingsRequest {
 message SetProjectSettingsResponse {
   bool ok = 1;               // Whether the settings were applied
   string error_message = 2;  // Error message if ok is false
+}
+
+// Scene management messages
+message OpenSceneRequest {
+  string path = 1;  // Unity project-relative path e.g., "Assets/Scenes/Main.unity"
+  bool additive = 2; // Load additively if true
+}
+
+message OpenSceneResponse { bool ok = 1; }
+
+message SaveSceneRequest { string path = 1; }
+message SaveSceneResponse { bool ok = 1; }
+
+message GetOpenScenesRequest {}
+message GetOpenScenesResponse {
+  repeated string scenes = 1;      // Currently open scenes (project-relative paths)
+  string active_scene = 2;         // Path of the active scene
+}
+
+message SetActiveSceneRequest { string path = 1; }
+message SetActiveSceneResponse { bool ok = 1; }
+
+message ScenesRequest {
+  oneof payload {
+    OpenSceneRequest open = 1;
+    SaveSceneRequest save = 2;
+    GetOpenScenesRequest get_open = 3;
+    SetActiveSceneRequest set_active = 4;
+  }
+}
+
+message ScenesResponse {
+  int32 status_code = 1; // 0=OK, 2=INVALID_ARGUMENT, 13=INTERNAL
+  string message = 2;
+  oneof payload {
+    OpenSceneResponse open = 10;
+    SaveSceneResponse save = 11;
+    GetOpenScenesResponse get_open = 12;
+    SetActiveSceneResponse set_active = 13;
+  }
 }

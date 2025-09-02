@@ -178,6 +178,95 @@ pub struct SetProjectSettingsResponse {
     #[prost(string, tag = "2")]
     pub error_message: ::prost::alloc::string::String,
 }
+/// Scene management messages
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct OpenSceneRequest {
+    /// Unity project-relative path e.g., "Assets/Scenes/Main.unity"
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
+    /// Load additively if true
+    #[prost(bool, tag = "2")]
+    pub additive: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct OpenSceneResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SaveSceneRequest {
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SaveSceneResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetOpenScenesRequest {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetOpenScenesResponse {
+    /// Currently open scenes (project-relative paths)
+    #[prost(string, repeated, tag = "1")]
+    pub scenes: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Path of the active scene
+    #[prost(string, tag = "2")]
+    pub active_scene: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetActiveSceneRequest {
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetActiveSceneResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ScenesRequest {
+    #[prost(oneof = "scenes_request::Payload", tags = "1, 2, 3, 4")]
+    pub payload: ::core::option::Option<scenes_request::Payload>,
+}
+/// Nested message and enum types in `ScenesRequest`.
+pub mod scenes_request {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "1")]
+        Open(super::OpenSceneRequest),
+        #[prost(message, tag = "2")]
+        Save(super::SaveSceneRequest),
+        #[prost(message, tag = "3")]
+        GetOpen(super::GetOpenScenesRequest),
+        #[prost(message, tag = "4")]
+        SetActive(super::SetActiveSceneRequest),
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ScenesResponse {
+    /// 0=OK, 2=INVALID_ARGUMENT, 13=INTERNAL
+    #[prost(int32, tag = "1")]
+    pub status_code: i32,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(oneof = "scenes_response::Payload", tags = "10, 11, 12, 13")]
+    pub payload: ::core::option::Option<scenes_response::Payload>,
+}
+/// Nested message and enum types in `ScenesResponse`.
+pub mod scenes_response {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "10")]
+        Open(super::OpenSceneResponse),
+        #[prost(message, tag = "11")]
+        Save(super::SaveSceneResponse),
+        #[prost(message, tag = "12")]
+        GetOpen(super::GetOpenScenesResponse),
+        #[prost(message, tag = "13")]
+        SetActive(super::SetActiveSceneResponse),
+    }
+}
 /// Import/Export operations for Unity assets
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ImportAssetRequest {
@@ -823,7 +912,7 @@ pub mod ipc_envelope {
 pub struct IpcRequest {
     #[prost(
         oneof = "ipc_request::Payload",
-        tags = "1, 10, 11, 12, 13, 14, 20, 21, 30, 40, 41, 50"
+        tags = "1, 10, 11, 12, 13, 14, 15, 20, 21, 30, 40, 41, 50"
     )]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
@@ -845,6 +934,8 @@ pub mod ipc_request {
         GetProjectSettings(super::GetProjectSettingsRequest),
         #[prost(message, tag = "14")]
         SetProjectSettings(super::SetProjectSettingsRequest),
+        #[prost(message, tag = "15")]
+        Scenes(super::ScenesRequest),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsRequest),
@@ -872,7 +963,7 @@ pub struct IpcResponse {
     pub correlation_id: ::prost::alloc::string::String,
     #[prost(
         oneof = "ipc_response::Payload",
-        tags = "2, 10, 11, 12, 13, 14, 20, 21, 30, 40, 41, 50"
+        tags = "2, 10, 11, 12, 13, 14, 15, 20, 21, 30, 40, 41, 50"
     )]
     pub payload: ::core::option::Option<ipc_response::Payload>,
 }
@@ -894,6 +985,8 @@ pub mod ipc_response {
         GetProjectSettings(super::GetProjectSettingsResponse),
         #[prost(message, tag = "14")]
         SetProjectSettings(super::SetProjectSettingsResponse),
+        #[prost(message, tag = "15")]
+        Scenes(super::ScenesResponse),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsResponse),

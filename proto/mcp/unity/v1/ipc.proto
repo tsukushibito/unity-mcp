@@ -36,6 +36,7 @@ message IpcRequest {
     GetCompileDiagnosticsRequest get_compile_diagnostics = 12;
     GetProjectSettingsRequest get_project_settings = 13;
     SetProjectSettingsRequest set_project_settings = 14;
+    ScenesRequest scenes = 15;
     
     // Assets
     AssetsRequest assets = 20;
@@ -68,6 +69,7 @@ message IpcResponse {
     GetCompileDiagnosticsResponse get_compile_diagnostics = 12;
     GetProjectSettingsResponse get_project_settings = 13;
     SetProjectSettingsResponse set_project_settings = 14;
+    ScenesResponse scenes = 15;
     
     // Assets
     AssetsResponse assets = 20;

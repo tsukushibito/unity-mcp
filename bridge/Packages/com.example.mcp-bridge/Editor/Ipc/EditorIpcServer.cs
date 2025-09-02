@@ -381,6 +381,10 @@ namespace Mcp.Unity.V1.Ipc
                         await HandlePrefabRequest(stream, correlationId, request.Prefab);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.Scenes:
+                        await HandleScenesRequest(stream, correlationId, request.Scenes);
+                        break;
+
                     case IpcRequest.PayloadOneofCase.Build:
                         await HandleBuildRequest(stream, correlationId, request.Build);
                         break;
@@ -552,6 +556,40 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent component response: status={compResponse.StatusCode}");
+        }
+
+        /// <summary>
+        /// Handle Scenes request
+        /// </summary>
+        private static async Task HandleScenesRequest(Stream stream, string correlationId, Pb.ScenesRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing scenes request: {request.PayloadCase}");
+
+            var scenesResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                Bridge.Editor.Ipc.FeatureGuard features;
+                lock (_streamLock)
+                {
+                    _negotiatedFeatures.TryGetValue(stream, out features);
+                }
+
+                if (features == null)
+                {
+                    throw new InvalidOperationException("No negotiated features found for connection");
+                }
+
+                return SceneHandler.Handle(request, features);
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                Scenes = scenesResponse
+            };
+
+            await SendResponseAsync(stream, response);
+            Debug.Log($"[EditorIpcServer] Sent scenes response: status={scenesResponse.StatusCode}");
         }
 
         /// <summary>
@@ -774,7 +812,7 @@ namespace Mcp.Unity.V1.Ipc
         public static void ReloadConfiguration()
         {
             if (!Application.isEditor) return;
-            
+
             EditorDispatcher.RunOnMainAsync(() =>
             {
                 _cachedToken = LoadTokenFromPrefs();
@@ -961,7 +999,7 @@ namespace Mcp.Unity.V1.Ipc
             return ValidationResult.Success();
         }
 
-        
+
 
         /// <summary>
         /// Get configured authentication token

@@ -401,6 +401,35 @@ impl IpcClient {
         }
     }
 
+    pub async fn scenes_open(
+        &self,
+        path: String,
+        additive: bool,
+        timeout: Duration,
+    ) -> Result<pb::OpenSceneResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Scenes(pb::ScenesRequest {
+                payload: Some(pb::scenes_request::Payload::Open(pb::OpenSceneRequest {
+                    path,
+                    additive,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Scenes(pb::ScenesResponse {
+                status_code: 0,
+                payload: Some(pb::scenes_response::Payload::Open(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Scenes(res)) => Err(IpcError::Handshake(format!(
+                "scene open failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
     pub async fn prefab_create(
         &self,
         game_object_path: String,
@@ -439,6 +468,33 @@ impl IpcClient {
         }
     }
 
+    pub async fn scenes_save(
+        &self,
+        path: String,
+        timeout: Duration,
+    ) -> Result<pb::SaveSceneResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Scenes(pb::ScenesRequest {
+                payload: Some(pb::scenes_request::Payload::Save(pb::SaveSceneRequest {
+                    path,
+                })),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Scenes(pb::ScenesResponse {
+                status_code: 0,
+                payload: Some(pb::scenes_response::Payload::Save(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Scenes(res)) => Err(IpcError::Handshake(format!(
+                "scene save failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
     pub async fn component_get(
         &self,
         game_object: String,
@@ -460,6 +516,32 @@ impl IpcClient {
             })) => Ok(r),
             Some(pb::ipc_response::Payload::Component(res)) => Err(IpcError::Handshake(format!(
                 "component get failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn scenes_get_open_scenes(
+        &self,
+        timeout: Duration,
+    ) -> Result<pb::GetOpenScenesResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Scenes(pb::ScenesRequest {
+                payload: Some(pb::scenes_request::Payload::GetOpen(
+                    pb::GetOpenScenesRequest {},
+                )),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Scenes(pb::ScenesResponse {
+                status_code: 0,
+                payload: Some(pb::scenes_response::Payload::GetOpen(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Scenes(res)) => Err(IpcError::Handshake(format!(
+                "scene get_open_scenes failed: {}",
                 res.message
             ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
@@ -491,6 +573,33 @@ impl IpcClient {
             })) => Ok(r),
             Some(pb::ipc_response::Payload::Component(res)) => Err(IpcError::Handshake(format!(
                 "component remove failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn scenes_set_active_scene(
+        &self,
+        path: String,
+        timeout: Duration,
+    ) -> Result<pb::SetActiveSceneResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Scenes(pb::ScenesRequest {
+                payload: Some(pb::scenes_request::Payload::SetActive(
+                    pb::SetActiveSceneRequest { path },
+                )),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Scenes(pb::ScenesResponse {
+                status_code: 0,
+                payload: Some(pb::scenes_response::Payload::SetActive(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Scenes(res)) => Err(IpcError::Handshake(format!(
+                "scene set_active failed: {}",
                 res.message
             ))),
             _ => Err(IpcError::Handshake("unexpected response".into())),
