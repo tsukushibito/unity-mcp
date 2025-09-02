@@ -527,6 +527,7 @@ async fn test_supported_by_client() -> anyhow::Result<()> {
     assert!(client_features.contains(&FeatureFlag::BuildMin));
     assert!(client_features.contains(&FeatureFlag::EventsLog));
     assert!(client_features.contains(&FeatureFlag::OpsProgress));
+    assert!(client_features.contains(&FeatureFlag::ComponentsBasic));
     assert!(!client_features.contains(&FeatureFlag::AssetsAdvanced));
 
     Ok(())
