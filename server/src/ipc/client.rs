@@ -157,6 +157,40 @@ impl IpcClient {
         self.inner.negotiated_features.lock().await.clone()
     }
 
+    pub async fn execute_menu_item(
+        &self,
+        path: String,
+        timeout: Duration,
+    ) -> Result<pb::ExecuteMenuItemResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::ExecuteMenuItem(
+                pb::ExecuteMenuItemRequest { path },
+            )),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::ExecuteMenuItem(r)) => Ok(r),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn focus_window(
+        &self,
+        window_type: String,
+        timeout: Duration,
+    ) -> Result<pb::FocusWindowResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::FocusWindow(
+                pb::FocusWindowRequest { window_type },
+            )),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::FocusWindow(r)) => Ok(r),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
     pub async fn assets_import(
         &self,
         paths: Vec<String>,

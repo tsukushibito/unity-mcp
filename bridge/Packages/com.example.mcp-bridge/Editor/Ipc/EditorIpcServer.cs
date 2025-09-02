@@ -365,6 +365,14 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleGetCompileDiagnosticsRequest(stream, correlationId, request.GetCompileDiagnostics);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.ExecuteMenuItem:
+                        await HandleExecuteMenuItemRequest(stream, correlationId, request.ExecuteMenuItem);
+                        break;
+
+                    case IpcRequest.PayloadOneofCase.FocusWindow:
+                        await HandleFocusWindowRequest(stream, correlationId, request.FocusWindow);
+                        break;
+
                     case IpcRequest.PayloadOneofCase.Assets:
                         await HandleAssetsRequest(stream, correlationId, request.Assets);
                         break;
@@ -423,6 +431,62 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent diagnostics response: success={diagnosticsResponse.Success}, diagnostics_count={diagnosticsResponse.Diagnostics.Count}");
+        }
+
+        /// <summary>
+        /// Handle ExecuteMenuItem request
+        /// </summary>
+        private static async Task HandleExecuteMenuItemRequest(Stream stream, string correlationId, ExecuteMenuItemRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing execute menu item request: {request.Path}");
+
+            var menuResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                bool ok = EditorApplication.ExecuteMenuItem(request.Path);
+                return new ExecuteMenuItemResponse
+                {
+                    Ok = ok,
+                    Message = ok ? string.Empty : "Menu item failed or not found"
+                };
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                ExecuteMenuItem = menuResponse
+            };
+
+            await SendResponseAsync(stream, response);
+        }
+
+        /// <summary>
+        /// Handle FocusWindow request
+        /// </summary>
+        private static async Task HandleFocusWindowRequest(Stream stream, string correlationId, FocusWindowRequest request)
+        {
+            Debug.Log($"[EditorIpcServer] Processing focus window request: {request.WindowType}");
+
+            var focusResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                var type = System.Type.GetType(request.WindowType);
+                bool ok = false;
+                if (type != null)
+                {
+                    EditorWindow.FocusWindowIfItsOpen(type);
+                    ok = true;
+                }
+                return new FocusWindowResponse { Ok = ok };
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                FocusWindow = focusResponse
+            };
+
+            await SendResponseAsync(stream, response);
         }
 
         /// <summary>

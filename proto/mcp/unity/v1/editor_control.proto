@@ -9,6 +9,8 @@ service EditorControl {
   rpc GetPlayMode(Empty) returns (GetPlayModeResponse);
   rpc SetPlayMode(SetPlayModeRequest) returns (SetPlayModeResponse);
   rpc GetCompileDiagnostics(GetCompileDiagnosticsRequest) returns (GetCompileDiagnosticsResponse);
+  rpc ExecuteMenuItem(ExecuteMenuItemRequest) returns (ExecuteMenuItemResponse);
+  rpc FocusWindow(FocusWindowRequest) returns (FocusWindowResponse);
 }
 
 message HealthRequest {}
@@ -65,4 +67,23 @@ message GetCompileDiagnosticsResponse {
   DiagnosticSummary summary = 4; // Summary statistics
   repeated CompileDiagnostic diagnostics = 5; // List of diagnostics
   bool truncated = 6;          // Whether results were truncated due to max_items
+}
+
+// Editor menu execution
+message ExecuteMenuItemRequest {
+  string path = 1; // e.g., "File/New Scene"
+}
+
+message ExecuteMenuItemResponse {
+  bool ok = 1;         // True if the menu item was executed
+  string message = 2;  // Optional error message
+}
+
+// Editor window focus
+message FocusWindowRequest {
+  string window_type = 1; // Fully qualified type name, e.g., "UnityEditor.SceneView"
+}
+
+message FocusWindowResponse {
+  bool ok = 1; // True if the window was focused
 }

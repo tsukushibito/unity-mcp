@@ -1,6 +1,7 @@
 pub mod assets;
 pub mod build;
 pub mod diagnostics;
+pub mod editor;
 pub mod health;
 pub mod status;
 pub mod tests;
@@ -118,6 +119,24 @@ impl McpService {
     ) -> Result<CallToolResult, McpError> {
         self.do_unity_get_test_results_ipc(req).await
     }
+
+    #[tool(description = "Execute a Unity Editor menu item via Direct IPC")]
+    pub async fn unity_execute_menu_item(
+        &self,
+        Parameters(req): Parameters<UnityExecuteMenuItemRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_execute_menu_item(req.path, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Focus a Unity Editor window via Direct IPC")]
+    pub async fn unity_focus_window(
+        &self,
+        Parameters(req): Parameters<UnityFocusWindowRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_focus_window(req.window_type, req.timeout_secs)
+            .await
+    }
 }
 
 // Helper to expose router across modules while the generated
@@ -166,6 +185,18 @@ pub struct UnityAssetsPathToGuidRequest {
     pub timeout_secs: Option<u64>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityExecuteMenuItemRequest {
+    pub path: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityFocusWindowRequest {
+    pub window_type: String,
+    pub timeout_secs: Option<u64>,
+}
+
 #[cfg(test)]
 mod tool_tests {
     use super::*;
@@ -184,5 +215,7 @@ mod tool_tests {
         assert!(router.has_route("unity_get_compile_diagnostics"));
         assert!(router.has_route("unity_run_tests"));
         assert!(router.has_route("unity_get_test_results"));
+        assert!(router.has_route("unity_execute_menu_item"));
+        assert!(router.has_route("unity_focus_window"));
     }
 }

@@ -138,6 +138,35 @@ pub struct GetCompileDiagnosticsResponse {
     #[prost(bool, tag = "6")]
     pub truncated: bool,
 }
+/// Editor menu execution
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ExecuteMenuItemRequest {
+    /// e.g., "File/New Scene"
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ExecuteMenuItemResponse {
+    /// True if the menu item was executed
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    /// Optional error message
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+}
+/// Editor window focus
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct FocusWindowRequest {
+    /// Fully qualified type name, e.g., "UnityEditor.SceneView"
+    #[prost(string, tag = "1")]
+    pub window_type: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct FocusWindowResponse {
+    /// True if the window was focused
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+}
 /// Import/Export operations for Unity assets
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ImportAssetRequest {
@@ -614,7 +643,10 @@ pub mod ipc_envelope {
 /// Request message with typed payloads
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcRequest {
-    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(
+        oneof = "ipc_request::Payload",
+        tags = "1, 10, 11, 12, 13, 14, 20, 30, 40, 41"
+    )]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
 /// Nested message and enum types in `IpcRequest`.
@@ -631,6 +663,10 @@ pub mod ipc_request {
         SetPlayMode(super::SetPlayModeRequest),
         #[prost(message, tag = "12")]
         GetCompileDiagnostics(super::GetCompileDiagnosticsRequest),
+        #[prost(message, tag = "13")]
+        ExecuteMenuItem(super::ExecuteMenuItemRequest),
+        #[prost(message, tag = "14")]
+        FocusWindow(super::FocusWindowRequest),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsRequest),
@@ -650,7 +686,10 @@ pub struct IpcResponse {
     /// Matches the request correlation_id
     #[prost(string, tag = "1")]
     pub correlation_id: ::prost::alloc::string::String,
-    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(
+        oneof = "ipc_response::Payload",
+        tags = "2, 10, 11, 12, 13, 14, 20, 30, 40, 41"
+    )]
     pub payload: ::core::option::Option<ipc_response::Payload>,
 }
 /// Nested message and enum types in `IpcResponse`.
@@ -667,6 +706,10 @@ pub mod ipc_response {
         SetPlayMode(super::SetPlayModeResponse),
         #[prost(message, tag = "12")]
         GetCompileDiagnostics(super::GetCompileDiagnosticsResponse),
+        #[prost(message, tag = "13")]
+        ExecuteMenuItem(super::ExecuteMenuItemResponse),
+        #[prost(message, tag = "14")]
+        FocusWindow(super::FocusWindowResponse),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsResponse),
