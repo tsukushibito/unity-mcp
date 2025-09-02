@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Google.Protobuf;
@@ -470,7 +471,10 @@ namespace Mcp.Unity.V1.Ipc
             var focusResponse = await EditorDispatcher.RunOnMainAsync(() =>
             {
                 MainThreadGuard.AssertMainThread();
-                var type = System.Type.GetType(request.WindowType);
+                var type = AppDomain.CurrentDomain
+                    .GetAssemblies()
+                    .Select(asm => asm.GetType(request.WindowType))
+                    .FirstOrDefault(t => t != null);
                 bool ok = false;
                 if (type != null)
                 {
