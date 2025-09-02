@@ -39,6 +39,7 @@ namespace Bridge.Editor.Ipc
             features.Add(FeatureFlag.AssetsBasic);
             features.Add(FeatureFlag.EventsLog);
             features.Add(FeatureFlag.OpsProgress);
+            features.Add(FeatureFlag.ComponentsBasic);
             
             // Conditionally enabled features (using cached value)
             if (_isBuildSystemAvailable)

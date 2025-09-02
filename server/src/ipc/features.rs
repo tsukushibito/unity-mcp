@@ -15,6 +15,9 @@ pub enum FeatureFlag {
     // Operations
     OpsProgress, // "ops.progress" - generic progress events for long-running operations
 
+    // Components
+    ComponentsBasic, // "components.basic" - add/get/remove components
+
     // Future extensions
     AssetsAdvanced, // "assets.advanced" - asset streaming, dependencies
     BuildFull,      // "build.full" - full build pipeline with addressables
@@ -31,6 +34,7 @@ impl FeatureFlag {
             "build.min" => Self::BuildMin,
             "events.log" => Self::EventsLog,
             "ops.progress" => Self::OpsProgress,
+            "components.basic" => Self::ComponentsBasic,
             "assets.advanced" => Self::AssetsAdvanced,
             "build.full" => Self::BuildFull,
             "events.full" => Self::EventsFull,
@@ -44,6 +48,7 @@ impl FeatureFlag {
             Self::BuildMin,
             Self::EventsLog,
             Self::OpsProgress,
+            Self::ComponentsBasic,
         ]
     }
 
@@ -60,6 +65,7 @@ impl fmt::Display for FeatureFlag {
             Self::BuildMin => "build.min",
             Self::EventsLog => "events.log",
             Self::OpsProgress => "ops.progress",
+            Self::ComponentsBasic => "components.basic",
             Self::AssetsAdvanced => "assets.advanced",
             Self::BuildFull => "build.full",
             Self::EventsFull => "events.full",
@@ -142,6 +148,10 @@ mod tests {
             FeatureFlag::from_string("ops.progress"),
             FeatureFlag::OpsProgress
         );
+        assert_eq!(
+            FeatureFlag::from_string("components.basic"),
+            FeatureFlag::ComponentsBasic
+        );
 
         match FeatureFlag::from_string("unknown.feature") {
             FeatureFlag::Unknown(s) => assert_eq!(s, "unknown.feature"),
@@ -155,6 +165,7 @@ mod tests {
         assert_eq!(FeatureFlag::BuildMin.to_string(), "build.min");
         assert_eq!(FeatureFlag::EventsLog.to_string(), "events.log");
         assert_eq!(FeatureFlag::OpsProgress.to_string(), "ops.progress");
+        assert_eq!(FeatureFlag::ComponentsBasic.to_string(), "components.basic");
     }
 
     #[test]

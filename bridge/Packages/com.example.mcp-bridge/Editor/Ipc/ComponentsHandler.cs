@@ -37,6 +37,7 @@ namespace Mcp.Unity.V1.Ipc
 
         public static Pb.ComponentResponse Handle(Pb.ComponentRequest req, Bridge.Editor.Ipc.FeatureGuard features)
         {
+            features.RequireFeature(Bridge.Editor.Ipc.FeatureFlag.ComponentsBasic);
             switch (req.PayloadCase)
             {
                 case Pb.ComponentRequest.PayloadOneofCase.Add:
