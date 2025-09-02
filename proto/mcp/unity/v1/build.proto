@@ -75,7 +75,12 @@ message BuildResponse {
 
 // Build service definition
 service Build {
+  // Build a Unity Player for the specified platform
   rpc BuildPlayer(BuildPlayerRequest) returns (BuildPlayerResponse);
+
+  // Build Unity AssetBundles for the current target
   rpc BuildAssetBundles(BuildAssetBundlesRequest) returns (BuildAssetBundlesResponse);
+
+  // Generic build wrapper that accepts either player or bundles requests
   rpc Build(BuildRequest) returns (BuildResponse);
 }

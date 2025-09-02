@@ -1,5 +1,8 @@
-use crate::{generated::mcp::unity::v1 as pb, ipc::client::IpcClient};
+use crate::{generated::mcp::unity::v1 as pb, ipc::client::IpcClient, mcp::service::McpService};
 use anyhow::Result;
+use rmcp::{ErrorData as McpError, model::CallToolResult, model::Content};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 
 pub struct BuildTool {
@@ -237,5 +240,131 @@ impl BuildTool {
             HashMap::new(),
         )
         .await
+    }
+}
+
+const DEFAULT_BUILD_TIMEOUT_SECS: u64 = 1800;
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityBuildPlayerRequest {
+    pub platform: String,
+    #[serde(rename = "outputPath")]
+    pub output_path: String,
+    pub scenes: Option<Vec<String>>,
+    pub development: Option<bool>,
+    #[serde(rename = "timeoutSecs")]
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityBuildAssetBundlesRequest {
+    #[serde(rename = "outputDirectory")]
+    pub output_directory: String,
+    pub deterministic: Option<bool>,
+    #[serde(rename = "chunkBased")]
+    pub chunk_based: Option<bool>,
+    #[serde(rename = "forceRebuild")]
+    pub force_rebuild: Option<bool>,
+    #[serde(rename = "timeoutSecs")]
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BuildPlayerOutput {
+    #[serde(rename = "statusCode")]
+    pub status_code: i32,
+    pub message: String,
+    #[serde(rename = "outputPath")]
+    pub output_path: String,
+    #[serde(rename = "buildTimeMs")]
+    pub build_time_ms: u64,
+    #[serde(rename = "sizeBytes")]
+    pub size_bytes: u64,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BuildAssetBundlesOutput {
+    #[serde(rename = "statusCode")]
+    pub status_code: i32,
+    pub message: String,
+    #[serde(rename = "outputDirectory")]
+    pub output_directory: String,
+    #[serde(rename = "buildTimeMs")]
+    pub build_time_ms: u64,
+}
+
+impl McpService {
+    pub(super) async fn do_unity_build_player(
+        &self,
+        req: UnityBuildPlayerRequest,
+    ) -> Result<CallToolResult, McpError> {
+        let timeout = Duration::from_secs(req.timeout_secs.unwrap_or(DEFAULT_BUILD_TIMEOUT_SECS));
+        let ipc = self.require_ipc().await?;
+
+        let platform = pb::BuildPlatform::from_str_name(&req.platform).ok_or_else(|| {
+            McpError::invalid_params(format!("invalid platform: {}", req.platform), None)
+        })?;
+
+        let pb_req = pb::BuildPlayerRequest {
+            platform: platform as i32,
+            output_path: req.output_path,
+            scenes: req.scenes.unwrap_or_default(),
+            variants: Some(if req.development.unwrap_or(false) {
+                BuildTool::development_variants()
+            } else {
+                BuildTool::release_variants()
+            }),
+            define_symbols: HashMap::new(),
+        };
+
+        let resp = ipc.build_player(pb_req, timeout).await.map_err(|e| {
+            McpError::internal_error(format!("Build player IPC error: {}", e), None)
+        })?;
+
+        let output = BuildPlayerOutput {
+            status_code: resp.status_code,
+            message: resp.message,
+            output_path: resp.output_path,
+            build_time_ms: resp.build_time_ms,
+            size_bytes: resp.size_bytes,
+            warnings: resp.warnings,
+        };
+
+        let content = serde_json::to_string(&output)
+            .map_err(|e| McpError::internal_error(format!("Serialization error: {}", e), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(content)]))
+    }
+
+    pub(super) async fn do_unity_build_asset_bundles(
+        &self,
+        req: UnityBuildAssetBundlesRequest,
+    ) -> Result<CallToolResult, McpError> {
+        let timeout = Duration::from_secs(req.timeout_secs.unwrap_or(DEFAULT_BUILD_TIMEOUT_SECS));
+        let ipc = self.require_ipc().await?;
+
+        let pb_req = pb::BuildAssetBundlesRequest {
+            output_directory: req.output_directory,
+            deterministic: req.deterministic.unwrap_or(true),
+            chunk_based: req.chunk_based.unwrap_or(false),
+            force_rebuild: req.force_rebuild.unwrap_or(false),
+        };
+
+        let resp = ipc.build_bundles(pb_req, timeout).await.map_err(|e| {
+            McpError::internal_error(format!("Build bundles IPC error: {}", e), None)
+        })?;
+
+        let output = BuildAssetBundlesOutput {
+            status_code: resp.status_code,
+            message: resp.message,
+            output_directory: resp.output_directory,
+            build_time_ms: resp.build_time_ms,
+        };
+
+        let content = serde_json::to_string(&output)
+            .map_err(|e| McpError::internal_error(format!("Serialization error: {}", e), None))?;
+
+        Ok(CallToolResult::success(vec![Content::text(content)]))
     }
 }

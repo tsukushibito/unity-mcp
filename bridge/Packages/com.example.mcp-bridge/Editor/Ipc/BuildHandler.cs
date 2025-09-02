@@ -78,11 +78,18 @@ namespace Mcp.Unity.V1.Ipc
                 if (EditorUserBuildSettings.activeBuildTarget != target)
                 {
                     if (!EditorUserBuildSettings.SwitchActiveBuildTarget(group, target))
-                        return new Pb.BuildPlayerResponse { 
-                            StatusCode = 9, 
-                            Message = $"failed to switch build target to {target}" 
+                        return new Pb.BuildPlayerResponse {
+                            StatusCode = 9,
+                            Message = $"failed to switch build target to {target}"
                         };
                 }
+
+                // 4.5. Variant-specific settings
+                // TODO(UNITY_API): touches PlayerSettings/EditorUserBuildSettings — must run on main via EditorDispatcher
+                if (r.Variants?.Il2Cpp == true)
+                    PlayerSettings.SetScriptingBackend(group, ScriptingImplementation.IL2CPP);
+                if (r.Variants?.StripSymbols == true)
+                    EditorUserBuildSettings.stripEngineCode = true;
 
                 // 5. Build options setup
                 var buildOptions = BuildOptions.None;
