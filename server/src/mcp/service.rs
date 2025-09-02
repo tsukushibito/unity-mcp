@@ -1,4 +1,5 @@
 use crate::ipc::{client::IpcClient, path::IpcConfig};
+pub use crate::mcp::tools::build::{UnityBuildAssetBundlesRequest, UnityBuildPlayerRequest};
 use rmcp::{
     ServerHandler, ServiceExt, handler::server::tool::ToolRouter, model::*, tool_handler,
     transport::stdio,

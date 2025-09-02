@@ -7,6 +7,7 @@ pub mod status;
 pub mod tests;
 
 use crate::mcp::service::McpService;
+use crate::mcp::tools::build::{UnityBuildAssetBundlesRequest, UnityBuildPlayerRequest};
 use crate::mcp::tools::diagnostics::UnityGetCompileDiagnosticsRequest;
 use crate::mcp::tools::tests::{UnityGetTestResultsRequest, UnityRunTestsRequest};
 use rmcp::{
@@ -80,6 +81,22 @@ impl McpService {
     ) -> Result<CallToolResult, McpError> {
         self.do_unity_assets_path_to_guid(req.paths, req.timeout_secs)
             .await
+    }
+
+    #[tool(description = "Build Unity player via Direct IPC")]
+    pub async fn unity_build_player(
+        &self,
+        Parameters(req): Parameters<UnityBuildPlayerRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_build_player(req).await
+    }
+
+    #[tool(description = "Build Unity AssetBundles via Direct IPC")]
+    pub async fn unity_build_asset_bundles(
+        &self,
+        Parameters(req): Parameters<UnityBuildAssetBundlesRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_build_asset_bundles(req).await
     }
 
     #[tool(description = "Get Unity C# compile diagnostics (errors, warnings, info)")]
@@ -212,6 +229,8 @@ mod tool_tests {
         assert!(router.has_route("unity_assets_refresh"));
         assert!(router.has_route("unity_assets_guid_to_path"));
         assert!(router.has_route("unity_assets_path_to_guid"));
+        assert!(router.has_route("unity_build_player"));
+        assert!(router.has_route("unity_build_asset_bundles"));
         assert!(router.has_route("unity_get_compile_diagnostics"));
         assert!(router.has_route("unity_run_tests"));
         assert!(router.has_route("unity_get_test_results"));
