@@ -2,6 +2,7 @@ pub mod assets;
 pub mod build;
 pub mod diagnostics;
 pub mod health;
+pub mod prefab;
 pub mod status;
 pub mod tests;
 
@@ -78,6 +79,33 @@ impl McpService {
         Parameters(req): Parameters<UnityAssetsPathToGuidRequest>,
     ) -> Result<CallToolResult, McpError> {
         self.do_unity_assets_path_to_guid(req.paths, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Create Unity prefab via Direct IPC")]
+    pub async fn unity_prefab_create(
+        &self,
+        Parameters(req): Parameters<UnityPrefabCreateRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_prefab_create(req.game_object_path, req.prefab_path, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Update Unity prefab via Direct IPC")]
+    pub async fn unity_prefab_update(
+        &self,
+        Parameters(req): Parameters<UnityPrefabUpdateRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_prefab_update(req.game_object_path, req.prefab_path, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Apply overrides to Unity prefab instance via Direct IPC")]
+    pub async fn unity_prefab_apply_overrides(
+        &self,
+        Parameters(req): Parameters<UnityPrefabApplyOverridesRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_prefab_apply_overrides(req.instance_path, req.timeout_secs)
             .await
     }
 
@@ -166,6 +194,26 @@ pub struct UnityAssetsPathToGuidRequest {
     pub timeout_secs: Option<u64>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityPrefabCreateRequest {
+    pub game_object_path: String,
+    pub prefab_path: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityPrefabUpdateRequest {
+    pub game_object_path: String,
+    pub prefab_path: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityPrefabApplyOverridesRequest {
+    pub instance_path: String,
+    pub timeout_secs: Option<u64>,
+}
+
 #[cfg(test)]
 mod tool_tests {
     use super::*;
@@ -184,5 +232,8 @@ mod tool_tests {
         assert!(router.has_route("unity_get_compile_diagnostics"));
         assert!(router.has_route("unity_run_tests"));
         assert!(router.has_route("unity_get_test_results"));
+        assert!(router.has_route("unity_prefab_create"));
+        assert!(router.has_route("unity_prefab_update"));
+        assert!(router.has_route("unity_prefab_apply_overrides"));
     }
 }

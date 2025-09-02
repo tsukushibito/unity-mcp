@@ -281,6 +281,95 @@ pub mod assets_response {
         P2g(super::PathToGuidResponse),
     }
 }
+/// Prefab operations for Unity
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CreatePrefabRequest {
+    /// Name or path of GameObject in scene
+    #[prost(string, tag = "1")]
+    pub game_object_path: ::prost::alloc::string::String,
+    /// Asset path for the prefab
+    #[prost(string, tag = "2")]
+    pub prefab_path: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CreatePrefabResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    #[prost(string, tag = "2")]
+    pub guid: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub message: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdatePrefabRequest {
+    /// Name or path of GameObject in scene
+    #[prost(string, tag = "1")]
+    pub game_object_path: ::prost::alloc::string::String,
+    /// Existing prefab asset path
+    #[prost(string, tag = "2")]
+    pub prefab_path: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdatePrefabResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ApplyPrefabOverridesRequest {
+    /// Name or path of instantiated prefab
+    #[prost(string, tag = "1")]
+    pub instance_path: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ApplyPrefabOverridesResponse {
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+}
+/// Unified request for prefab operations
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PrefabRequest {
+    #[prost(oneof = "prefab_request::Payload", tags = "1, 2, 3")]
+    pub payload: ::core::option::Option<prefab_request::Payload>,
+}
+/// Nested message and enum types in `PrefabRequest`.
+pub mod prefab_request {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "1")]
+        Create(super::CreatePrefabRequest),
+        #[prost(message, tag = "2")]
+        Update(super::UpdatePrefabRequest),
+        #[prost(message, tag = "3")]
+        ApplyOverrides(super::ApplyPrefabOverridesRequest),
+    }
+}
+/// Unified response for prefab operations
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PrefabResponse {
+    /// 0=OK, others follow canonical gRPC codes
+    #[prost(int32, tag = "1")]
+    pub status_code: i32,
+    #[prost(string, tag = "2")]
+    pub message: ::prost::alloc::string::String,
+    #[prost(oneof = "prefab_response::Payload", tags = "10, 11, 12")]
+    pub payload: ::core::option::Option<prefab_response::Payload>,
+}
+/// Nested message and enum types in `PrefabResponse`.
+pub mod prefab_response {
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Payload {
+        #[prost(message, tag = "10")]
+        Create(super::CreatePrefabResponse),
+        #[prost(message, tag = "11")]
+        Update(super::UpdatePrefabResponse),
+        #[prost(message, tag = "12")]
+        ApplyOverrides(super::ApplyPrefabOverridesResponse),
+    }
+}
 /// Architecture or variant knobs (optional where relevant)
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct BuildVariants {
@@ -614,7 +703,7 @@ pub mod ipc_envelope {
 /// Request message with typed payloads
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcRequest {
-    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 12, 20, 21, 30, 40, 41")]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
 /// Nested message and enum types in `IpcRequest`.
@@ -634,6 +723,9 @@ pub mod ipc_request {
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsRequest),
+        /// Prefab
+        #[prost(message, tag = "21")]
+        Prefab(super::PrefabRequest),
         /// Build
         #[prost(message, tag = "30")]
         Build(super::BuildRequest),
@@ -650,7 +742,7 @@ pub struct IpcResponse {
     /// Matches the request correlation_id
     #[prost(string, tag = "1")]
     pub correlation_id: ::prost::alloc::string::String,
-    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 12, 20, 21, 30, 40, 41")]
     pub payload: ::core::option::Option<ipc_response::Payload>,
 }
 /// Nested message and enum types in `IpcResponse`.
@@ -670,6 +762,9 @@ pub mod ipc_response {
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsResponse),
+        /// Prefab
+        #[prost(message, tag = "21")]
+        Prefab(super::PrefabResponse),
         /// Build
         #[prost(message, tag = "30")]
         Build(super::BuildResponse),

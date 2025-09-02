@@ -4,7 +4,8 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum FeatureFlag {
     // Asset management
-    AssetsBasic, // "assets.basic" - path↔guid, import, refresh
+    AssetsBasic,  // "assets.basic" - path↔guid, import, refresh
+    PrefabsBasic, // "prefabs.basic" - prefab create/update/overrides
 
     // Build system
     BuildMin, // "build.min" - minimal player build with operation events
@@ -28,6 +29,7 @@ impl FeatureFlag {
     pub fn from_string(s: &str) -> Self {
         match s {
             "assets.basic" => Self::AssetsBasic,
+            "prefabs.basic" => Self::PrefabsBasic,
             "build.min" => Self::BuildMin,
             "events.log" => Self::EventsLog,
             "ops.progress" => Self::OpsProgress,
@@ -41,6 +43,7 @@ impl FeatureFlag {
     pub fn is_supported_by_client() -> Vec<Self> {
         vec![
             Self::AssetsBasic,
+            Self::PrefabsBasic,
             Self::BuildMin,
             Self::EventsLog,
             Self::OpsProgress,
@@ -57,6 +60,7 @@ impl fmt::Display for FeatureFlag {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             Self::AssetsBasic => "assets.basic",
+            Self::PrefabsBasic => "prefabs.basic",
             Self::BuildMin => "build.min",
             Self::EventsLog => "events.log",
             Self::OpsProgress => "ops.progress",
@@ -133,6 +137,10 @@ mod tests {
             FeatureFlag::from_string("assets.basic"),
             FeatureFlag::AssetsBasic
         );
+        assert_eq!(
+            FeatureFlag::from_string("prefabs.basic"),
+            FeatureFlag::PrefabsBasic
+        );
         assert_eq!(FeatureFlag::from_string("build.min"), FeatureFlag::BuildMin);
         assert_eq!(
             FeatureFlag::from_string("events.log"),
@@ -152,6 +160,7 @@ mod tests {
     #[test]
     fn test_feature_flag_to_string() {
         assert_eq!(FeatureFlag::AssetsBasic.to_string(), "assets.basic");
+        assert_eq!(FeatureFlag::PrefabsBasic.to_string(), "prefabs.basic");
         assert_eq!(FeatureFlag::BuildMin.to_string(), "build.min");
         assert_eq!(FeatureFlag::EventsLog.to_string(), "events.log");
         assert_eq!(FeatureFlag::OpsProgress.to_string(), "ops.progress");
@@ -168,7 +177,11 @@ mod tests {
 
     #[test]
     fn test_feature_set_from_strings() {
-        let client_features = vec!["assets.basic".to_string(), "unknown.feature".to_string()];
+        let client_features = vec![
+            "assets.basic".to_string(),
+            "prefabs.basic".to_string(),
+            "unknown.feature".to_string(),
+        ];
         let feature_set = FeatureSet::from_strings(&client_features);
 
         // Unknown features should be filtered out during negotiation
@@ -178,22 +191,26 @@ mod tests {
                 .contains(&"unknown.feature".to_string())
         );
         assert!(feature_set.contains(&FeatureFlag::AssetsBasic));
+        assert!(feature_set.contains(&FeatureFlag::PrefabsBasic));
     }
 
     #[test]
     fn test_feature_set_intersection() {
         let mut client_features = FeatureSet::new();
         client_features.insert(FeatureFlag::AssetsBasic);
+        client_features.insert(FeatureFlag::PrefabsBasic);
         client_features.insert(FeatureFlag::BuildMin);
         client_features.insert(FeatureFlag::EventsLog);
 
         let mut server_features = FeatureSet::new();
         server_features.insert(FeatureFlag::AssetsBasic);
+        server_features.insert(FeatureFlag::PrefabsBasic);
         server_features.insert(FeatureFlag::EventsLog);
         server_features.insert(FeatureFlag::OpsProgress);
 
         let negotiated = client_features.intersect(&server_features);
         assert!(negotiated.contains(&FeatureFlag::AssetsBasic));
+        assert!(negotiated.contains(&FeatureFlag::PrefabsBasic));
         assert!(negotiated.contains(&FeatureFlag::EventsLog));
         assert!(!negotiated.contains(&FeatureFlag::BuildMin));
         assert!(!negotiated.contains(&FeatureFlag::OpsProgress));
@@ -203,6 +220,7 @@ mod tests {
     fn test_supported_by_client() {
         let client_features = FeatureSet::supported_by_client();
         assert!(client_features.contains(&FeatureFlag::AssetsBasic));
+        assert!(client_features.contains(&FeatureFlag::PrefabsBasic));
         assert!(client_features.contains(&FeatureFlag::BuildMin));
         assert!(client_features.contains(&FeatureFlag::EventsLog));
         assert!(client_features.contains(&FeatureFlag::OpsProgress));

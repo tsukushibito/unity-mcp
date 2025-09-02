@@ -1,0 +1,63 @@
+// STATUS: PROVISIONAL — Breaking changes allowed until Schema Freeze.
+// PACKAGE: mcp.unity.v1
+syntax = "proto3";
+package mcp.unity.v1;
+
+// Prefab operations for Unity
+message CreatePrefabRequest {
+  string game_object_path = 1; // Name or path of GameObject in scene
+  string prefab_path = 2;      // Asset path for the prefab
+}
+
+message CreatePrefabResponse {
+  bool ok = 1;
+  string guid = 2;
+  string message = 3;
+}
+
+message UpdatePrefabRequest {
+  string game_object_path = 1; // Name or path of GameObject in scene
+  string prefab_path = 2;      // Existing prefab asset path
+}
+
+message UpdatePrefabResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message ApplyPrefabOverridesRequest {
+  string instance_path = 1; // Name or path of instantiated prefab
+}
+
+message ApplyPrefabOverridesResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+// Unified request for prefab operations
+message PrefabRequest {
+  oneof payload {
+    CreatePrefabRequest create = 1;
+    UpdatePrefabRequest update = 2;
+    ApplyPrefabOverridesRequest apply_overrides = 3;
+  }
+}
+
+// Unified response for prefab operations
+message PrefabResponse {
+  int32 status_code = 1; // 0=OK, others follow canonical gRPC codes
+  string message = 2;
+  oneof payload {
+    CreatePrefabResponse create = 10;
+    UpdatePrefabResponse update = 11;
+    ApplyPrefabOverridesResponse apply_overrides = 12;
+  }
+}
+
+// Prefab service definition
+service Prefab {
+  rpc Create(CreatePrefabRequest) returns (CreatePrefabResponse);
+  rpc Update(UpdatePrefabRequest) returns (UpdatePrefabResponse);
+  rpc ApplyOverrides(ApplyPrefabOverridesRequest) returns (ApplyPrefabOverridesResponse);
+  rpc PrefabOp(PrefabRequest) returns (PrefabResponse);
+}

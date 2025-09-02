@@ -8,6 +8,7 @@ namespace Bridge.Editor.Ipc
     public enum FeatureFlag
     {
         AssetsBasic,
+        PrefabsBasic,
         BuildMin,
         EventsLog,
         OpsProgress,
@@ -22,6 +23,7 @@ namespace Bridge.Editor.Ipc
         private static readonly Dictionary<string, FeatureFlag> StringToFlag = new Dictionary<string, FeatureFlag>
         {
             { "assets.basic", FeatureFlag.AssetsBasic },
+            { "prefabs.basic", FeatureFlag.PrefabsBasic },
             { "build.min", FeatureFlag.BuildMin },
             { "events.log", FeatureFlag.EventsLog },
             { "ops.progress", FeatureFlag.OpsProgress },
@@ -50,6 +52,7 @@ namespace Bridge.Editor.Ipc
             return new HashSet<FeatureFlag>
             {
                 FeatureFlag.AssetsBasic,
+                FeatureFlag.PrefabsBasic,
                 FeatureFlag.BuildMin,
                 FeatureFlag.EventsLog,
                 FeatureFlag.OpsProgress,
