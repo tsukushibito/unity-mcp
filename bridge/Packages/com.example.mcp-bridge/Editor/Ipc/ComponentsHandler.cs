@@ -22,7 +22,7 @@ namespace Mcp.Unity.V1.Ipc
                     return type;
                 }
 
-                if (!name.Contains("."))
+                if (!name.Contains('.'))
                 {
                     type = asm.GetType($"UnityEngine.{name}");
                     if (type != null)
