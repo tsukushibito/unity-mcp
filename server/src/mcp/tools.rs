@@ -1,5 +1,6 @@
 pub mod assets;
 pub mod build;
+pub mod component;
 pub mod diagnostics;
 pub mod health;
 pub mod project_settings;
@@ -97,6 +98,33 @@ impl McpService {
         Parameters(req): Parameters<UnityBuildAssetBundlesRequest>,
     ) -> Result<CallToolResult, McpError> {
         self.do_unity_build_asset_bundles(req).await
+    }
+
+    #[tool(description = "Add Unity component via Direct IPC")]
+    pub async fn unity_component_add(
+        &self,
+        Parameters(req): Parameters<UnityComponentAddRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_component_add(req.game_object, req.component, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Get Unity components via Direct IPC")]
+    pub async fn unity_get_components(
+        &self,
+        Parameters(req): Parameters<UnityGetComponentsRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_get_components(req.game_object, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Remove Unity component via Direct IPC")]
+    pub async fn unity_component_remove(
+        &self,
+        Parameters(req): Parameters<UnityComponentRemoveRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_component_remove(req.game_object, req.component, req.timeout_secs)
+            .await
     }
 
     #[tool(description = "Get Unity C# compile diagnostics (errors, warnings, info)")]
@@ -209,8 +237,28 @@ pub struct UnityGetProjectSettingsRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityComponentAddRequest {
+    pub game_object: String,
+    pub component: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct UnitySetProjectSettingsRequest {
     pub settings: std::collections::HashMap<String, String>,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityGetComponentsRequest {
+    pub game_object: String,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityComponentRemoveRequest {
+    pub game_object: String,
+    pub component: String,
     pub timeout_secs: Option<u64>,
 }
 
@@ -231,6 +279,9 @@ mod tool_tests {
         assert!(router.has_route("unity_assets_path_to_guid"));
         assert!(router.has_route("unity_build_player"));
         assert!(router.has_route("unity_build_asset_bundles"));
+        assert!(router.has_route("unity_component_add"));
+        assert!(router.has_route("unity_get_components"));
+        assert!(router.has_route("unity_component_remove"));
         assert!(router.has_route("unity_get_compile_diagnostics"));
         assert!(router.has_route("unity_run_tests"));
         assert!(router.has_route("unity_get_test_results"));

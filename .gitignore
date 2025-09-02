@@ -17,3 +17,5 @@ Thumbs.db
 
 # Serena MCP
 .serena
+# Generated protobuf descriptor
+server/src/generated/schema.pb

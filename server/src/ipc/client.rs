@@ -370,6 +370,95 @@ impl IpcClient {
         }
     }
 
+    pub async fn component_add(
+        &self,
+        game_object: String,
+        component: String,
+        timeout: Duration,
+    ) -> Result<pb::AddComponentResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Component(pb::ComponentRequest {
+                payload: Some(pb::component_request::Payload::Add(
+                    pb::AddComponentRequest {
+                        game_object,
+                        component,
+                    },
+                )),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Component(pb::ComponentResponse {
+                status_code: 0,
+                payload: Some(pb::component_response::Payload::Add(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Component(res)) => Err(IpcError::Handshake(format!(
+                "component add failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn component_get(
+        &self,
+        game_object: String,
+        timeout: Duration,
+    ) -> Result<pb::GetComponentsResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Component(pb::ComponentRequest {
+                payload: Some(pb::component_request::Payload::Get(
+                    pb::GetComponentsRequest { game_object },
+                )),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Component(pb::ComponentResponse {
+                status_code: 0,
+                payload: Some(pb::component_response::Payload::Get(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Component(res)) => Err(IpcError::Handshake(format!(
+                "component get failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
+    pub async fn component_remove(
+        &self,
+        game_object: String,
+        component: String,
+        timeout: Duration,
+    ) -> Result<pb::RemoveComponentResponse, IpcError> {
+        let req = pb::IpcRequest {
+            payload: Some(pb::ipc_request::Payload::Component(pb::ComponentRequest {
+                payload: Some(pb::component_request::Payload::Remove(
+                    pb::RemoveComponentRequest {
+                        game_object,
+                        component,
+                    },
+                )),
+            })),
+        };
+        let resp = self.request(req, timeout).await?;
+        match resp.payload {
+            Some(pb::ipc_response::Payload::Component(pb::ComponentResponse {
+                status_code: 0,
+                payload: Some(pb::component_response::Payload::Remove(r)),
+                ..
+            })) => Ok(r),
+            Some(pb::ipc_response::Payload::Component(res)) => Err(IpcError::Handshake(format!(
+                "component remove failed: {}",
+                res.message
+            ))),
+            _ => Err(IpcError::Handshake("unexpected response".into())),
+        }
+    }
+
     pub async fn build_player(
         &self,
         req: pb::BuildPlayerRequest,
