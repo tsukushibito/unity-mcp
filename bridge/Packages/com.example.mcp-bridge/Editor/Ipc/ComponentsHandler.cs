@@ -14,16 +14,30 @@ namespace Mcp.Unity.V1.Ipc
                 return type;
             }
 
-            if (name.Contains("."))
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
             {
-                return Type.GetType($"{name}, UnityEngine");
+                type = asm.GetType(name);
+                if (type != null)
+                {
+                    return type;
+                }
+
+                if (!name.Contains('.'))
+                {
+                    type = asm.GetType($"UnityEngine.{name}");
+                    if (type != null)
+                    {
+                        return type;
+                    }
+                }
             }
 
-            return Type.GetType($"UnityEngine.{name}, UnityEngine");
+            return null;
         }
 
         public static Pb.ComponentResponse Handle(Pb.ComponentRequest req, Bridge.Editor.Ipc.FeatureGuard features)
         {
+            features.RequireFeature(Bridge.Editor.Ipc.FeatureFlag.ComponentsBasic);
             switch (req.PayloadCase)
             {
                 case Pb.ComponentRequest.PayloadOneofCase.Add:

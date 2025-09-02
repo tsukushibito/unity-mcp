@@ -12,6 +12,7 @@ namespace Bridge.Editor.Ipc
         BuildMin,
         EventsLog,
         OpsProgress,
+        ComponentsBasic,
         AssetsAdvanced,
         BuildFull,
         EventsFull,
@@ -27,6 +28,7 @@ namespace Bridge.Editor.Ipc
             { "build.min", FeatureFlag.BuildMin },
             { "events.log", FeatureFlag.EventsLog },
             { "ops.progress", FeatureFlag.OpsProgress },
+            { "components.basic", FeatureFlag.ComponentsBasic },
             { "assets.advanced", FeatureFlag.AssetsAdvanced },
             { "build.full", FeatureFlag.BuildFull },
             { "events.full", FeatureFlag.EventsFull },
@@ -56,6 +58,7 @@ namespace Bridge.Editor.Ipc
                 FeatureFlag.BuildMin,
                 FeatureFlag.EventsLog,
                 FeatureFlag.OpsProgress,
+                FeatureFlag.ComponentsBasic,
                 // Note: AssetsAdvanced, BuildFull, EventsFull not yet implemented
             };
         }

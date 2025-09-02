@@ -410,6 +410,13 @@ impl IpcClient {
         component: String,
         timeout: Duration,
     ) -> Result<pb::AddComponentResponse, IpcError> {
+        // Check if components.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::ComponentsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "components.basic feature not negotiated".into(),
+            ));
+        }
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Component(pb::ComponentRequest {
                 payload: Some(pb::component_request::Payload::Add(
@@ -534,6 +541,13 @@ impl IpcClient {
         game_object: String,
         timeout: Duration,
     ) -> Result<pb::GetComponentsResponse, IpcError> {
+        // Check if components.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::ComponentsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "components.basic feature not negotiated".into(),
+            ));
+        }
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Component(pb::ComponentRequest {
                 payload: Some(pb::component_request::Payload::Get(
@@ -588,6 +602,13 @@ impl IpcClient {
         component: String,
         timeout: Duration,
     ) -> Result<pb::RemoveComponentResponse, IpcError> {
+        // Check if components.basic feature is negotiated
+        if !self.has_feature(FeatureFlag::ComponentsBasic).await {
+            return Err(IpcError::UnsupportedFeature(
+                "components.basic feature not negotiated".into(),
+            ));
+        }
+
         let req = pb::IpcRequest {
             payload: Some(pb::ipc_request::Payload::Component(pb::ComponentRequest {
                 payload: Some(pb::component_request::Payload::Remove(
