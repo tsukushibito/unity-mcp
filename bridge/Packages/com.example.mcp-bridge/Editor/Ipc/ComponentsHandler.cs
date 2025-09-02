@@ -9,11 +9,17 @@ namespace Mcp.Unity.V1.Ipc
         private static Type FindType(string name)
         {
             var type = Type.GetType(name);
-            if (type == null)
+            if (type != null)
             {
-                type = Type.GetType($"UnityEngine.{name}, UnityEngine");
+                return type;
             }
-            return type;
+
+            if (name.Contains("."))
+            {
+                return Type.GetType($"{name}, UnityEngine");
+            }
+
+            return Type.GetType($"UnityEngine.{name}, UnityEngine");
         }
 
         public static Pb.ComponentResponse Handle(Pb.ComponentRequest req, Bridge.Editor.Ipc.FeatureGuard features)
