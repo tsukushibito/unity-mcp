@@ -64,9 +64,9 @@ async fn test_scene_operations_end_to_end() {
         assert!(set_res.ok, "scenes_set_active_scene returned not ok");
     }
 
-    // Clean up the saved scene file and directory if they exist
-    let _ = fs::remove_file(&full_path);
+    // Clean up the saved scene directory and its meta file if they exist
     if let Some(parent) = full_path.parent() {
-        let _ = fs::remove_dir(parent);
+        let _ = fs::remove_dir_all(parent);
+        let _ = fs::remove_file(parent.with_extension("meta"));
     }
 }
