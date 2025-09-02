@@ -1,6 +1,7 @@
 use server::ipc::{client::IpcClient, path::IpcConfig};
-use std::time::Duration;
+use std::{fs, time::Duration};
 use tokio::time::timeout;
+use uuid::Uuid;
 
 #[tokio::test]
 async fn test_scene_operations_end_to_end() {
@@ -25,8 +26,8 @@ async fn test_scene_operations_end_to_end() {
         }
     }
 
-    // Save current active scene to a temp path
-    let save_path = "Assets/TestScene.unity".to_string();
+    // Save current active scene to a Temp path to avoid polluting Assets
+    let save_path = format!("Temp/TestScene-{}.unity", Uuid::new_v4());
     let _ = client
         .scenes_save(save_path.clone(), Duration::from_secs(5))
         .await;
@@ -54,4 +55,12 @@ async fn test_scene_operations_end_to_end() {
         }
         Err(e) => println!("Get open scenes failed: {}", e),
     }
+
+    // Clean up the saved scene file if it exists
+    let project_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let unity_root = project_root.join("bridge");
+    let full_path = unity_root.join(&save_path);
+    let _ = fs::remove_file(full_path);
 }
