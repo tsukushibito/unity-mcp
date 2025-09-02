@@ -138,6 +138,46 @@ pub struct GetCompileDiagnosticsResponse {
     #[prost(bool, tag = "6")]
     pub truncated: bool,
 }
+/// Project settings messages
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetProjectSettingsRequest {
+    /// List of project setting keys to retrieve
+    #[prost(string, repeated, tag = "1")]
+    pub keys: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetProjectSettingsResponse {
+    /// Retrieved settings
+    #[prost(map = "string, string", tag = "1")]
+    pub settings: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
+    /// Whether retrieval was successful
+    #[prost(bool, tag = "2")]
+    pub success: bool,
+    /// Error message if success is false
+    #[prost(string, tag = "3")]
+    pub error_message: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SetProjectSettingsRequest {
+    /// Settings to apply
+    #[prost(map = "string, string", tag = "1")]
+    pub settings: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SetProjectSettingsResponse {
+    /// Whether the settings were applied
+    #[prost(bool, tag = "1")]
+    pub ok: bool,
+    /// Error message if ok is false
+    #[prost(string, tag = "2")]
+    pub error_message: ::prost::alloc::string::String,
+}
 /// Import/Export operations for Unity assets
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ImportAssetRequest {
@@ -614,7 +654,10 @@ pub mod ipc_envelope {
 /// Request message with typed payloads
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IpcRequest {
-    #[prost(oneof = "ipc_request::Payload", tags = "1, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(
+        oneof = "ipc_request::Payload",
+        tags = "1, 10, 11, 12, 13, 14, 20, 30, 40, 41"
+    )]
     pub payload: ::core::option::Option<ipc_request::Payload>,
 }
 /// Nested message and enum types in `IpcRequest`.
@@ -631,6 +674,10 @@ pub mod ipc_request {
         SetPlayMode(super::SetPlayModeRequest),
         #[prost(message, tag = "12")]
         GetCompileDiagnostics(super::GetCompileDiagnosticsRequest),
+        #[prost(message, tag = "13")]
+        GetProjectSettings(super::GetProjectSettingsRequest),
+        #[prost(message, tag = "14")]
+        SetProjectSettings(super::SetProjectSettingsRequest),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsRequest),
@@ -650,7 +697,10 @@ pub struct IpcResponse {
     /// Matches the request correlation_id
     #[prost(string, tag = "1")]
     pub correlation_id: ::prost::alloc::string::String,
-    #[prost(oneof = "ipc_response::Payload", tags = "2, 10, 11, 12, 20, 30, 40, 41")]
+    #[prost(
+        oneof = "ipc_response::Payload",
+        tags = "2, 10, 11, 12, 13, 14, 20, 30, 40, 41"
+    )]
     pub payload: ::core::option::Option<ipc_response::Payload>,
 }
 /// Nested message and enum types in `IpcResponse`.
@@ -667,6 +717,10 @@ pub mod ipc_response {
         SetPlayMode(super::SetPlayModeResponse),
         #[prost(message, tag = "12")]
         GetCompileDiagnostics(super::GetCompileDiagnosticsResponse),
+        #[prost(message, tag = "13")]
+        GetProjectSettings(super::GetProjectSettingsResponse),
+        #[prost(message, tag = "14")]
+        SetProjectSettings(super::SetProjectSettingsResponse),
         /// Assets
         #[prost(message, tag = "20")]
         Assets(super::AssetsResponse),

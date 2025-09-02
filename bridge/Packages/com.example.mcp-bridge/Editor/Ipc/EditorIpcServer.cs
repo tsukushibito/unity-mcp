@@ -365,6 +365,14 @@ namespace Mcp.Unity.V1.Ipc
                         await HandleGetCompileDiagnosticsRequest(stream, correlationId, request.GetCompileDiagnostics);
                         break;
 
+                    case IpcRequest.PayloadOneofCase.GetProjectSettings:
+                        await HandleGetProjectSettingsRequest(stream, correlationId, request.GetProjectSettings);
+                        break;
+
+                    case IpcRequest.PayloadOneofCase.SetProjectSettings:
+                        await HandleSetProjectSettingsRequest(stream, correlationId, request.SetProjectSettings);
+                        break;
+
                     case IpcRequest.PayloadOneofCase.Assets:
                         await HandleAssetsRequest(stream, correlationId, request.Assets);
                         break;
@@ -423,6 +431,50 @@ namespace Mcp.Unity.V1.Ipc
 
             await SendResponseAsync(stream, response);
             Debug.Log($"[EditorIpcServer] Sent diagnostics response: success={diagnosticsResponse.Success}, diagnostics_count={diagnosticsResponse.Diagnostics.Count}");
+        }
+
+        /// <summary>
+        /// Handle GetProjectSettings request
+        /// </summary>
+        private static async Task HandleGetProjectSettingsRequest(Stream stream, string correlationId, GetProjectSettingsRequest request)
+        {
+            Debug.Log("[EditorIpcServer] Processing project settings get request");
+
+            var settingsResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                return ProjectSettingsHandler.HandleGet(request);
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                GetProjectSettings = settingsResponse
+            };
+
+            await SendResponseAsync(stream, response);
+        }
+
+        /// <summary>
+        /// Handle SetProjectSettings request
+        /// </summary>
+        private static async Task HandleSetProjectSettingsRequest(Stream stream, string correlationId, SetProjectSettingsRequest request)
+        {
+            Debug.Log("[EditorIpcServer] Processing project settings set request");
+
+            var setResponse = await EditorDispatcher.RunOnMainAsync(() =>
+            {
+                MainThreadGuard.AssertMainThread();
+                return ProjectSettingsHandler.HandleSet(request);
+            });
+
+            var response = new IpcResponse
+            {
+                CorrelationId = correlationId,
+                SetProjectSettings = setResponse
+            };
+
+            await SendResponseAsync(stream, response);
         }
 
         /// <summary>

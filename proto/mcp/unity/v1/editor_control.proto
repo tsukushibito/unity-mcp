@@ -9,6 +9,9 @@ service EditorControl {
   rpc GetPlayMode(Empty) returns (GetPlayModeResponse);
   rpc SetPlayMode(SetPlayModeRequest) returns (SetPlayModeResponse);
   rpc GetCompileDiagnostics(GetCompileDiagnosticsRequest) returns (GetCompileDiagnosticsResponse);
+  // Project settings operations
+  rpc GetProjectSettings(GetProjectSettingsRequest) returns (GetProjectSettingsResponse);
+  rpc SetProjectSettings(SetProjectSettingsRequest) returns (SetProjectSettingsResponse);
 }
 
 message HealthRequest {}
@@ -65,4 +68,24 @@ message GetCompileDiagnosticsResponse {
   DiagnosticSummary summary = 4; // Summary statistics
   repeated CompileDiagnostic diagnostics = 5; // List of diagnostics
   bool truncated = 6;          // Whether results were truncated due to max_items
+}
+
+// Project settings messages
+message GetProjectSettingsRequest {
+  repeated string keys = 1; // List of project setting keys to retrieve
+}
+
+message GetProjectSettingsResponse {
+  map<string, string> settings = 1; // Retrieved settings
+  bool success = 2;                 // Whether retrieval was successful
+  string error_message = 3;         // Error message if success is false
+}
+
+message SetProjectSettingsRequest {
+  map<string, string> settings = 1; // Settings to apply
+}
+
+message SetProjectSettingsResponse {
+  bool ok = 1;               // Whether the settings were applied
+  string error_message = 2;  // Error message if ok is false
 }
