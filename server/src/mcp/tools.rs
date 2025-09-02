@@ -2,6 +2,7 @@ pub mod assets;
 pub mod build;
 pub mod diagnostics;
 pub mod health;
+pub mod project_settings;
 pub mod status;
 pub mod tests;
 
@@ -118,6 +119,24 @@ impl McpService {
     ) -> Result<CallToolResult, McpError> {
         self.do_unity_get_test_results_ipc(req).await
     }
+
+    #[tool(description = "Get Unity project settings via Direct IPC")]
+    pub async fn unity_get_project_settings(
+        &self,
+        Parameters(req): Parameters<UnityGetProjectSettingsRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_get_project_settings(req.keys, req.timeout_secs)
+            .await
+    }
+
+    #[tool(description = "Set Unity project settings via Direct IPC")]
+    pub async fn unity_set_project_settings(
+        &self,
+        Parameters(req): Parameters<UnitySetProjectSettingsRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        self.do_unity_set_project_settings(req.settings, req.timeout_secs)
+            .await
+    }
 }
 
 // Helper to expose router across modules while the generated
@@ -166,6 +185,18 @@ pub struct UnityAssetsPathToGuidRequest {
     pub timeout_secs: Option<u64>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnityGetProjectSettingsRequest {
+    pub keys: Vec<String>,
+    pub timeout_secs: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UnitySetProjectSettingsRequest {
+    pub settings: std::collections::HashMap<String, String>,
+    pub timeout_secs: Option<u64>,
+}
+
 #[cfg(test)]
 mod tool_tests {
     use super::*;
@@ -184,5 +215,7 @@ mod tool_tests {
         assert!(router.has_route("unity_get_compile_diagnostics"));
         assert!(router.has_route("unity_run_tests"));
         assert!(router.has_route("unity_get_test_results"));
+        assert!(router.has_route("unity_get_project_settings"));
+        assert!(router.has_route("unity_set_project_settings"));
     }
 }
