@@ -42,7 +42,7 @@ impl McpService {
 
         if !resp.success {
             return Err(McpError::internal_error(
-                format!("Project settings get failed: {}", resp.error_message),
+                format!("Get project settings failed: {}", resp.error_message),
                 None,
             ));
         }
