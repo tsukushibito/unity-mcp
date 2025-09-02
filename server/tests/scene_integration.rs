@@ -1,5 +1,5 @@
 use server::ipc::{client::IpcClient, path::IpcConfig};
-use std::{fs, time::Duration};
+use std::{fs, path::Path, time::Duration};
 use tokio::time::timeout;
 use uuid::Uuid;
 
@@ -26,8 +26,15 @@ async fn test_scene_operations_end_to_end() {
         }
     }
 
-    // Save current active scene to a Temp path to avoid polluting Assets
-    let save_path = format!("Temp/TestScene-{}.unity", Uuid::new_v4());
+    // Save current active scene under Assets so Unity accepts the path
+    let temp_dir = "Assets/__codex_tmp";
+    let save_path = format!("{}/TestScene-{}.unity", temp_dir, Uuid::new_v4());
+    let project_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let unity_root = project_root.join("bridge");
+    let full_path = unity_root.join(&save_path);
+    if let Some(parent) = full_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
     let save_res = client
         .scenes_save(save_path.clone(), Duration::from_secs(5))
         .await
@@ -57,11 +64,9 @@ async fn test_scene_operations_end_to_end() {
         assert!(set_res.ok, "scenes_set_active_scene returned not ok");
     }
 
-    // Clean up the saved scene file if it exists
-    let project_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap();
-    let unity_root = project_root.join("bridge");
-    let full_path = unity_root.join(&save_path);
-    let _ = fs::remove_file(full_path);
+    // Clean up the saved scene file and directory if they exist
+    let _ = fs::remove_file(&full_path);
+    if let Some(parent) = full_path.parent() {
+        let _ = fs::remove_dir(parent);
+    }
 }
