@@ -474,8 +474,7 @@ namespace Mcp.Unity.V1.Ipc
                 bool ok = false;
                 if (type != null)
                 {
-                    EditorWindow.FocusWindowIfItsOpen(type);
-                    ok = true;
+                    ok = EditorWindow.FocusWindowIfItsOpen(type);
                 }
                 return new FocusWindowResponse { Ok = ok };
             });
