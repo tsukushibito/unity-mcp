@@ -1,3 +1,4 @@
+use scopeguard::guard;
 use server::generated::mcp::unity::v1::{
     GetProjectSettingsRequest, IpcRequest, SetProjectSettingsRequest, ipc_request, ipc_response,
 };
@@ -48,6 +49,24 @@ async fn test_project_settings_roundtrip() {
         .get("companyName")
         .cloned()
         .unwrap_or_default();
+
+    // Ensure project setting is restored even if test panics
+    let restore_client = client.clone();
+    let _restore = guard(original.clone(), move |orig| {
+        let mut restore = HashMap::new();
+        restore.insert("companyName".to_string(), orig);
+        let set_req = SetProjectSettingsRequest { settings: restore };
+        let ipc_req = IpcRequest {
+            payload: Some(ipc_request::Payload::SetProjectSettings(set_req)),
+        };
+        tokio::spawn(async move {
+            let _ = timeout(
+                Duration::from_secs(5),
+                restore_client.request(ipc_req, Duration::from_secs(5)),
+            )
+            .await;
+        });
+    });
 
     // Set new companyName
     let mut map = HashMap::new();
@@ -111,17 +130,4 @@ async fn test_project_settings_roundtrip() {
         .cloned()
         .unwrap_or_default();
     assert_eq!(updated, "TestCo");
-
-    // Restore original value
-    let mut restore = HashMap::new();
-    restore.insert("companyName".to_string(), original);
-    let set_req = SetProjectSettingsRequest { settings: restore };
-    let ipc_req = IpcRequest {
-        payload: Some(ipc_request::Payload::SetProjectSettings(set_req)),
-    };
-    let _ = timeout(
-        Duration::from_secs(5),
-        client.request(ipc_req, Duration::from_secs(5)),
-    )
-    .await;
 }
