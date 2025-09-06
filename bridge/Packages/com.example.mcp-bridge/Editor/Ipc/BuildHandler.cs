@@ -2,6 +2,7 @@
 // Handles Player and AssetBundles build operations via IPC
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor.Build;
 using UnityEngine;
 using Pb = Mcp.Unity.V1;
 using System;
@@ -86,15 +87,16 @@ namespace Mcp.Unity.V1.Ipc
 
                 // 4.5. Variant-specific settings
                 // TODO(UNITY_API): touches PlayerSettings/EditorUserBuildSettings — must run on main via EditorDispatcher
+                var namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(group);
                 if (r.Variants?.Il2Cpp == true)
-                    PlayerSettings.SetScriptingBackend(group, ScriptingImplementation.IL2CPP);
+                    PlayerSettings.SetScriptingBackend(namedBuildTarget, ScriptingImplementation.IL2CPP);
                 else
-                    PlayerSettings.SetScriptingBackend(group, ScriptingImplementation.Mono2x);
+                    PlayerSettings.SetScriptingBackend(namedBuildTarget, ScriptingImplementation.Mono2x);
 
                 if (r.Variants?.StripSymbols == true)
-                    EditorUserBuildSettings.stripEngineCode = true;
+                    PlayerSettings.stripEngineCode = true;
                 else
-                    EditorUserBuildSettings.stripEngineCode = false;
+                    PlayerSettings.stripEngineCode = false;
 
                 // 5. Build options setup
                 var buildOptions = BuildOptions.None;

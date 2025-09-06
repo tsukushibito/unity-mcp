@@ -542,7 +542,33 @@ namespace Mcp.Unity.V1.Ipc
                 bool ok = false;
                 if (type != null)
                 {
-                    ok = EditorWindow.FocusWindowIfItsOpen(type);
+                    try
+                    {
+                        var hasOpen = typeof(EditorWindow)
+                            .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                            .FirstOrDefault(m => m.Name == "HasOpenInstances" && m.IsGenericMethodDefinition && m.GetParameters().Length == 0);
+                        if (hasOpen != null)
+                        {
+                            var gm = hasOpen.MakeGenericMethod(type);
+                            ok = (bool)gm.Invoke(null, null);
+                        }
+                        else
+                        {
+                            // Fallback: check via Resources API
+                            ok = Resources.FindObjectsOfTypeAll(type).Length > 0;
+                        }
+
+                        if (ok)
+                        {
+                            // Focus if already open (Unity API returns void)
+                            EditorWindow.FocusWindowIfItsOpen(type);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"[EditorIpcServer] FocusWindow check failed: {e.Message}");
+                        ok = false;
+                    }
                 }
                 return new FocusWindowResponse { Ok = ok };
             });
